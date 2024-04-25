@@ -3,7 +3,57 @@ guid: e92fbd4615fc02e4093d0acc48d5fb83
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BlueCourt
+    second: {fileID: 2100000, guid: 0bf2a86be5e98e84088cfe5d27fd0234, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: FloorOutter
+    second: {fileID: 2100000, guid: 3a744c0913bada0498fce855a0e74271, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GymnasiumProps2
+    second: {fileID: 2100000, guid: 4c2abdda54659374295e7f92bd8eefb6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GymnasiumProps_1
+    second: {fileID: 2100000, guid: e95dec04726c39444b4756297b7f3032, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Roof
+    second: {fileID: 2100000, guid: 58baf7fdf31f8e34498952e77b06423e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RoofBeams
+    second: {fileID: 2100000, guid: f4d85e2a3cc0a4e43a38c051fb69eae5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Speakers
+    second: {fileID: 2100000, guid: 179de7851c931f945b0aa9f5c930a1fb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Walls
+    second: {fileID: 2100000, guid: 9a1451bb2cdfc034db899845d1c01038, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WindowFrames
+    second: {fileID: 2100000, guid: bad34b7568925284a8f6d9db8495d13e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert1
+    second: {fileID: 2100000, guid: 4e671cbf9b2cef941b7a4d1e1578d1a4, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

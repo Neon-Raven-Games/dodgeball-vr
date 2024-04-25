@@ -469,7 +469,7 @@
                 {
                     "name": "",
                     "id": "8e383b1a-270f-4c20-819b-89a59cffb498",
-                    "path": "<XRController>{LeftHand}/Primary2DAxis",
+                    "path": "<XRController>{LeftHand}/joystick",
                     "interactions": "",
                     "processors": "StickDeadzone",
                     "groups": "Continuous Move",
@@ -1369,6 +1369,34 @@
                     "processors": "",
                     "groups": "",
                     "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Development",
+            "id": "bfbf7cdd-e423-4a80-85e9-ab97428a8a2f",
+            "actions": [
+                {
+                    "name": "Mouse",
+                    "type": "Value",
+                    "id": "4988c059-bc85-4a5b-abdb-a29dbe438d91",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "3a031ff1-4a1d-4246-9c1d-c0e46ba3edbe",
+                    "path": "<Mouse>/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Mouse",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

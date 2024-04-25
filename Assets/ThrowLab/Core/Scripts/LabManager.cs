@@ -1,5 +1,6 @@
 ﻿using CloudFine.ThrowLab.UI;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -192,58 +193,44 @@ namespace CloudFine.ThrowLab
             }
         }
 
-        void RespawnThrowable()
+        private void RespawnThrowable()
         {
-            if (_currentSpawn != null)
-            {
-                GameObject.Destroy(_currentSpawn.gameObject);
-            }
+            if (_currentSpawn != null) Destroy(_currentSpawn.gameObject);
 
             SpawnTrackedThrowable();
         }
 
-        public void SetCurrentConfigEnabled(bool enabled)
+        public void SetCurrentConfigEnabled(bool enable)
         {
-            SetConfigEnabled(currentConfigIndex, enabled);
-            variantLineEnabledToggle.interactable = enabled;
-            variantSamplesEnabledToggle.interactable = enabled;
+            SetConfigEnabled(currentConfigIndex, enable);
+            variantLineEnabledToggle.interactable = enable;
+            variantSamplesEnabledToggle.interactable = enable;
             ReloadCurrentConfig();
             RespawnThrowable();
         }
 
-        public void SetConfigEnabled(int i, bool enabled)
+        private void SetConfigEnabled(int i, bool enable)
         {
-            configEnabled[i] = enabled;
-            tabFills[i].enabled = enabled;
+            configEnabled[i] = enable;
+            tabFills[i].enabled = enable;
 
-            bool activeConfig = false;
-            for (int j = 0; j < configEnabled.Length; j++)
-            {
-                activeConfig = activeConfig || configEnabled[j];
-            }
+            var activeConfig = configEnabled
+                .Aggregate(false, (current, t) => current || t);
 
             warningNoConfigs.SetActive(!activeConfig);
         }
 
-        public void SetCurrentLineEnabled(bool enabled)
-        {
-            SetLineEnabled(currentConfigIndex, enabled);
-        }
+        public void SetCurrentLineEnabled(bool enable) =>
+            SetLineEnabled(currentConfigIndex, enable);
 
-        public void SetLineEnabled(int i, bool enabled)
-        {
-            showLine[i] = enabled;
-        }
+        private void SetLineEnabled(int i, bool enable) =>
+            showLine[i] = enable;
 
-        public void SetCurrentSampleVisEnabled(bool enabled)
-        {
-            SetSampleVisualizationEnabled(currentConfigIndex, enabled);
-        }
+        public void SetCurrentSampleVisEnabled(bool enable) =>
+            SetSampleVisualizationEnabled(currentConfigIndex, enable);
 
-        public void SetSampleVisualizationEnabled(int i, bool enabled)
-        {
-            showSamples[i] = enabled;
-        }
+        private void SetSampleVisualizationEnabled(int i, bool enable) =>
+            showSamples[i] = enable;
 
         public void SaveCurrentConfig()
         {
@@ -263,44 +250,34 @@ namespace CloudFine.ThrowLab
 
         public void ClearAll()
         {
-            foreach (ThrowTracker tracker in _trackers)
-            {
-                tracker.Cleanup();
-            }
-
+            foreach (var tracker in _trackers) tracker.Cleanup();
             _trackers.Clear();
         }
 
-        public void Reset()
-        {
+        public void Reset() =>
             SpawnTrackedThrowable();
-        }
 
         public void CycleThrowableRight()
         {
             if (_throwableIndex < 0) return;
+            
             _throwableIndex++;
-            if (_throwableIndex >= _throwablePrefabs.Count)
-            {
-                _throwableIndex = 0;
-            }
-
+            
+            if (_throwableIndex >= _throwablePrefabs.Count) _throwableIndex = 0;
             SelectThrowable(_throwableIndex);
         }
 
         public void CycleThrowableLeft()
         {
             if (_throwableIndex < 0) return;
+            
             _throwableIndex--;
-            if (_throwableIndex < 0)
-            {
-                _throwableIndex = _throwablePrefabs.Count - 1;
-            }
+            if (_throwableIndex < 0) _throwableIndex = _throwablePrefabs.Count - 1;
 
             SelectThrowable(_throwableIndex);
         }
 
-        void SelectThrowable(int i)
+        private void SelectThrowable(int i)
         {
             if (i < 0 || i >= _throwablePrefabs.Count) return;
 

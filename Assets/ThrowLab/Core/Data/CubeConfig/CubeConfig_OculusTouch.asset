@@ -4,7 +4,8 @@
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -52,9 +53,9 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   scaleEnabled: 1
-  scaleMultiplier: 2.5
-  scaleThreshold: 6
-  scaleRampExponent: 2
+  scaleMultiplier: 3.6000004
+  scaleThreshold: 3
+  scaleRampExponent: 2.949389
   useScaleRampCustomCurve: 0
   scaleRampCustomCurve:
     serializedVersion: 2
@@ -82,8 +83,8 @@ MonoBehaviour:
     m_RotationOrder: 4
   assistEnabled: 1
   assistWeight: 1
-  assistRangeDegrees: 45
-  assistRampExponent: 2
+  assistRangeDegrees: 33
+  assistRampExponent: 3.1162632
   useAssistRampCustomCurve: 0
   assistRampCustomCurve:
     serializedVersion: 2
@@ -111,8 +112,8 @@ MonoBehaviour:
     m_RotationOrder: 4
   assistTargetMethod: 0
   frictionEnabled: 0
-  frictionFalloffSeconds: 0.02
-  frictionFalloffExponent: 2
+  frictionFalloffSeconds: 0.07999999
+  frictionFalloffExponent: 2.41268
   useFrictionFalloffCustomCurve: 0
   frictionFalloffCustomCurve:
     serializedVersion: 2

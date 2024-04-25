@@ -193,7 +193,7 @@ namespace CloudFine.ThrowLab
         {
             if (_velocitySensor)
             {
-                GameObject.Destroy(_velocitySensor.gameObject);
+                Destroy(_velocitySensor.gameObject);
             }
             if (OnDestroyHandle != null) OnDestroyHandle.Invoke(this);
         }
