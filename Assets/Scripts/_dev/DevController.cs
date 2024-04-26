@@ -16,7 +16,8 @@ public class DevController : MonoBehaviour
     public CharacterController controller;
     public float speed = 5.0f;
     public float rotationSpeed = 100.0f;
-    
+    public Team team;
+
     private void Awake()
     {
         moveForwardAction = actionAsset.FindAction("XRI LeftHand Locomotion/Move", true);
