@@ -57,11 +57,13 @@ public class DodgeBall : MonoBehaviour
                 Debug.Log("Velocity: " + GetComponent<Rigidbody>().velocity.magnitude);
                 GameManager.teamOneScore++;
                 GameManager.UpdateScore();
+                SetDeadBall();
             }
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
                 GameManager.teamTwoScore++;
                 GameManager.UpdateScore();
+                SetDeadBall();
             }
         }
     }
