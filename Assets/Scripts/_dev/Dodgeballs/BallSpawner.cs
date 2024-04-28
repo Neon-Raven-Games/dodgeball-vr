@@ -30,7 +30,6 @@ namespace _dev.Dodgeballs
 
             if (despawnAfterSeconds) _ballHandle.onDetachFromHand += () => AttachDeactivateScript(go);
 
-            lab.SetThrowableConfig(_ballHandle);
             _ballHandle.gameObject.SetActive(false);
             _ballHandle.transform.position = transform.position;
             _ballHandle.transform.rotation = transform.rotation;
@@ -39,6 +38,7 @@ namespace _dev.Dodgeballs
             _particleSystem.Play();
             yield return new WaitForSeconds(particleDelay);
             _ballHandle.gameObject.SetActive(true);
+            lab.SetThrowableConfig(_ballHandle);
         }
 
         private void AttachDeactivateScript(GameObject go)
