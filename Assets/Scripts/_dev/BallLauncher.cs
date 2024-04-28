@@ -59,6 +59,7 @@ public class BallLauncher : MonoBehaviour
             ballHandle.transform.position = ballSpawnPoint.transform.position;
             ballHandle.transform.rotation = ballSpawnPoint.transform.rotation;
             ballHandle.gameObject.SetActive(true);
+            ballHandle.GetComponent<DodgeBall>().SetLiveBall();
             go.GetComponent<Rigidbody>().AddForce(ballSpawnPoint.transform.forward * launchForce);
         }
     }
