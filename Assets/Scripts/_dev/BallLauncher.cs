@@ -54,12 +54,14 @@ public class BallLauncher : MonoBehaviour
 
             if (despawnAfterSeconds) ballHandle.onDetachFromHand += () => AttachDeactivateScript(go);
 
-            lab.SetThrowableConfig(ballHandle);
             ballHandle.gameObject.SetActive(false);
             ballHandle.transform.position = ballSpawnPoint.transform.position;
             ballHandle.transform.rotation = ballSpawnPoint.transform.rotation;
             ballHandle.gameObject.SetActive(true);
+            
             ballHandle.GetComponent<DodgeBall>().SetLiveBall();
+            
+            lab.SetThrowableConfig(ballHandle);
             go.GetComponent<Rigidbody>().AddForce(ballSpawnPoint.transform.forward * launchForce);
         }
     }

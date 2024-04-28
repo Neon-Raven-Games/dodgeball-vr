@@ -1,3 +1,4 @@
+using System;
 using CloudFine.ThrowLab;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,6 +16,7 @@ public class HandController : MonoBehaviour
     private Animator _animator;
     private static readonly int _SState = Animator.StringToHash("State");
     private DevController _controller;
+
     private void Start()
     {
         _controller = GetComponentInParent<DevController>();
@@ -31,12 +33,15 @@ public class HandController : MonoBehaviour
 
     private void SetGrab()
     {
-        if (_ball)
+        if (_ball && !_grabbing)
         {
             _animator.SetInteger(_SState, 1);
             _ball.GetComponent<DodgeBall>().SetOwner(_controller);
-            _ball.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            var rb = _ball.GetComponent<Rigidbody>();
+            if (!rb.isKinematic) rb.velocity = Vector3.zero;
+            _grabbing = true;
         }
+
         _grip = true;
     }
 
@@ -51,14 +56,14 @@ public class HandController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.layer == _ballLayer)
+        if (!_grabbing && other.gameObject.layer == _ballLayer)
             _ball = other.gameObject;
     }
 
-    private void Update()
+    private void OnTriggerExit(Collider other)
     {
-        if (_grip && _ball) _grabbing = true;
-        else _grabbing = false;
+        if (!_grabbing && other.gameObject.layer == _ballLayer)
+            _ball = null;
     }
 
     private void LateUpdate()
