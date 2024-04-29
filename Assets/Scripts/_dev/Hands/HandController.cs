@@ -37,15 +37,17 @@ public class HandController : MonoBehaviour
         {
             _animator.SetInteger(_SState, 1);
             _ball.GetComponent<DodgeBall>().SetOwner(_controller);
-            _ball.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            var rb = _ball.GetComponent<Rigidbody>();
+            if (!rb.isKinematic) rb.velocity = Vector3.zero;
             _grabbing = true;
         }
+
         _grip = true;
     }
 
     private void SetGrabReleased()
     {
-        if (_ball && _grabbing) _ball.GetComponent<DodgeBall>().SetLiveBall();
+        if (_grabbing) _ball.GetComponent<DodgeBall>().SetLiveBall();
         _animator.SetInteger(_SState, 2);
         _ball = null;
         _grip = false;
@@ -60,7 +62,8 @@ public class HandController : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.layer == _ballLayer) _ball = null;
+        if (!_grabbing && other.gameObject.layer == _ballLayer)
+            _ball = null;
     }
 
     private void LateUpdate()
