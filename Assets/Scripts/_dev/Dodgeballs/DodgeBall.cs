@@ -47,20 +47,22 @@ public class DodgeBall : MonoBehaviour
     // 4 is the player
     private void OnCollisionEnter(Collision collision)
     {
+        var param = 0;
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        {
+            param = 1;
+        }
+
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        {
+            param = 2;
+        }
+
         if (_ballState == BallState.Live)
         {
             // todo, pass the velocity parameter on any hit
             // Debug.Log("Velocity: " + GetComponent<Rigidbody>().velocity.magnitude);
-            var param = 0;
-            if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
-            {
-                param = 1;
-            }
 
-            if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
-            {
-                param = 2;
-            }
 
             if (collision.gameObject.TryGetComponent(out DevController controller))
             {
@@ -88,8 +90,8 @@ public class DodgeBall : MonoBehaviour
                 SetDeadBall();
                 param = 3;
             }
-
-            if (param > 0) hitSound.Play();
         }
+
+        if (param > 0) hitSound.Play();
     }
 }
