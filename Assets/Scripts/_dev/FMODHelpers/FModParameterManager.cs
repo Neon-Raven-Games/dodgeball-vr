@@ -11,12 +11,11 @@ using FMODUnity;
 /// </example>
 public enum FootstepParameter
 {
-    Concrete = 0,
-    Wood = 1,
-    WoodTopFloor = 2,
-    WoodStairs = 3,
-    MetalStairs = 5,
-    Tile = 7,
+    Default = 0,
+    Ground = 1,
+    Wall = 2,
+    Player = 3,
+    SelfPlayer = 4,
 }
 
 public class FMODParameterManager : MonoBehaviour
