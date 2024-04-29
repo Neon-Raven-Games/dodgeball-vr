@@ -35,11 +35,11 @@ public class HandController : MonoBehaviour
     {
         if (_ball && !_grabbing)
         {
+            _grabbing = true;
             _animator.SetInteger(_SState, 1);
             _ball.GetComponent<DodgeBall>().SetOwner(_controller);
             var rb = _ball.GetComponent<Rigidbody>();
             if (!rb.isKinematic) rb.velocity = Vector3.zero;
-            _grabbing = true;
         }
 
         _grip = true;
@@ -56,7 +56,7 @@ public class HandController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!_grabbing && other.gameObject.layer == _ballLayer)
+        if (!_ball && !_grabbing && other.gameObject.layer == _ballLayer)
             _ball = other.gameObject;
     }
 
