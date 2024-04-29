@@ -65,6 +65,7 @@ public class VcaBusHelper : MonoBehaviour
     {
         // todo, set this up whenever we have the FMOD project
         Debug.Log("Setting " + vcaBusType + " to " + volume);
+        defaultVolume = volume;
         // FMODUnity.RuntimeManager.GetVCA($"vca:/{vcaBusName}").setVolume(volume);
     }
 
