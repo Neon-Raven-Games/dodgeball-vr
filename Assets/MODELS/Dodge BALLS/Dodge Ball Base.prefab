@@ -15243,6 +15243,30 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 40649e05c5a919c409b51d52a6275efe, type: 2}
+    - target: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+      propertyPath: m_DirtyAABB
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+      propertyPath: m_AABB.m_Center.x
+      value: 0.000000014901161
+      objectReference: {fileID: 0}
+    - target: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+      propertyPath: m_AABB.m_Extent.x
+      value: 0.14092024
+      objectReference: {fileID: 0}
+    - target: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+      propertyPath: m_AABB.m_Extent.y
+      value: 0.1079885
+      objectReference: {fileID: 0}
+    - target: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+      propertyPath: m_AABB.m_Extent.z
+      value: 0.14092027
+      objectReference: {fileID: 0}
+    - target: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 40649e05c5a919c409b51d52a6275efe, type: 2}
     - target: {fileID: 919132149155446097, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
       propertyPath: m_Name
       value: Dodge Ball Base
