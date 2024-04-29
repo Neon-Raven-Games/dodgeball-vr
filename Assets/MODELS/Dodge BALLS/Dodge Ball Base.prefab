@@ -10030,6 +10030,9 @@ MonoBehaviour:
   travelSound: {fileID: 2004052082612756594}
   throwSound: {fileID: 2423338972770981943}
   catchSound: {fileID: 7653424380236497631}
+  skinnedMeshRenderer: {fileID: 6327207839396823541}
+  transitionTime: 0.3
+  pauseTime: 0
 --- !u!54 &2910980798290559304
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -15267,6 +15270,10 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 40649e05c5a919c409b51d52a6275efe, type: 2}
+    - target: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+      propertyPath: m_BlendShapeWeights.Array.data[0]
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
       propertyPath: m_Name
       value: Dodge Ball Base
@@ -15279,5 +15286,10 @@ PrefabInstance:
 --- !u!4 &1894197642457873932 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+  m_PrefabInstance: {fileID: 2144614769626716647}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &6327207839396823541 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -3887185075125053422, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
   m_PrefabInstance: {fileID: 2144614769626716647}
   m_PrefabAsset: {fileID: 0}

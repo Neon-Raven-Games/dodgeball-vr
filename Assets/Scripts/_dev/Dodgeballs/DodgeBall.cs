@@ -11,7 +11,9 @@ public class DodgeBall : MonoBehaviour
     [SerializeField] private StudioEventEmitter travelSound;
     [SerializeField] private StudioEventEmitter throwSound;
     [SerializeField] private StudioEventEmitter catchSound;
-
+    public SkinnedMeshRenderer skinnedMeshRenderer;
+    public float transitionTime = 1.0f; // Time in seconds to complete one half of the animation (0 to 100 or 100 to 0)
+    public float pauseTime = 0.5f;
     private Team _team;
     private DevController _owner;
     private BallState _ballState = BallState.Dead;
@@ -33,10 +35,47 @@ public class DodgeBall : MonoBehaviour
         _ballState = BallState.Live;
     }
 
+    public void HitSquash(Collision collision)
+    {
+        var hitNormal = collision.GetContact(0).normal;
+        var fromToRotation = Quaternion.FromToRotation(skinnedMeshRenderer.transform.up, hitNormal);
+        skinnedMeshRenderer.transform.rotation = fromToRotation * skinnedMeshRenderer.transform.rotation;
+        StartCoroutine(AnimateBlendShape());
+    }
+
     private void SetDeadBall()
     {
         travelSound.Stop();
         _ballState = BallState.Dead;
+    }
+
+    IEnumerator AnimateBlendShape()
+    {
+        int blendShapeIndex = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex("blendShape1.DodgeBall_Base1");
+        if (blendShapeIndex == -1)
+        {
+            Debug.LogError("Blend shape not found!");
+            yield break;
+        }
+
+        skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 100);
+        yield return new WaitForSeconds(pauseTime);
+        yield return StartCoroutine(AnimateBlendShapeValue(blendShapeIndex, 100, 0, transitionTime));
+        skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 0);
+    }
+
+    IEnumerator AnimateBlendShapeValue(int index, float startValue, float endValue, float duration)
+    {
+        float currentTime = 0;
+        while (currentTime < duration)
+        {
+            float newValue = Mathf.Lerp(startValue, endValue, currentTime / duration);
+            skinnedMeshRenderer.SetBlendShapeWeight(index, newValue);
+            currentTime += Time.deltaTime;
+            yield return null;
+        }
+
+        skinnedMeshRenderer.SetBlendShapeWeight(index, endValue);
     }
 
     // When a ball hits something, we will set the param to below:
@@ -81,6 +120,7 @@ public class DodgeBall : MonoBehaviour
                 GameManager.teamOneScore++;
                 GameManager.UpdateScore();
                 SetDeadBall();
+                HitSquash(collision);
                 param = 3;
             }
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
@@ -88,6 +128,7 @@ public class DodgeBall : MonoBehaviour
                 GameManager.teamTwoScore++;
                 GameManager.UpdateScore();
                 SetDeadBall();
+                HitSquash(collision);
                 param = 3;
             }
         }
