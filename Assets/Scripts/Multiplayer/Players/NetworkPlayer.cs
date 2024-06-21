@@ -15,7 +15,26 @@ public class PlayerRig
     public Transform leftHandTarget;
     public Transform rightHandTarget;
 }
+// blend shapes:
+// boy = 0
+// girl = 100
+// body
+// pants
+// hoodie
+// t-shirt
 
+// expressions
+    // first one, blinking
+// collection of blend shapes for faces:
+// eye shape
+// eye
+// eyebrow position/rotation
+// eye specular
+
+// hair movement when player moves:
+// hair bones
+
+// 
 public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 {
     [SerializeField] private PlayerRig localPlayer;

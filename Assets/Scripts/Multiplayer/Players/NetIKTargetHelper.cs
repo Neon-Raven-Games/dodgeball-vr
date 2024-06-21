@@ -32,7 +32,6 @@ public class NetIKTargetHelper : MonoBehaviour
         _leftHandTransform = leftHandTransform;
         _rightHandTransform = rightHandTransform;
         _initialized = true;
-        Debug.Log("Calling Init");
     }
 
     private void OnAnimatorIK(int layerIndex)

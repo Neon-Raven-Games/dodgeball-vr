@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,7 @@ public class DevController : MonoBehaviour
 {
     [SerializeField] private InputActionAsset actionAsset;
     [SerializeField] private GameObject hmd;
-    
+    [SerializeField] private float analogThreshold = 0.2f;
 
     public CharacterController controller;
     public float speed = 5.0f;
@@ -56,6 +57,8 @@ public class DevController : MonoBehaviour
 
     private void HandleMovement()
     {
+        if (Math.Abs(_moveInput.x) <= analogThreshold) _moveInput.x = 0;
+        if (Math.Abs(_moveInput.y) <= analogThreshold) _moveInput.y = 0;
         var movement = new Vector3(_moveInput.x, 0, _moveInput.y).normalized;
         movement *= speed * Time.fixedDeltaTime;
         movement = hmd.transform.TransformDirection(movement);

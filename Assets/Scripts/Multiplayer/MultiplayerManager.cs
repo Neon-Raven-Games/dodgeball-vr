@@ -2,26 +2,27 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
-using Unity.Mathematics;
-using Unity.Template.VR.Multiplayer.Players;
-using Unity.VisualScripting;
+using TMPro;
 using UnityEngine;
 
 public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     public NetworkRunner networkRunner;
     public GameObject networkPlayerPrefab;
+    [SerializeField] private TextMeshPro _statusText;
     private readonly Dictionary<PlayerRef, NetworkObject> _spawnedPlayers = new();
-    public void StartLocalGame() => InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
+    public void StartLocalGame()
+    {
+        if (networkRunner == null) _statusText.text += "\nNetworkRunner is null when starting local game!";
+        else _statusText.text += "\nStarting game";
+        InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
+    }
 
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
         if (networkRunner != null) return;
         InitializeNetworkRunner();
-#if !UNITY_EDITOR
-InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
-#endif
     }
 
     #region initialization
@@ -60,9 +61,10 @@ InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
         networkRunner = gameObject.AddComponent<NetworkRunner>();
         networkRunner.ProvideInput = true;
         networkRunner.AddCallbacks(this);
+        _statusText.text = "NetworkRunner initialized";
     }
 
-    private static async void InitializeNetworkRunner(NetworkRunner runner, GameMode mode)
+    private async void InitializeNetworkRunner(NetworkRunner runner, GameMode mode)
     {
         if (runner == null)
         {
@@ -79,7 +81,7 @@ InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
     #endregion
 
     // logging
-    private static void LogRoomConnectionStatus(StartGameResult result, StartGameArgs startGameArgs)
+    private void LogRoomConnectionStatus(StartGameResult result, StartGameArgs startGameArgs)
     {
         if (result.Ok)
         {
@@ -87,6 +89,7 @@ InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
         }
         else
         {
+            _statusText.text += $"\nFailed to connect to room: {result.ShutdownReason} - {result.ErrorMessage}";
             Debug.LogError($"Failed to connect to room: {result.ShutdownReason} - {result.ErrorMessage}");
         }
     }
@@ -98,6 +101,7 @@ InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
         if (runner.IsClient)
         {
             Debug.Log("Connected to Fusion server.");
+            _statusText.text += "\nConnected to Fusion server.";
         }
     }
 
