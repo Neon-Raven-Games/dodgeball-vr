@@ -158,7 +158,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5938885159466491045
 Transform:
   m_ObjectHideFlags: 0
@@ -243,7 +243,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8713529625286806067
 Transform:
   m_ObjectHideFlags: 0
@@ -365,7 +365,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8147594790894745237
 Transform:
   m_ObjectHideFlags: 0
@@ -1514,6 +1514,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: AI Avatar3
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 0056bb53af45d4444ab6d53b42b23087, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1296780601038809700, guid: 0056bb53af45d4444ab6d53b42b23087, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -1897,8 +1901,8 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4315865454357737502}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 2296e366aca332c4b882bff40daafd4f, type: 2}
+  m_Avatar: {fileID: 9000000, guid: aa7b4a864bab28a4099614f25375dfac, type: 2}
+  m_Controller: {fileID: 9100000, guid: 3b8d768c58272a04bb9d174edb30f658, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

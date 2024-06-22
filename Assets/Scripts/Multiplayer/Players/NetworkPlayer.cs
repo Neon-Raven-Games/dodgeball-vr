@@ -45,6 +45,9 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     private Quaternion _leftHandRotation;
     private Quaternion _rightHandRotation;
+    
+    private Vector3 _hmdPosition;
+    private Quaternion _hmdRotation;
 
     private void OnDrawGizmos()
     {
@@ -86,10 +89,22 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         if (SyncIkTargets()) return;
         UpdateLeftHand();
         UpdateRightHand();
+        UpdateCharacter();
     }
 
     #region IKTargets
 
+    // use offset
+    private void UpdateCharacter()
+    {
+        RotateNextIKTarget(ikTargetModel.hmdTarget, _hmdRotation, Vector3.zero); 
+        
+        var eulerRotation = _hmdRotation.eulerAngles;
+        eulerRotation.y = 0;
+        eulerRotation.z = 0;
+        ikTargetModel.playerModel.transform.rotation = Quaternion.Euler(eulerRotation);
+        MoveNetIKTarget(ikTargetModel.playerModel.transform, _hmdPosition);
+    }
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         var ikInput = new IKInput()
@@ -97,11 +112,14 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             leftHandPosition = _leftHandPosition,
             rightHandPosition = _rightHandPosition,
             leftHandRotation = _leftHandRotation,
-            rightHandRotation = _rightHandRotation
+            rightHandRotation = _rightHandRotation,
+            hmdPosition = _hmdPosition,
+            hmdRotation = _hmdRotation
         };
         input.Set(ikInput);
     }
     
+    // profile this
     private bool SyncIkTargets()
     {
         if (Object.HasInputAuthority)
@@ -110,6 +128,9 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             _rightHandPosition = localPlayer.rightHandTarget.position;
             _leftHandRotation = localPlayer.leftHandTarget.rotation;
             _rightHandRotation = localPlayer.rightHandTarget.rotation;
+            
+            _hmdPosition = localPlayer.hmdTarget.position;
+            _hmdRotation = localPlayer.hmdTarget.rotation;
         }
         else
         {
@@ -119,6 +140,9 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             _rightHandPosition = input.Value.rightHandPosition;
             _leftHandRotation = input.Value.leftHandRotation;
             _rightHandRotation = input.Value.rightHandRotation;
+            
+            _hmdPosition = input.Value.hmdPosition;
+            _hmdRotation = input.Value.hmdRotation;
         }
 
         return false;
