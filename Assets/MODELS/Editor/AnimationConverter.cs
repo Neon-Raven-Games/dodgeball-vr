@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.Animations;
-using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
 
 namespace MODELS.Editor
@@ -53,11 +51,13 @@ namespace MODELS.Editor
                 }
 
                 var assets = AssetDatabase.LoadAllAssetsAtPath(path);
-                var oldAnimations = new List<AnimationClip>();
+                
+                // var oldAnimations = new List<AnimationClip>();
+                
                 foreach (var asset in assets)
                 {
                     if (asset is not AnimationClip clip || clip.name.Contains("__preview__")) continue;
-                    oldAnimations.Add(clip);
+                    // oldAnimations.Add(clip);
                     
                     SetAnimationClipLoop(clip, true);
                    
@@ -67,12 +67,12 @@ namespace MODELS.Editor
                     animationClips.Add(AssetDatabase.LoadAssetAtPath<AnimationClip>(newPath));
                 }
 
-                if (oldAnimations.Count <= 0) continue;
+                // if (oldAnimations.Count <= 0) continue;
                 
-                // does not work
-                var newFbxPath = Path.Combine(fbxFolderPath, fbxFileName + ".fbx");
-                CreateEmptyFbxWithAnimations(newFbxPath, oldAnimations);
-                oldAnimations.Clear();
+                // does not work, test with autodesk api
+                // var newFbxPath = Path.Combine(fbxFolderPath, fbxFileName + ".prefab");
+                // CreateEmptyFbxWithAnimations(newFbxPath, oldAnimations);
+                // oldAnimations.Clear();
                 
                 // Delete the original FBX file if needed
                 // AssetDatabase.DeleteAsset(path);
@@ -82,28 +82,19 @@ namespace MODELS.Editor
             AssetDatabase.Refresh();
 
             CreateAnimatorController(animationClips, animatorControllerPath);
-
             AssetDatabase.Refresh();
         }
 
-        // if you can get the animations to export in the gui, I can call it in code
+        // todo, this will not work in unity. Need to use Autodesk API
         private static void CreateEmptyFbxWithAnimations(string path, List<AnimationClip> clips)
         {
             var tempGO = new GameObject("TempFBXCreator");
             var anim = tempGO.AddComponent<Animation>();
-            foreach (var clip in clips)
-            {
-                anim.AddClip(clip, clip.name);
-            }
-
-            var options = new ExportModelOptions
-            {
-                AnimationSource = tempGO.transform,
-                KeepInstances = true,
-            };
-
-            // this should export the animations to a new fbx file
-            ModelExporter.ExportObject(path, tempGO, options);
+            
+            // this is not adding animation clips
+            foreach (var clip in clips) anim.AddClip(clip, clip.name);
+            
+            PrefabUtility.SaveAsPrefabAsset(tempGO, path);
             DestroyImmediate(tempGO);
         }
 
