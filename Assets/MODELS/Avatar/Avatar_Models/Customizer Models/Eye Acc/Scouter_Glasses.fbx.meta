@@ -3,7 +3,12 @@ guid: c34f8e799ff4e1e499561ef1ae8824fb
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Character_Blendshapes_Scouter_mat
+    second: {fileID: 2100000, guid: df9c25b2a3d5ff44e81ced571343c85d, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
