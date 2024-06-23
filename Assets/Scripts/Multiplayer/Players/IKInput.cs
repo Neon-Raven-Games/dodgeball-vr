@@ -12,5 +12,8 @@ namespace Unity.Template.VR.Multiplayer.Players
         public Quaternion rightHandRotation;
         public Vector3 hmdPosition;
         public Quaternion hmdRotation;
+        
+        public Vector3 playerPosition;
+        public Quaternion playerRotation;
     }
 }

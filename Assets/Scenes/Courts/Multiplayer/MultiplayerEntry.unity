@@ -215,7 +215,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &177348959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1096,6 +1096,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 5fd249f58f6603644b2b7e1c879e7fd5, type: 2}
+    - target: {fileID: -4303112078464573517, guid: e92fbd4615fc02e4093d0acc48d5fb83, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -1490966804148751805, guid: e92fbd4615fc02e4093d0acc48d5fb83, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
