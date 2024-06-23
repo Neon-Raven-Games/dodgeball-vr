@@ -5,7 +5,7 @@ public class TextureResizer : EditorWindow
 {
     private int maxSize = 512;
 
-    [MenuItem("Tools/Resize Textures")]
+    [MenuItem("Neon Raven/Resize Textures")]
     public static void ShowWindow()
     {
         GetWindow<TextureResizer>("Resize Textures");
@@ -53,6 +53,7 @@ public class TextureResizer : EditorWindow
                     AssetDatabase.ImportAsset(newPath);
 
                     AssetDatabase.DeleteAsset(tempPath);
+                    
                     // Texture2D newTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(newPath);
                     // UpdateTextureReferences(originalTexture, newTexture);
 

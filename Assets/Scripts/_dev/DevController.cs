@@ -9,7 +9,6 @@ public class DevController : MonoBehaviour
     [SerializeField] private InputActionAsset actionAsset;
     [SerializeField] private GameObject hmd;
     [SerializeField] private float analogThreshold = 0.2f;
-
     public CharacterController controller;
     public float speed = 5.0f;
     public float rotationSpeed = 100.0f;
@@ -19,7 +18,8 @@ public class DevController : MonoBehaviour
     private InputAction _lookAction;
     private Vector2 _moveInput;
     private Vector2 _lookInput;
-    
+
+    public Vector2 GetMoveInput() => _moveInput;
     private void Awake()
     {
         _moveForwardAction = actionAsset.FindAction("XRI LeftHand Locomotion/Move", true);
@@ -43,16 +43,22 @@ public class DevController : MonoBehaviour
         _moveForwardAction.Disable();
         _lookAction.Disable();
     }
+    
+    [SerializeField] private float camDistanceMoveOffset = 0.5f;
 
     private void Update()
     {
         HandleMovement();
         HandleRotation();
+
+        // MoveToCamera();
     }
+  
+
 
     private void HandleRotation()
     {
-        transform.Rotate(0, _lookInput.x * rotationSpeed * Time.fixedDeltaTime, 0);
+        controller.transform.Rotate(0, _lookInput.x * rotationSpeed * Time.fixedDeltaTime, 0);
     }
 
     private void HandleMovement()

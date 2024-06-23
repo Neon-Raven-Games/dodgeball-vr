@@ -607,6 +607,16 @@ RectTransform:
   m_AnchoredPosition: {x: 3.23, y: 3.04}
   m_SizeDelta: {x: 20, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!143 &706050671 stripped
+CharacterController:
+  m_CorrespondingSourceObject: {fileID: 5477991295364095552, guid: 6a8718c4b9c806c4db4e4513889b3a62, type: 3}
+  m_PrefabInstance: {fileID: 2135507178}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &786958884 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1556086632146069877, guid: 6a8718c4b9c806c4db4e4513889b3a62, type: 3}
+  m_PrefabInstance: {fileID: 2135507178}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1047252260
 GameObject:
   m_ObjectHideFlags: 0
@@ -1125,6 +1135,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e92fbd4615fc02e4093d0acc48d5fb83, type: 3}
+--- !u!4 &1381293664 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6910466835845947171, guid: 6a8718c4b9c806c4db4e4513889b3a62, type: 3}
+  m_PrefabInstance: {fileID: 2135507178}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1562411271
 GameObject:
   m_ObjectHideFlags: 0
@@ -1529,6 +1544,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4234500311193678129, guid: 6a8718c4b9c806c4db4e4513889b3a62, type: 3}
+      propertyPath: controller
+      value: 
+      objectReference: {fileID: 706050671}
+    - target: {fileID: 4234500311193678129, guid: 6a8718c4b9c806c4db4e4513889b3a62, type: 3}
+      propertyPath: cameraTransform
+      value: 
+      objectReference: {fileID: 786958884}
+    - target: {fileID: 4234500311193678129, guid: 6a8718c4b9c806c4db4e4513889b3a62, type: 3}
+      propertyPath: cameraOffsetTransform
+      value: 
+      objectReference: {fileID: 1381293664}
     - target: {fileID: 5353628904111300744, guid: 6a8718c4b9c806c4db4e4513889b3a62, type: 3}
       propertyPath: m_CameraYOffset
       value: 0.7

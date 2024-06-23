@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
 using Unity.Template.VR.Multiplayer.Players;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 [Serializable]
 public class PlayerRig
@@ -18,10 +16,10 @@ public class PlayerRig
 // blend shapes:
 // boy = 0
 // girl = 100
-// body
-// pants
-// hoodie
-// t-shirt
+    // body
+    // pants
+    // hoodie
+    // t-shirt
 
 // expressions
 // first one, blinking
@@ -31,17 +29,19 @@ public class PlayerRig
 // eyebrow position/rotation
 // eye specular
 
+// mouth sprites for talking
+
 // hair movement when player moves:
 // hair bones
 
-// 
 public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 {
     [SerializeField] private PlayerRig localPlayer;
     [SerializeField] public PlayerRig ikTargetModel;
     [SerializeField] private Transform networkPlayerTarget;
     [SerializeField] private Transform networkHeadTarget;
-    
+    [SerializeField] private DevController localController;
+
     private Vector3 _leftHandPosition;
     private Vector3 _rightHandPosition;
 
@@ -54,6 +54,10 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     private Vector3 _playerPosition;
     private Quaternion _playerRotation;
 
+    private Vector2 _moveInput;
+    
+    private NetIKTargetHelper _netIKTargetHelper;
+    
     private void OnDrawGizmos()
     {
         if (Object == null) return;
@@ -84,16 +88,20 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             localPlayer.playerModel.SetActive(false);
             ikTargetModel.playerModel.SetActive(true);
 
-            var netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
-            netIKTargetHelper.AssignIKTargets(ikTargetModel.leftHandTarget, ikTargetModel.rightHandTarget);
+            _netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
+            _netIKTargetHelper.AssignIKTargets(ikTargetModel.leftHandTarget, ikTargetModel.rightHandTarget);
         }
     }
-
 
     public override void FixedUpdateNetwork()
     {
         if (SyncIkTargets()) return;
-        if (!Object.HasStateAuthority) return;
+
+        if (!Object.HasInputAuthority) _netIKTargetHelper.SetAxis(_moveInput);
+        if (!Object.HasStateAuthority)
+        {
+            return;
+        }
         UpdateHostNetModels();
     }
 
@@ -101,10 +109,23 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     {
         UpdateLeftHand();
         UpdateRightHand();
+        
+        // todo, remove this, it's not needed
+        // we use the hmd and ik to resolve pos/rot
         UpdateCharacter();
+        
         UpdateHead();
     }
+    
+    // we need to remove this, the ik input for player target, and OnInput
+    private void UpdateCharacter()
+    {
+        MoveNetIKTarget(networkPlayerTarget.transform, _playerPosition);
+        RotateNextIKTarget(networkPlayerTarget.transform, _playerRotation);
 
+        ikTargetModel.playerModel.transform.position = networkPlayerTarget.position;
+        ikTargetModel.playerModel.transform.rotation = networkPlayerTarget.rotation;
+    }
     #region IKTargets
 
     private void UpdateHead()
@@ -115,15 +136,7 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         ikTargetModel.hmdTarget.position = networkHeadTarget.position;
         ikTargetModel.hmdTarget.rotation = networkHeadTarget.rotation;
     }
-    
-    private void UpdateCharacter()
-    {
-        MoveNetIKTarget(networkPlayerTarget.transform, _playerPosition);
-        RotateNextIKTarget(networkPlayerTarget.transform, _playerRotation);
 
-        ikTargetModel.playerModel.transform.position = networkPlayerTarget.position;
-        ikTargetModel.playerModel.transform.rotation = networkPlayerTarget.rotation;
-    }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
@@ -139,10 +152,14 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             playerRotation = _playerRotation
         };
 
+        var moveInput = new MoveInput
+        {
+            axis = _moveInput
+        };
         input.Set(ikInput);
+        input.Set(moveInput);
     }
 
-    // profile this
     private bool SyncIkTargets()
     {
         if (Object.HasInputAuthority)
@@ -157,6 +174,8 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
             _playerPosition = localPlayer.playerModel.transform.position;
             _playerRotation = localPlayer.playerModel.transform.rotation;
+            
+            _moveInput = localController.GetMoveInput();
         }
         else
         {
@@ -172,6 +191,9 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
             _playerPosition = input.Value.playerPosition;
             _playerRotation = input.Value.playerRotation;
+            
+            var inputAxis = GetInput<MoveInput>();
+            if (inputAxis != null) _moveInput = inputAxis.Value.axis;
         }
 
         return false;
@@ -179,14 +201,14 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     private void UpdateLeftHand()
     {
-        var dxOffset = new Vector3(-180, 90, -180);
+        var dxOffset = new Vector3(90, 90, -180);
         RotateNextIKTarget(ikTargetModel.leftHandTarget, _leftHandRotation, dxOffset);
         MoveNetIKTarget(ikTargetModel.leftHandTarget, _leftHandPosition);
     }
 
     private void UpdateRightHand()
     {
-        var dzOffset = new Vector3(0, -90, 0);
+        var dzOffset = new Vector3(90, -90, 0);
         RotateNextIKTarget(ikTargetModel.rightHandTarget, _rightHandRotation, dzOffset);
         MoveNetIKTarget(ikTargetModel.rightHandTarget, _rightHandPosition);
     }

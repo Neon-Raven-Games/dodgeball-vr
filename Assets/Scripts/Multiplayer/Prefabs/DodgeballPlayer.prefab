@@ -346,7 +346,7 @@ Transform:
   m_GameObject: {fileID: 171337603595708082}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: -0.74720854, z: 0.071299314}
+  m_LocalPosition: {x: -0.0009999821, y: -0.678, z: 0.08099988}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2339,7 +2339,7 @@ Transform:
   m_GameObject: {fileID: 1419449082842733420}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: -0.74720854, z: 0.071299314}
+  m_LocalPosition: {x: -0.0009999821, y: -0.678, z: 0.08099988}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2424,7 +2424,7 @@ Transform:
   m_GameObject: {fileID: 1438443936365054297}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: -0.74720854, z: 0.071299314}
+  m_LocalPosition: {x: -0.0009999821, y: -0.678, z: 0.08099988}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5609,7 +5609,7 @@ Transform:
   m_GameObject: {fileID: 3005075361430624631}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.033166137, y: -0.23960654, z: 0.15152822}
+  m_LocalPosition: {x: 0.004, y: -0.153, z: 0.17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6850,7 +6850,7 @@ Transform:
   m_GameObject: {fileID: 3579374631009973459}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: 0.01850556, z: 0.17062578}
+  m_LocalPosition: {x: 0, y: 0.095, z: 0.177}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8124,6 +8124,7 @@ GameObject:
   - component: {fileID: 3535833327074550451}
   - component: {fileID: 7718303410085226490}
   - component: {fileID: 3888300188622425915}
+  - component: {fileID: 6085922563748823580}
   m_Layer: 0
   m_Name: NetAvatar
   m_TagString: Untagged
@@ -8178,7 +8179,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4204705096530163721}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6bdbd0ea90284e4aa81f14d16fdefbb, type: 3}
   m_Name: 
@@ -8186,6 +8187,262 @@ MonoBehaviour:
   networkCharacterTarget: {fileID: 180572564744335740}
   networkHeadTarget: {fileID: 7627412358644885061}
   headObject: {fileID: 2426203755585934004}
+--- !u!114 &6085922563748823580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4204705096530163721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfac4fa329d1f4f23814af71a247c14b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fixTransforms: 1
+  references:
+    root: {fileID: 3535833327074550451}
+    pelvis: {fileID: 8548602867959941699}
+    spine: {fileID: 7050304415184710841}
+    chest: {fileID: 6414445832326573084}
+    neck: {fileID: 479488332290509476}
+    head: {fileID: 2426203755585934004}
+    leftShoulder: {fileID: 2633429697777075012}
+    leftUpperArm: {fileID: 2896418075533739518}
+    leftForearm: {fileID: 3081381949781417089}
+    leftHand: {fileID: 3516290822359371243}
+    rightShoulder: {fileID: 6903628506868648862}
+    rightUpperArm: {fileID: 5228180135673471023}
+    rightForearm: {fileID: 1828879775431561691}
+    rightHand: {fileID: 6455546313598325379}
+    leftThigh: {fileID: 8144232375617215929}
+    leftCalf: {fileID: 8231238097524182181}
+    leftFoot: {fileID: 5165648523404087341}
+    leftToes: {fileID: 2329301492403233731}
+    rightThigh: {fileID: 4610699107148802396}
+    rightCalf: {fileID: 6005559417708312975}
+    rightFoot: {fileID: 1046534594052961229}
+    rightToes: {fileID: 2935880673700652287}
+  solver:
+    executedInEditor: 0
+    IKPosition: {x: 0, y: 0, z: 0}
+    IKPositionWeight: 1
+    root: {fileID: 0}
+    LOD: 0
+    scale: 1
+    plantFeet: 0
+    spine:
+      bones: []
+      headTarget: {fileID: 7627412358644885061}
+      positionWeight: 1
+      rotationWeight: 1
+      headClampWeight: 0.6
+      minHeadHeight: 0.8
+      useAnimatedHeadHeightWeight: 0
+      useAnimatedHeadHeightRange: 0.1
+      animatedHeadHeightBlend: 0.3
+      pelvisTarget: {fileID: 0}
+      pelvisPositionWeight: 0
+      pelvisRotationWeight: 0
+      maintainPelvisPosition: 0.2
+      chestGoal: {fileID: 0}
+      chestGoalWeight: 0
+      chestClampWeight: 0.5
+      rotateChestByHands: 1
+      bodyPosStiffness: 0.55
+      bodyRotStiffness: 0.1
+      neckStiffness: 0.2
+      moveBodyBackWhenCrouching: 0.5
+      maxRootAngle: 25
+      rootHeadingOffset: 0
+    leftArm:
+      bones: []
+      target: {fileID: 4071861196324349787}
+      positionWeight: 1
+      rotationWeight: 1
+      shoulderRotationWeight: 1
+      shoulderRotationMode: 0
+      shoulderTwistWeight: 1
+      shoulderYawOffset: 45
+      shoulderPitchOffset: -30
+      bendGoal: {fileID: 0}
+      bendGoalWeight: 0
+      swivelOffset: 0
+      wristToPalmAxis: {x: 0, y: 1, z: 0}
+      palmToThumbAxis: {x: 1, y: 0, z: 0}
+      armLengthMlp: 1
+      stretchCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+    rightArm:
+      bones: []
+      target: {fileID: 8775165245022617747}
+      positionWeight: 1
+      rotationWeight: 1
+      shoulderRotationWeight: 1
+      shoulderRotationMode: 0
+      shoulderTwistWeight: 1
+      shoulderYawOffset: 45
+      shoulderPitchOffset: -30
+      bendGoal: {fileID: 0}
+      bendGoalWeight: 0
+      swivelOffset: 0
+      wristToPalmAxis: {x: 0, y: 1, z: 0}
+      palmToThumbAxis: {x: -1, y: -0, z: -0}
+      armLengthMlp: 1
+      stretchCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+    leftLeg:
+      bones: []
+      target: {fileID: 0}
+      positionWeight: 0
+      rotationWeight: 0
+      bendGoal: {fileID: 0}
+      bendGoalWeight: 0
+      swivelOffset: 0
+      bendToTargetWeight: 0.5
+      legLengthMlp: 1
+      stretchCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      useAnimatedBendNormal: 0
+    rightLeg:
+      bones: []
+      target: {fileID: 0}
+      positionWeight: 0
+      rotationWeight: 0
+      bendGoal: {fileID: 0}
+      bendGoalWeight: 0
+      swivelOffset: 0
+      bendToTargetWeight: 0.5
+      legLengthMlp: 1
+      stretchCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      useAnimatedBendNormal: 0
+    locomotion:
+      mode: 1
+      weight: 1
+      moveThreshold: 0.3
+      animationHeader: 0
+      minAnimationSpeed: 0.2
+      maxAnimationSpeed: 3
+      animationSmoothTime: 0.1
+      rootPositionHeader: 0
+      standOffset: {x: 0, y: 0}
+      rootLerpSpeedWhileMoving: 30
+      rootLerpSpeedWhileStopping: 10
+      rootLerpSpeedWhileTurning: 10
+      maxRootOffset: 0.5
+      rootRotationHeader: 0
+      maxRootAngleMoving: 10
+      maxRootAngleStanding: 90
+      stepLengthMlp: 1
+      footDistance: 0.3
+      stepThreshold: 0.4
+      angleThreshold: 60
+      comAngleMlp: 1
+      maxVelocity: 0.4
+      velocityFactor: 0.4
+      maxLegStretch: 1
+      rootSpeed: 20
+      stepSpeed: 3
+      stepHeight:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 0.5
+          value: 0.03
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      maxBodyYOffset: 0.05
+      heelHeight:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 0.5
+          value: 0.03
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      relaxLegTwistMinAngle: 20
+      relaxLegTwistSpeed: 400
+      stepInterpolation: 3
+      offset: {x: 0, y: 0, z: 0}
+      blockingEnabled: 0
+      blockingLayers:
+        serializedVersion: 2
+        m_Bits: 0
+      raycastRadius: 0.2
+      raycastHeight: 0.2
+      onLeftFootstep:
+        m_PersistentCalls:
+          m_Calls: []
+      onRightFootstep:
+        m_PersistentCalls:
+          m_Calls: []
 --- !u!1 &4210482451598252846
 GameObject:
   m_ObjectHideFlags: 0
@@ -13622,7 +13879,7 @@ Transform:
   m_GameObject: {fileID: 6444291342922094114}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: -0.74720854, z: 0.071299314}
+  m_LocalPosition: {x: -0.001, y: -0.678, z: 0.081}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15525,7 +15782,7 @@ Transform:
   m_GameObject: {fileID: 7343786094788302766}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.03306553, y: 0.24774322, z: -0.0009892245}
+  m_LocalPosition: {x: -0.005, y: 0.145, z: -0.01}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -17249,7 +17506,7 @@ Transform:
   m_GameObject: {fileID: 8123512691612016602}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: -0.74720854, z: 0.071299314}
+  m_LocalPosition: {x: 0.003, y: -0.673, z: 0.077}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17525,7 +17782,7 @@ Transform:
   m_GameObject: {fileID: 8215993685323728126}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: -1.4470664, z: 0.0047229766}
+  m_LocalPosition: {x: -0.0009999821, y: -1.3778578, z: 0.014423545}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17964,6 +18221,7 @@ MonoBehaviour:
     rightHandTarget: {fileID: 8775165245022617747}
   networkPlayerTarget: {fileID: 180572564744335740}
   networkHeadTarget: {fileID: 7627412358644885061}
+  localController: {fileID: 2983501505657943674}
 --- !u!114 &8178959201039284167
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18824,7 +19082,7 @@ Transform:
   m_GameObject: {fileID: 8831577673502387823}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.048480786, y: -0.1064979, z: 0.13889223}
+  m_LocalPosition: {x: 0.08064695, y: -0.03728933, z: 0.1485928}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19069,7 +19327,7 @@ Transform:
   m_GameObject: {fileID: 8943751366966527451}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.08787446, y: -0.10649787, z: 0.14870456}
+  m_LocalPosition: {x: -0.0557083, y: -0.0372893, z: 0.15840513}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19252,7 +19510,7 @@ Transform:
   m_GameObject: {fileID: 9015738581628310830}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.03316614, y: -1.4470664, z: 0.0047229766}
+  m_LocalPosition: {x: -0.0009999821, y: -1.3778578, z: 0.014423545}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20458,6 +20716,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7074176320684353013, guid: 3757c14f8b1c5414797ade956dfbe52a, type: 3}
   m_PrefabInstance: {fileID: 4847709206973203457}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2983501505657943674 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7647397048422167163, guid: 3757c14f8b1c5414797ade956dfbe52a, type: 3}
+  m_PrefabInstance: {fileID: 4847709206973203457}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6364189951749034566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8e7e758d2e483d41acf543385970eda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6364189951749034566 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1951361405934097991, guid: 3757c14f8b1c5414797ade956dfbe52a, type: 3}
@@ -20820,15 +21089,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: ee3d2ff719afa2f4db20a40bd95ad9b3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.005
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ee3d2ff719afa2f4db20a40bd95ad9b3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.342
+      value: 1.252
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ee3d2ff719afa2f4db20a40bd95ad9b3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.0203
+      value: 0.042
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ee3d2ff719afa2f4db20a40bd95ad9b3, type: 3}
       propertyPath: m_LocalRotation.w

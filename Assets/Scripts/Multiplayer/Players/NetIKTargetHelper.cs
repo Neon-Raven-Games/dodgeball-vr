@@ -1,13 +1,9 @@
-using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 // updates the net players
 public class NetIKTargetHelper : MonoBehaviour
 {
-    [FormerlySerializedAs("networkPositionTransform")] [SerializeField]
-    private Transform networkCharacterTarget;
-
+    [SerializeField] private Transform networkCharacterTarget;
     [SerializeField] private Transform networkHeadTarget;
     [SerializeField] private Transform headObject;
 
@@ -39,23 +35,23 @@ public class NetIKTargetHelper : MonoBehaviour
     public void AssignIKTargets(Transform leftHandTransform, Transform rightHandTransform)
     {
         _animator = GetComponent<Animator>();
-        _leftHandTransform = leftHandTransform;
-        _rightHandTransform = rightHandTransform;
+        // _leftHandTransform = leftHandTransform;
+        // _rightHandTransform = rightHandTransform;
         _initialized = true;
     }
 
     private void OnAnimatorIK(int layerIndex)
     {
-        SetLeftIKTarget(_leftHandTransform);
-        SetRightIKTarget(_rightHandTransform);
+        // SetLeftIKTarget(_leftHandTransform);
+        // SetRightIKTarget(_rightHandTransform);
     }
 
     void Update()
     {
-        if (!_initialized) return;
+        // if (!_initialized) return;
 
-        transform.position = networkCharacterTarget.position;
-        transform.rotation = networkCharacterTarget.rotation;
+        // transform.position = networkCharacterTarget.position;
+        // transform.rotation = networkCharacterTarget.rotation;
     }
 
     // if using IK final we can use this to update the body position
@@ -63,6 +59,17 @@ public class NetIKTargetHelper : MonoBehaviour
     
     private void LateUpdate()
     {
-        headObject.rotation = networkHeadTarget.rotation;
+        // headObject.rotation = networkHeadTarget.rotation;
+    }
+
+    private Vector2 _moveInputAxis;
+    private static readonly int _SYAxis = Animator.StringToHash("yAxis");
+    private static readonly int _SXAxis = Animator.StringToHash("xAxis");
+
+    public void SetAxis(Vector2 getMoveInput)
+    {
+        if (getMoveInput == _moveInputAxis) return;
+        _animator.SetInteger(_SXAxis, (int)getMoveInput.x);
+        _animator.SetInteger(_SYAxis, (int)getMoveInput.y);
     }
 }
