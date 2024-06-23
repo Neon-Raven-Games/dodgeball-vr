@@ -3,7 +3,12 @@ guid: e59ed8daf821b1545aa402373ad953ad
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SpectrumGlass
+    second: {fileID: 2100000, guid: 8f98109ed146a2d439dfab66a35543dc, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

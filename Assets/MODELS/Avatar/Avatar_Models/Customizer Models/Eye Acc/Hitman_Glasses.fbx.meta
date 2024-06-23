@@ -3,7 +3,12 @@ guid: ee3d2ff719afa2f4db20a40bd95ad9b3
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: hitman_shades
+    second: {fileID: 2100000, guid: 251201007ea5da649a8e37ec7af93ecc, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
