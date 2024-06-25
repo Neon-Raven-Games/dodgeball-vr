@@ -16,11 +16,14 @@ namespace Photon.Voice.Unity.FMOD
             if (this.useEvent)
             {
                 var instance = FMODUnity.RuntimeManager.CreateInstance(this.eventReference);
-                return new Voice.FMOD.AudioOutEvent<float>(FMODUnity.RuntimeManager.CoreSystem, instance, this.playDelayConfig, this.Logger, string.Empty, true);
+                return new Voice.FMOD.AudioOutEvent<float>(
+                    FMODUnity.RuntimeManager.CoreSystem, instance, 
+                    this.playDelayConfig, this.Logger, string.Empty, true);
             }
             else
             {
-                return new Voice.FMOD.AudioOut<float>(FMODUnity.RuntimeManager.CoreSystem, this.playDelayConfig, this.Logger, string.Empty, true);
+                return new Voice.FMOD.AudioOut<float>(FMODUnity.RuntimeManager.CoreSystem, 
+                    this.playDelayConfig, this.Logger, string.Empty, true);
             }
         }
 

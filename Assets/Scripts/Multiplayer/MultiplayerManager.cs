@@ -2,9 +2,12 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
-using Photon.Voice;
+using System.Runtime.InteropServices;
+using FMOD;
+using FMODUnity;
 using TMPro;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
 {

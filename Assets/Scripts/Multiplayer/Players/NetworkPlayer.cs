@@ -233,13 +233,10 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    // this needs to only be called on this object
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
     private void RPC_SetBallPossession(NetBallPossession possession, BallType type)
     {
-        // this should be working regardless, but since the changes, does not.
-        // we send it to all clients, if they have input authority, they don't have a model
-        // so we return. This probably has no state context to ball possession
-        // in the scene context, we should keep up with players
         if (Object.HasInputAuthority) return;
 
         if (possession == NetBallPossession.None)
