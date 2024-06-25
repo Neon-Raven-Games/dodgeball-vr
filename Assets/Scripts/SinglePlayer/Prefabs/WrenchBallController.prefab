@@ -509,6 +509,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 934a0da31ccf72f42a08f0243e3aac66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  networkPlayer: {fileID: 0}
   grabTransform: {fileID: 72690071402225159}
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   handSide: 0
@@ -958,6 +959,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 934a0da31ccf72f42a08f0243e3aac66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  networkPlayer: {fileID: 0}
   grabTransform: {fileID: 4789674656470363809}
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   handSide: 1
@@ -1753,7 +1755,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.02
+    widthMultiplier: 0.01
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -2122,10 +2124,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   hmd: {fileID: 4205625296772211675}
+  analogThreshold: 0.2
   controller: {fileID: 5477991295364095552}
   speed: 3
   rotationSpeed: 100
   team: 0
+  networkPlayer: {fileID: 0}
 --- !u!1 &5518971726178373802
 GameObject:
   m_ObjectHideFlags: 0

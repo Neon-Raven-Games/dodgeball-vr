@@ -1,5 +1,80 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1598114880370836945
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2031663001730640255}
+  - component: {fileID: 2468996123791780629}
+  m_Layer: 0
+  m_Name: Recorder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2031663001730640255
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598114880370836945}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 216462934079342029}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2468996123791780629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598114880370836945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91175dcc15224463780e01a8a98b1b60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  voiceDetection: 0
+  voiceDetectionThreshold: 0.01
+  voiceDetectionDelayMs: 500
+  interestGroup: 0
+  useTargetPlayers: 0
+  targetPlayers: 
+  debugEchoMode: 0
+  reliableMode: 0
+  encrypt: 0
+  transmitEnabled: 1
+  samplingRate: 16000
+  frameDuration: 20000
+  bitrate: 30000
+  sourceType: 0
+  microphoneType: 0
+  audioClip: {fileID: 0}
+  loopAudioClip: 1
+  recordingEnabled: 1
+  audioSessionParameters:
+    Category: 4
+    Mode: 1
+    CategoryOptions: 0800000004000000
+  editorAudioSessionPreset: 1
+  androidMicrophoneSettings:
+    EnableAEC: 1
+    EnableAGC: 1
+    EnableNS: 1
+  stopRecordingWhenPaused: 0
+  useOnAudioFilterRead: 0
+  useMicrophoneTypeFallback: 1
+  recordWhenJoined: 1
 --- !u!1 &5784487045585534595
 GameObject:
   m_ObjectHideFlags: 0
@@ -14,7 +89,7 @@ GameObject:
   - component: {fileID: -6446251838885659683}
   - component: {fileID: -4073823677522750790}
   - component: {fileID: -4140403261532454502}
-  - component: {fileID: -662334849697958518}
+  - component: {fileID: 1178515127391083158}
   m_Layer: 0
   m_Name: MultiplayerController
   m_TagString: Untagged
@@ -34,7 +109,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2031663001730640255}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2411670133349451518
@@ -108,7 +184,7 @@ MonoBehaviour:
   BVHDepth: 0
   BVHNodes: 0
   TotalHitboxes: 0
---- !u!114 &-662334849697958518
+--- !u!114 &1178515127391083158
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,7 +202,7 @@ MonoBehaviour:
   runInBackground: 1
   statsResetInterval: 1000
   speakerPrefab: {fileID: 4973381658274221766, guid: bb8ef1209faed4d4689110b91eae8e1c, type: 3}
-  primaryRecorder: {fileID: 7878642155406242900, guid: a0567d83810911a44b06744b74518085, type: 3}
+  primaryRecorder: {fileID: 2468996123791780629}
   usePrimaryRecorder: 1
   cppCompatibilityMode: 0
   Settings:

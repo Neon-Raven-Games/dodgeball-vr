@@ -776,6 +776,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1075624070}
   - component: {fileID: 1075624071}
+  - component: {fileID: 1075624072}
   m_Layer: 0
   m_Name: NetBallController
   m_TagString: Untagged
@@ -815,6 +816,24 @@ MonoBehaviour:
   firstBallSpawn: {fileID: 1050879116}
   secondBallSpawn: {fileID: 1653875620}
   thirdBallSpawn: {fileID: 1122056601}
+--- !u!114 &1075624072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1075624069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 3859867411
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1075624071}
 --- !u!4 &1122056601 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7787479181224087446, guid: 4745569a32fa6224fa2f42d3a494a917, type: 3}

@@ -290,6 +290,7 @@ namespace Photon.Voice.Unity
         }
         protected void Update()
         {
+            Debug.Log($"Speaker.Update: {IsPlaying}");
             if (System.Threading.Interlocked.Exchange(ref this.restartPlaybackPending, 0) != 0)
             {
                 this.Logger.Log(LogLevel.Info, "Restarting playback");
