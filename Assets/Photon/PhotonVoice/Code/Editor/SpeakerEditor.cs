@@ -1,4 +1,6 @@
-﻿namespace Photon.Voice.Unity.Editor
+﻿using FMODUnity;
+
+namespace Photon.Voice.Unity.Editor
 {
     using UnityEngine;
     using UnityEditor;
