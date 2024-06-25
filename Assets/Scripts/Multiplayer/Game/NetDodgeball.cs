@@ -17,9 +17,9 @@ namespace Unity.Template.VR.Multiplayer
     // IK final should be able to handle this
     public class NetDodgeball : NetworkBehaviour
     {
-        public int index;
-        public Team team;
-        public BallType type;
+        [Networked] public int index { get; set; }
+        [Networked] public Team team { get; set; }
+        [Networked] public BallType type { get; set; }
 
         public override void Spawned()
         {

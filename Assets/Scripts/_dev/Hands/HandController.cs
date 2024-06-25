@@ -109,11 +109,6 @@ public class HandController : MonoBehaviour
 
     private void InitializeNetworkPossessedBall()
     {
-        var ball = _ball.GetComponent<NetDodgeball>();
-        var ballIndex = ball.index;
-        var ballType = ball.type;
-        var ballTeam = ball.team;
-
         // set net possession, despawning original ball
         NetworkedPossession();
 
@@ -129,17 +124,12 @@ public class HandController : MonoBehaviour
         _ball.GetComponent<NetworkTransform>().enabled = false;
         
         // override the select enter to resume grab state
-
-        // initialize the local values to extract on ThrowNetBallAfterTrajectory
-        localBall.Initialize(ballType, Vector3.zero, ballIndex, ballTeam);
-
        var throwHandle = _ball.GetComponent<ThrowHandle>();
         throwHandle.OnAttach(gameObject, gameObject);
         
         // set it's velocity to zero if we are not kinematic
         var rb = _ball.GetComponent<Rigidbody>();
         if (!rb.isKinematic) rb.velocity = Vector3.zero;
-        _ball = localBall.gameObject;
     }
  
 
@@ -181,7 +171,6 @@ public class HandController : MonoBehaviour
 
     private void ThrowNetBallAfterTrajectory(Vector3 velocity)
     {
-        if (!_ball) return;
         _ball.GetComponent<ThrowHandle>().onFinalTrajectory -= ThrowNetBallAfterTrajectory;
         var dodgeBall = _ball.GetComponent<NetDodgeball>();
         if (!dodgeBall)
@@ -192,7 +181,7 @@ public class HandController : MonoBehaviour
         var dodgeballType = dodgeBall.type;
         var position = dodgeBall.transform.position;
         var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
-        networkPlayer.RPC_ThrownBall(dodgeballType, position, velocity, _controller.team, possession);
+        networkPlayer.RPC_ThrownBall(dodgeballType, position, velocity, _controller.team, possession, networkPlayer.Id.Object);
         
         Destroy(dodgeBall.gameObject);
         _ball = null;
@@ -206,9 +195,10 @@ public class HandController : MonoBehaviour
             Debug.LogError("Dodgeball not found");
         }
 
-        networkPlayer.RPC_PossessBall(
-            handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand,
-            dodgeBall.type, dodgeBall.GetComponent<NetDodgeball>().index);
+        var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
+        networkPlayer.RPC_PossessBall(possession,
+            dodgeBall.type, dodgeBall.GetComponent<NetDodgeball>().index, networkPlayer.Id.Object);
+        
     }
 
     #endregion

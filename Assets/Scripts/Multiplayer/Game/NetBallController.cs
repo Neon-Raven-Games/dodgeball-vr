@@ -46,10 +46,9 @@ public class NetBallController : MonoBehaviour
     {
         var netBehavior = networkRunner.Spawn(_instance.ballPrefab, position, Quaternion.identity);
         var go = netBehavior.gameObject;
-        var throwHandle = go.GetComponent<ThrowHandle>();
-        SetBallConfig(throwHandle);
         return go.GetComponent<NetDodgeball>();
     }
+    
     public static NetDodgeball SpawnNewBall(Vector3 position)
     {
         var go = Instantiate(_instance.ballPrefab, position, Quaternion.identity);
