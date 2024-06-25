@@ -58,7 +58,7 @@ public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void InitializeNetworkRunner()
     {
-        networkRunner = gameObject.AddComponent<NetworkRunner>();
+        networkRunner = gameObject.GetComponent<NetworkRunner>();
         networkRunner.ProvideInput = true;
         networkRunner.AddCallbacks(this);
         _statusText.text = "NetworkRunner initialized";

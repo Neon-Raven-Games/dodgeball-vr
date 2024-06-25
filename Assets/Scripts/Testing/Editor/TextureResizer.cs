@@ -3,7 +3,7 @@ using UnityEditor;
 
 public class TextureResizer : EditorWindow
 {
-    private int maxSize = 512;
+    private int _textureMaxSize = 512;
 
     [MenuItem("Neon Raven/Resize Textures")]
     public static void ShowWindow()
@@ -14,7 +14,7 @@ public class TextureResizer : EditorWindow
     void OnGUI()
     {
         GUILayout.Label("Resize Textures", EditorStyles.boldLabel);
-        maxSize = EditorGUILayout.IntField("Max Size", maxSize);
+        _textureMaxSize = EditorGUILayout.IntField("Max Size", _textureMaxSize);
 
         if (GUILayout.Button("Resize Selected Textures"))
         {
@@ -40,13 +40,13 @@ public class TextureResizer : EditorWindow
                     AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 
                     // Resize the texture
-                    Texture2D resizedTexture = ResizeTexture(originalTexture, maxSize, maxSize);
+                    Texture2D resizedTexture = ResizeTexture(originalTexture, _textureMaxSize, _textureMaxSize);
 
                     // Compress the texture back to its original format
                     Texture2D compressedTexture = CompressTexture(resizedTexture, importer, out var tempPath);
 
                     // Save the resized and compressed texture as a new asset
-                    string newPath = path.Replace(".png", $"_resized_{maxSize}.png").Replace(".jpg", $"_resized_{maxSize}.jpg");
+                    string newPath = path.Replace(".png", $"_resized_{_textureMaxSize}.png").Replace(".jpg", $"_resized_{_textureMaxSize}.jpg");
                     byte[] bytes = compressedTexture.EncodeToPNG();
                     Debug.Log(path);
                     System.IO.File.WriteAllBytes(newPath, bytes);
@@ -105,9 +105,9 @@ public class TextureResizer : EditorWindow
         return compressedTexture;
     }
 
-    void UpdateTextureReferences(Texture2D original, Texture2D optimized)
+    private void UpdateTextureReferences(Texture2D original, Texture2D optimized)
     {
-        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        Renderer[] renderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
         foreach (Renderer renderer in renderers)
         {
             foreach (Material mat in renderer.sharedMaterials)

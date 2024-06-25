@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
+using Unity.Template.VR.Multiplayer;
 using Unity.Template.VR.Multiplayer.Players;
 using UnityEngine;
 
@@ -16,10 +17,10 @@ public class PlayerRig
 // blend shapes:
 // boy = 0
 // girl = 100
-    // body
-    // pants
-    // hoodie
-    // t-shirt
+// body
+// pants
+// hoodie
+// t-shirt
 
 // expressions
 // first one, blinking
@@ -42,6 +43,11 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     [SerializeField] private Transform networkHeadTarget;
     [SerializeField] private DevController localController;
 
+    [SerializeField] private NetBallPossessionHandler leftBallIndex;
+    [SerializeField] private NetBallPossessionHandler rightBallIndex;
+
+    #region inputs
+
     private Vector3 _leftHandPosition;
     private Vector3 _rightHandPosition;
 
@@ -51,13 +57,171 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     private Vector3 _hmdPosition;
     private Quaternion _hmdRotation;
 
-    private Vector3 _playerPosition;
-    private Quaternion _playerRotation;
-
     private Vector2 _moveInput;
-    
     private NetIKTargetHelper _netIKTargetHelper;
-    
+
+    private bool _gripPreformed;
+    private Action _gripPerformedAction;
+
+    private bool _gripCancelled;
+    private Action _gripCancelledAction;
+
+
+    public void GripPerform()
+    {
+        if (!Object.HasInputAuthority) return;
+        _gripPreformed = true;
+    }
+
+    public void GripCancel()
+    {
+        if (!Object.HasInputAuthority) return;
+        _gripCancelled = true;
+    }
+
+    public void SubscribeInput(Action gripPerformed, Action gripCancelled)
+    {
+        _gripPerformedAction = gripPerformed;
+        _gripCancelledAction = gripCancelled;
+    }
+
+    public void UnsubscribeGrips()
+    {
+        _gripCancelledAction = null;
+        _gripPerformedAction = null;
+    }
+
+    private bool ExtractNetInput()
+    {
+        if (Object.HasInputAuthority)
+        {
+            _leftHandPosition = localPlayer.leftHandTarget.position;
+            _rightHandPosition = localPlayer.rightHandTarget.position;
+            _leftHandRotation = localPlayer.leftHandTarget.rotation;
+            _rightHandRotation = localPlayer.rightHandTarget.rotation;
+
+            _hmdPosition = localPlayer.hmdTarget.position;
+            _hmdRotation = localPlayer.hmdTarget.rotation;
+
+            _moveInput = localController.GetMoveInput();
+        }
+        else
+        {
+            var input = GetInput<IKInput>();
+            if (input == null) return true;
+
+            _leftHandPosition = input.Value.leftHandPosition;
+            _rightHandPosition = input.Value.rightHandPosition;
+            _leftHandRotation = input.Value.leftHandRotation;
+            _rightHandRotation = input.Value.rightHandRotation;
+
+            _hmdPosition = input.Value.hmdPosition;
+            _hmdRotation = input.Value.hmdRotation;
+
+            _moveInput = input.Value.axis;
+        }
+        return false;
+    }
+
+    public void OnInput(NetworkRunner runner, NetworkInput input)
+    {
+        var ikInput = new IKInput
+        {
+            leftHandPosition = _leftHandPosition,
+            rightHandPosition = _rightHandPosition,
+            leftHandRotation = _leftHandRotation,
+            rightHandRotation = _rightHandRotation,
+            hmdPosition = _hmdPosition,
+            hmdRotation = _hmdRotation,
+            axis = _moveInput,
+        };
+
+        input.Set(ikInput);
+    }
+
+    #endregion
+
+    #region ball RPC
+
+    private int _throwCount;
+    private readonly Dictionary<int, NetworkObject> _dodgeballDictionary = new();
+    [SerializeField] private GameObject ballPrefab;
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    public void RPC_PossessBall(NetBallPossession possession, BallType type, int ballIndex)
+    {
+        if (possession == NetBallPossession.None)
+        {
+            Debug.LogError("Invalid ball possession: " + possession + " index: " + ballIndex + " type: " + type);
+        }
+
+        if (_dodgeballDictionary.ContainsKey(ballIndex))
+        {
+            var ballObject = _dodgeballDictionary[ballIndex];
+            _dodgeballDictionary.Remove(ballIndex);
+            Runner.Despawn(ballObject);
+        }
+        else
+        {
+            Debug.LogError("Ball not found: " + ballIndex);
+        }
+
+        RPC_SetBallPossession(possession, type);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    public void RPC_ThrownBall(BallType type, Vector3 position, Vector3 velocity, Team ownerTeam,
+        NetBallPossession possession)
+    {
+        var ballIndex = _throwCount++;
+        Runner.Spawn(ballPrefab, position, Quaternion.identity, Object.InputAuthority,
+            (runner, obj) =>
+            {
+                var db = obj.GetBehaviour<NetDodgeball>();
+                _dodgeballDictionary.Add(ballIndex, obj);
+                db.Initialize(type, velocity, ballIndex, ownerTeam);
+            });
+        RPC_SetBallPossession(possession, BallType.None);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    public void RPC_TargetHit(Team ownerTeam, Team targetTeam, int ballIndex)
+    {
+        if (_dodgeballDictionary.ContainsKey(ballIndex) && ownerTeam != targetTeam)
+        {
+            if (ownerTeam == Team.TeamOne) GameManager.teamOneScore++;
+            else if (ownerTeam == Team.TeamTwo) GameManager.teamTwoScore++;
+            GameManager.UpdateScore();
+            Debug.Log("Hit player!");
+        }
+        else
+        {
+            Debug.LogError("Ball not found: " + ballIndex + " " + ownerTeam + " -> " + targetTeam);
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
+    private void RPC_SetBallPossession(NetBallPossession possession, BallType type)
+    {
+        if (Object.HasInputAuthority) return;
+
+        if (possession == NetBallPossession.None)
+        {
+            leftBallIndex.SetBallType(BallType.None);
+            rightBallIndex.SetBallType(BallType.None);
+        }
+        else if (possession == NetBallPossession.LeftHand)
+        {
+            leftBallIndex.SetBallType(type);
+        }
+        else if (possession == NetBallPossession.RightHand)
+        {
+            rightBallIndex.SetBallType(type);
+        }
+    }
+
+    #endregion
+
     private void OnDrawGizmos()
     {
         if (Object == null) return;
@@ -78,7 +242,29 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             ikTargetModel.playerModel.SetActive(false);
 
             // no longer synchronizing the player model
-            if (Object.HasStateAuthority) return;
+            if (Object.HasStateAuthority)
+            {
+                _dodgeballDictionary.Add(_throwCount,
+                    NetBallController.SpawnInitialBall(0, Object.Runner).GetComponent<NetworkObject>());
+                _dodgeballDictionary[_throwCount].GetComponent<NetDodgeball>()
+                    .Initialize(BallType.Dodgeball, Vector3.zero, _throwCount, Team.None);
+                _throwCount++;
+
+                _dodgeballDictionary.Add(_throwCount,
+                    NetBallController.SpawnInitialBall(1, Object.Runner).GetComponent<NetworkObject>());
+                _dodgeballDictionary[_throwCount].GetComponent<NetDodgeball>()
+                    .Initialize(BallType.Dodgeball, Vector3.zero, _throwCount, Team.None);
+                _throwCount++;
+
+                _dodgeballDictionary.Add(_throwCount,
+                    NetBallController.SpawnInitialBall(2, Object.Runner).GetComponent<NetworkObject>());
+                _dodgeballDictionary[_throwCount].GetComponent<NetDodgeball>()
+                    .Initialize(BallType.Dodgeball, Vector3.zero, _throwCount, Team.None);
+                _throwCount++;
+
+                return;
+            }
+
             networkPlayerTarget.GetComponent<NetworkTransform>().enabled = false;
             ikTargetModel.leftHandTarget.GetComponent<NetworkTransform>().enabled = false;
             ikTargetModel.rightHandTarget.GetComponent<NetworkTransform>().enabled = false;
@@ -89,115 +275,54 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             ikTargetModel.playerModel.SetActive(true);
 
             _netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
-            _netIKTargetHelper.AssignIKTargets(ikTargetModel.leftHandTarget, ikTargetModel.rightHandTarget);
         }
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (SyncIkTargets()) return;
+        if (ExtractNetInput()) return;
 
         if (!Object.HasInputAuthority) _netIKTargetHelper.SetAxis(_moveInput);
-        if (!Object.HasStateAuthority)
-        {
-            return;
-        }
+        else InvokeActions();
+        if (!Object.HasStateAuthority) return;
+
         UpdateHostNetModels();
     }
+
+    private void InvokeActions()
+    {
+        if (_gripPreformed)
+        {
+            _gripPreformed = false;
+            _gripPerformedAction?.Invoke();
+        }
+
+        if (_gripCancelled)
+        {
+            _gripCancelled = false;
+            _gripCancelledAction?.Invoke();
+        }
+    }
+
+    #region IKTargets
 
     private void UpdateHostNetModels()
     {
         UpdateLeftHand();
         UpdateRightHand();
-        
-        // todo, remove this, it's not needed
-        // we use the hmd and ik to resolve pos/rot
-        UpdateCharacter();
-        
         UpdateHead();
     }
-    
-    // we need to remove this, the ik input for player target, and OnInput
-    private void UpdateCharacter()
-    {
-        MoveNetIKTarget(networkPlayerTarget.transform, _playerPosition);
-        RotateNextIKTarget(networkPlayerTarget.transform, _playerRotation);
-
-        ikTargetModel.playerModel.transform.position = networkPlayerTarget.position;
-        ikTargetModel.playerModel.transform.rotation = networkPlayerTarget.rotation;
-    }
-    #region IKTargets
 
     private void UpdateHead()
     {
         MoveNetIKTarget(networkHeadTarget.transform, _hmdPosition);
         RotateNextIKTarget(networkHeadTarget, _hmdRotation);
-        
-        ikTargetModel.hmdTarget.position = networkHeadTarget.position;
-        ikTargetModel.hmdTarget.rotation = networkHeadTarget.rotation;
+
+        // this is trying to move the players head, but we are using the ik targets now
+        // ikTargetModel.hmdTarget.position = networkHeadTarget.position;
+        // ikTargetModel.hmdTarget.rotation = networkHeadTarget.rotation;
     }
 
-
-    public void OnInput(NetworkRunner runner, NetworkInput input)
-    {
-        var ikInput = new IKInput
-        {
-            leftHandPosition = _leftHandPosition,
-            rightHandPosition = _rightHandPosition,
-            leftHandRotation = _leftHandRotation,
-            rightHandRotation = _rightHandRotation,
-            hmdPosition = _hmdPosition,
-            hmdRotation = _hmdRotation,
-            playerPosition = _playerPosition,
-            playerRotation = _playerRotation
-        };
-
-        var moveInput = new MoveInput
-        {
-            axis = _moveInput
-        };
-        input.Set(ikInput);
-        input.Set(moveInput);
-    }
-
-    private bool SyncIkTargets()
-    {
-        if (Object.HasInputAuthority)
-        {
-            _leftHandPosition = localPlayer.leftHandTarget.position;
-            _rightHandPosition = localPlayer.rightHandTarget.position;
-            _leftHandRotation = localPlayer.leftHandTarget.rotation;
-            _rightHandRotation = localPlayer.rightHandTarget.rotation;
-
-            _hmdPosition = localPlayer.hmdTarget.position;
-            _hmdRotation = localPlayer.hmdTarget.rotation;
-
-            _playerPosition = localPlayer.playerModel.transform.position;
-            _playerRotation = localPlayer.playerModel.transform.rotation;
-            
-            _moveInput = localController.GetMoveInput();
-        }
-        else
-        {
-            var input = GetInput<IKInput>();
-            if (input == null) return true;
-            _leftHandPosition = input.Value.leftHandPosition;
-            _rightHandPosition = input.Value.rightHandPosition;
-            _leftHandRotation = input.Value.leftHandRotation;
-            _rightHandRotation = input.Value.rightHandRotation;
-
-            _hmdPosition = input.Value.hmdPosition;
-            _hmdRotation = input.Value.hmdRotation;
-
-            _playerPosition = input.Value.playerPosition;
-            _playerRotation = input.Value.playerRotation;
-            
-            var inputAxis = GetInput<MoveInput>();
-            if (inputAxis != null) _moveInput = inputAxis.Value.axis;
-        }
-
-        return false;
-    }
 
     private void UpdateLeftHand()
     {

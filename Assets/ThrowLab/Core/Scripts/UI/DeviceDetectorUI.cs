@@ -20,7 +20,7 @@ namespace CloudFine.ThrowLab {
 
         // Use this for initialization
         void Start() {
-            DeviceDetector[] detectors = FindObjectsOfType<DeviceDetector>();
+            DeviceDetector[] detectors = FindObjectsByType<DeviceDetector>(FindObjectsSortMode.None);
             if (detectors.Length > 0)
             {
                 _leftDetector = detectors.FirstOrDefault(x => x.Side == HandSide.LEFT);

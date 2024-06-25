@@ -56,14 +56,16 @@ public class DodgeballLab : MonoBehaviour
             _tempConfigVariants.Add(_original, variants);
         }
         _configSet = variants;
-        LoadConfig(_currentConfigIndex);
+
+        if (useUi) LoadConfig(_currentConfigIndex);
+        
     }
 
+    public bool useUi;
     private void Start()
     {
         for (int i = 0; i < _configEnabled.Length; i++)
             SetConfigEnabled(i, _configEnabled[i]);
-
     }
 
     private void SetDevice(Device device)
@@ -76,10 +78,15 @@ public class DodgeballLab : MonoBehaviour
     public void LoadConfig(int i)
     {
         _currentConfigIndex = i;
-        ReloadCurrentConfig();
         SetCurrentConfigEnabled(_configEnabled[i]);
     }
-
+    
+    public void LoadCurrentConfig(int i)
+    {
+        _currentConfigIndex = i;
+        SetConfigEnabled(_currentConfigIndex, true);
+    }
+    
     public void SetCurrentConfigEnabled(bool enable)
     {
         SetConfigEnabled(_currentConfigIndex, enable);
@@ -89,10 +96,10 @@ public class DodgeballLab : MonoBehaviour
     private void SetConfigEnabled(int i, bool enable)
     {
         _configEnabled[i] = enable;
-        tabFills[i].enabled = enable;
+        if (tabFills.Length < i) tabFills[i].enabled = enable;
 
         var activeConfig = _configEnabled.Aggregate(false, (current, isEnabled) => current || isEnabled);
-        warningNoConfigs.SetActive(!activeConfig);
+        if (warningNoConfigs) warningNoConfigs.SetActive(!activeConfig);
     }
 
     private void ReloadCurrentConfig()

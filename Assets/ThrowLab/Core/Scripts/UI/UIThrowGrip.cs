@@ -54,7 +54,7 @@ namespace CloudFine.ThrowLab.UI
 
         // Use this for initialization
         void Start() {
-            grips = FindObjectsOfType<GrabThresholdModifier>().ToList();
+            grips = FindObjectsByType<GrabThresholdModifier>(FindObjectsSortMode.None).ToList();
             ShowHidePanel(grips.Count > 0);
 
             grabEndSlider.GetComponent<UISliderEvents>().onPointerUp.AddListener(SliderReleased);

@@ -1,7 +1,8 @@
 ﻿public enum Team
 {
     TeamOne,
-    TeamTwo
+    TeamTwo,
+    None
 }
 
 public enum BallState

@@ -13,12 +13,6 @@ namespace Unity.Template.VR.Multiplayer.Players
         public Vector3 hmdPosition;
         public Quaternion hmdRotation;
         
-        public Vector3 playerPosition;
-        public Quaternion playerRotation;
-    }
-    
-    public struct MoveInput : INetworkInput
-    {
         public Vector2 axis;
     }
 }

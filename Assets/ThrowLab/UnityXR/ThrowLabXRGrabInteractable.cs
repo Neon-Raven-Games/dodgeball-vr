@@ -18,11 +18,12 @@ namespace CloudFine.ThrowLab.UnityXR
                         m_handle = gameObject.AddComponent<ThrowHandle>();
                     }
                 }
+
                 return m_handle;
             }
         }
-        private ThrowHandle m_handle;
 
+        private ThrowHandle m_handle;
         protected override void OnSelectEntered(SelectEnterEventArgs args)
         {
             var interactor = args.interactorObject;
@@ -30,11 +31,11 @@ namespace CloudFine.ThrowLab.UnityXR
             throwOnDetach = false;
             _handle.OnAttach(interactor.transform.gameObject, interactor.transform.gameObject);
         }
-
+        
         protected override void OnSelectExiting(SelectExitEventArgs args)
         {
             base.OnSelectExiting(args);
-            _handle.OnDetach();         
+            _handle.OnDetach();
         }
     }
 }

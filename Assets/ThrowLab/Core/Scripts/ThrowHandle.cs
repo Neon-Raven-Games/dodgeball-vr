@@ -284,6 +284,7 @@ namespace CloudFine.ThrowLab
             {
                 _attachedDevice = detector.DetectedDevice;
             }
+            
             switch (Settings.sampleSourceType)
             {
                 case ThrowConfiguration.VelocitySource.DEVICE_CENTER_OF_MASS:

@@ -141,10 +141,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   hmd: {fileID: 7692030983400923281}
+  analogThreshold: 0.2
   controller: {fileID: 2082713132583869706}
   speed: 3
   rotationSpeed: 100
   team: 0
+  networkPlayer: {fileID: 0}
 --- !u!1 &2050728872602850272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1791,9 +1793,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 934a0da31ccf72f42a08f0243e3aac66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  networkPlayer: {fileID: 0}
   grabTransform: {fileID: 5899939520484777293}
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   handSide: 0
+  animator: {fileID: 4300750789005704510}
 --- !u!1 &8761925483006002943
 GameObject:
   m_ObjectHideFlags: 0
@@ -2240,9 +2244,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 934a0da31ccf72f42a08f0243e3aac66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  networkPlayer: {fileID: 0}
   grabTransform: {fileID: 1340563304958094827}
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   handSide: 1
+  animator: {fileID: 1300035022512073891}
 --- !u!1001 &829825465580231403
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2319,6 +2325,11 @@ PrefabInstance:
       addedObject: {fileID: 5899939520484777293}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cef896f92b6ed8044831492118bf95c1, type: 3}
+--- !u!95 &4300750789005704510 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 3470999686533474261, guid: cef896f92b6ed8044831492118bf95c1, type: 3}
+  m_PrefabInstance: {fileID: 829825465580231403}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5375838005403137039 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4692453890956898020, guid: cef896f92b6ed8044831492118bf95c1, type: 3}
@@ -2400,6 +2411,11 @@ PrefabInstance:
       addedObject: {fileID: 1340563304958094827}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cef896f92b6ed8044831492118bf95c1, type: 3}
+--- !u!95 &1300035022512073891 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 3470999686533474261, guid: cef896f92b6ed8044831492118bf95c1, type: 3}
+  m_PrefabInstance: {fileID: 2459476824929323894}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1422058110951097823 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3575290161178857129, guid: cef896f92b6ed8044831492118bf95c1, type: 3}

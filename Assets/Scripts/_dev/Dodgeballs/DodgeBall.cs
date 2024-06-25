@@ -1,7 +1,6 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using FMODUnity;
+using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 
 public class DodgeBall : MonoBehaviour
@@ -17,6 +16,7 @@ public class DodgeBall : MonoBehaviour
     private Team _team;
     private DevController _owner;
     private BallState _ballState = BallState.Dead;
+
 
     public void SetOwner(DevController owner)
     {
@@ -107,32 +107,47 @@ public class DodgeBall : MonoBehaviour
             {
                 if (controller != _owner && controller.team != _team)
                 {
+                    HitSquash(collision);
+                    SetDeadBall();
+                    
                     param = 4;
                     // controller.Die();
                     // _owner.Score();
-                    Debug.Log("Hit Player");
-                    SetDeadBall();
+                    
+                    HitOppositeTeam(controller);
+                    Debug.Log($"Hit Player! {_owner.team} hit {controller.team}!");
                 }
             }
 
-            if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
+            if (_owner != controller && _team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
-                GameManager.teamOneScore++;
-                GameManager.UpdateScore();
+                Debug.Log("Team One Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
+                FriendlyFire();
                 param = 3;
             }
-            else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
+            else if (_owner != controller && _team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
-                GameManager.teamTwoScore++;
-                GameManager.UpdateScore();
+                Debug.Log("Team Two Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
+                FriendlyFire();
                 param = 3;
             }
         }
 
         if (param > 0) hitSound.Play();
+    }
+
+    private void FriendlyFire()
+    {
+        if (_ballState != BallState.Live) return;
+        _owner.networkPlayer.RPC_TargetHit(_owner.team, _owner.team, GetComponent<NetDodgeball>().index);
+    }
+
+    private void HitOppositeTeam(DevController controller)
+    {
+        _owner.networkPlayer.RPC_TargetHit(_owner.team, controller.team, GetComponent<NetDodgeball>().index);
     }
 }

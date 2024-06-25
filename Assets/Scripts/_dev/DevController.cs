@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +16,7 @@ public class DevController : MonoBehaviour
     private InputAction _lookAction;
     private Vector2 _moveInput;
     private Vector2 _lookInput;
+    public NetworkPlayer networkPlayer;
 
     public Vector2 GetMoveInput() => _moveInput;
     private void Awake()
@@ -44,8 +43,6 @@ public class DevController : MonoBehaviour
         _lookAction.Disable();
     }
     
-    [SerializeField] private float camDistanceMoveOffset = 0.5f;
-
     private void Update()
     {
         HandleMovement();
@@ -53,8 +50,12 @@ public class DevController : MonoBehaviour
 
         // MoveToCamera();
     }
-  
 
+    private void FixedUpdate()
+    {
+        var gravity = Physics.gravity;
+        controller.Move(gravity * Time.fixedDeltaTime);
+    }
 
     private void HandleRotation()
     {

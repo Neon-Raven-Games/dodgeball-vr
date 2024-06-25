@@ -69,10 +69,10 @@ namespace _dev
 
         public static void UpdateVcaBusVolumes()
         {
-// todo, update this when fmod integrated
-            return;
-            SetVcaBusVolume(VcaBusType.Sfx, _sfxVolume);
-            SetVcaBusVolume(VcaBusType.Music, _musicVolume);
+            // todo, update this when fmod integrated
+            // return;
+            // SetVcaBusVolume(VcaBusType.Sfx, _sfxVolume);
+            // SetVcaBusVolume(VcaBusType.Music, _musicVolume);
         }
 
         internal static void PopulateBusHelpers()

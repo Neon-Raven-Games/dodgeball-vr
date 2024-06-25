@@ -22,8 +22,8 @@ public class VcaBusHelper : MonoBehaviour
 
     public void UpdateSlider(float value)
     {
-        if (slider != null) 
-            slider.SetValueWithoutNotify(value);
+        // if (slider != null) 
+            // slider.SetValueWithoutNotify(value);
     }
     
     public void Initialize(float value)
@@ -35,7 +35,7 @@ public class VcaBusHelper : MonoBehaviour
     public void Initialize()
     {
         SetVcaVolume(defaultVolume);
-        slider.value = defaultVolume;
+        // if (slider) slider.value = defaultVolume;
     }
 
     private void OnEnable()
@@ -45,8 +45,8 @@ public class VcaBusHelper : MonoBehaviour
 
     private void UpdateSliderFromManager()
     {
-        if (vcaBusType == VcaBusType.Music) UpdateSlider(SoundManager.MusicVolume);
-        if (vcaBusType == VcaBusType.Sfx) UpdateSlider(SoundManager.SfxVolume);
+        // if (vcaBusType == VcaBusType.Music) UpdateSlider(SoundManager.MusicVolume);
+        // if (vcaBusType == VcaBusType.Sfx) UpdateSlider(SoundManager.SfxVolume);
     }
 
     public float GetNormalizedVcaBusVolume() =>
