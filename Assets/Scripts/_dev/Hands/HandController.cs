@@ -120,9 +120,6 @@ public class HandController : MonoBehaviour
         // set owner
         _ball.GetComponent<DodgeBall>().SetOwner(_controller);
         
-        // disable host sync for local
-        _ball.GetComponent<NetworkTransform>().enabled = false;
-        
         // override the select enter to resume grab state
        var throwHandle = _ball.GetComponent<ThrowHandle>();
         throwHandle.OnAttach(gameObject, gameObject);
@@ -181,7 +178,7 @@ public class HandController : MonoBehaviour
         var dodgeballType = dodgeBall.type;
         var position = dodgeBall.transform.position;
         var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
-        networkPlayer.RPC_ThrownBall(dodgeballType, position, velocity, _controller.team, possession, networkPlayer.Id.Object);
+        networkPlayer.RPC_ThrownBall(dodgeballType, position, velocity, _controller.team, possession);
         
         Destroy(dodgeBall.gameObject);
         _ball = null;
@@ -197,7 +194,7 @@ public class HandController : MonoBehaviour
 
         var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
         networkPlayer.RPC_PossessBall(possession,
-            dodgeBall.type, dodgeBall.GetComponent<NetDodgeball>().index, networkPlayer.Id.Object);
+            dodgeBall.type, dodgeBall.GetComponent<NetDodgeball>().index);
         
     }
 

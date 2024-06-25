@@ -120,6 +120,7 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
             _moveInput = input.Value.axis;
         }
+
         return false;
     }
 
@@ -145,20 +146,26 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     private int _throwCount;
     private readonly Dictionary<int, NetworkObject> _dodgeballDictionary = new();
-    [SerializeField] private GameObject ballPrefab;
+    [SerializeField] private NetDodgeball ballPrefab;
 
     // This method on the non-state authority client does not remove the net ball, but does spawn local
     // this method is either not being called by non-state authority
     // or the _dodgeballDictionary on the state authority does not contain the key
     // ie. junk in/junk out, or rpc not being called. likely the former
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
-    public void RPC_PossessBall(NetBallPossession possession, BallType type, int ballIndex, NetworkId id)
+    public void RPC_PossessBall(NetBallPossession possession, BallType type, int ballIndex)
     {
         if (possession == NetBallPossession.None)
         {
             Debug.LogError("Invalid ball possession: " + possession + " index: " + ballIndex + " type: " + type);
         }
-
+        
+        // scene context can possibly be obtained from this object. 
+        // we should set the scene context for players and balls
+        // Runner.SimulationUnityScene
+        
+        // dodgeball dictionary needs to be scene context because we no longer have
+        // only one state authority
         if (_dodgeballDictionary.ContainsKey(ballIndex))
         {
             var ballObject = _dodgeballDictionary[ballIndex];
@@ -170,30 +177,49 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             Debug.LogError("Ball not found: " + ballIndex);
         }
 
-        RPC_SetBallPossession(possession, type, id);
+        RPC_SetBallPossession(possession, type);
     }
 
-    // this method is called from non-state authority when RpcSources.All,
-    // and local ball does delete, but the resulting ball is laggy as shit
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
     public void RPC_ThrownBall(BallType type, Vector3 position, Vector3 velocity, Team ownerTeam,
-        NetBallPossession possession, NetworkId id)
+        NetBallPossession possession)
     {
         var ballIndex = _throwCount++;
+        
+        // the main difference between these two, is that before spawning, we call the init method
+        // on the first. The second lets the object spawn then calls the init method
+        // based on our network rigidbody, I think the latter is more appropriate, so will comment this
+        // first one out
+        
+        // ===== code from documentation research ======
+        /*
         Runner.Spawn(ballPrefab, position, Quaternion.identity, Object.InputAuthority,
             (runner, obj) =>
             {
-                var db = obj.GetBehaviour<NetDodgeball>();
+                // dodgeball dictionary needs to be scene context because we no longer have
+                // only one state authority
+                // var db = obj.GetBehaviour<NetDodgeball>();
                 _dodgeballDictionary.Add(ballIndex, obj);
                 db.Initialize(type, velocity, ballIndex, ownerTeam);
             });
-        RPC_SetBallPossession(possession, BallType.None, id);
+         */
+        
+        // ====== code made from example usage ======
+        var db = Runner.Spawn(ballPrefab, position, Quaternion.identity, Object.InputAuthority);
+
+        // dodgeball dictionary needs to be scene context because we no longer have
+        // only one state authority
+        _dodgeballDictionary.Add(ballIndex, db.GetComponent<NetworkObject>());
+
+        db.Initialize(type, velocity, ballIndex, ownerTeam);
+        RPC_SetBallPossession(possession, BallType.None);
     }
 
-    // not tested yet until other issues resolved
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, TickAligned = false)]
     public void RPC_TargetHit(Team ownerTeam, Team targetTeam, int ballIndex)
     {
+        // dodgeball dictionary needs to be scene context because we no longer have
+        // only one state authority
         if (_dodgeballDictionary.ContainsKey(ballIndex) && ownerTeam != targetTeam)
         {
             if (ownerTeam == Team.TeamOne) GameManager.teamOneScore++;
@@ -207,12 +233,14 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    // This method does not work properly when calling possession rpc is called from the non-state authority
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
-    private void RPC_SetBallPossession(NetBallPossession possession, BallType type, NetworkId id)
+    private void RPC_SetBallPossession(NetBallPossession possession, BallType type)
     {
-        // this condition may be working improperly, but it shouldn't
-        if (Object.HasInputAuthority || id != Id.Object) return;
+        // this should be working regardless, but since the changes, does not.
+        // we send it to all clients, if they have input authority, they don't have a model
+        // so we return. This probably has no state context to ball possession
+        // in the scene context, we should keep up with players
+        if (Object.HasInputAuthority) return;
 
         if (possession == NetBallPossession.None)
         {
@@ -229,7 +257,7 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
-      #endregion
+    #endregion
 
     private void OnDrawGizmos()
     {

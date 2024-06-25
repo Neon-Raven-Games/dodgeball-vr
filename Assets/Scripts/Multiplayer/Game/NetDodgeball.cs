@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CloudFine.ThrowLab;
 using Fusion;
+using Fusion.Addons.Physics;
 using UnityEngine;
 
 namespace Unity.Template.VR.Multiplayer
@@ -21,6 +22,7 @@ namespace Unity.Template.VR.Multiplayer
         [Networked] public Team team { get; set; }
         [Networked] public BallType type { get; set; }
 
+        public NetworkRigidbody3D rigidBody;
         public override void Spawned()
         {
             base.Spawned();
@@ -40,7 +42,7 @@ namespace Unity.Template.VR.Multiplayer
 
         public void ThrowBall(Vector3 velocity)
         {
-            GetComponent<Rigidbody>().velocity = velocity;
+            rigidBody.Rigidbody.velocity = velocity;
         }
 
         public void Initialize(BallType type, Vector3 velocity, int throwCount, Team ownerTeam)

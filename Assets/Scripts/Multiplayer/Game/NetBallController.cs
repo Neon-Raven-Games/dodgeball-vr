@@ -3,7 +3,13 @@ using Fusion;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 
-public class NetBallController : MonoBehaviour
+// public struct NetPlayerData : INetworkStruct
+// {
+//     public BallType leftBall;
+//     public BallType rightBall;
+//     public Team team;
+// }
+public class NetBallController : NetworkBehaviour
 {
     [SerializeField] private DodgeballLab lab;
     [SerializeField] private GameObject ballPrefab;
@@ -12,8 +18,25 @@ public class NetBallController : MonoBehaviour
     [SerializeField] private Transform secondBallSpawn;
     [SerializeField] private Transform thirdBallSpawn;
     
-    private ThrowHandle _ballHandle;
+    // [Networked, Capacity(10)] 
+    // private NetworkDictionary<NetworkId, NetPlayerData> playerData { get; set; }
     
+    
+    private ThrowHandle _ballHandle;
+
+    // if the ball is picked up, we need to despawn the ball
+    public static void Despawn(NetworkRunner runner, NetworkObject ball)
+    {
+        runner.Despawn(ball);
+    }
+
+    public static NetDodgeball SpawnBall(NetworkRunner runner, NetworkObject ball)
+    {
+        // spawn the ball
+        // we can handle initialization here since we are state authority
+        // and the dodgeball holds networked values
+        return null;
+    }
 
     private static NetBallController _instance;
     public NetBallController Instance

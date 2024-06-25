@@ -2,6 +2,7 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
+using Photon.Voice;
 using TMPro;
 using UnityEngine;
 
@@ -11,10 +12,15 @@ public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
     public GameObject networkPlayerPrefab;
     [SerializeField] private TextMeshPro _statusText;
     private readonly Dictionary<PlayerRef, NetworkObject> _spawnedPlayers = new();
+
     public void StartLocalGame()
     {
-        if (networkRunner == null) _statusText.text += "\nNetworkRunner is null when starting local game!";
-        else _statusText.text += "\nStarting game";
+        if (_statusText != null)
+        {
+            if (networkRunner == null) _statusText.text += "\nNetworkRunner is null when starting local game!";
+            else _statusText.text += "\nStarting game";
+        }
+
         InitializeNetworkRunner(networkRunner, GameMode.AutoHostOrClient);
     }
 
@@ -46,7 +52,11 @@ public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         var spawnPosition = Utils.GetRandomSpawnPosition();
         var spawnRotation = Quaternion.identity;
+        
         var networkPlayer = runner.Spawn(networkPlayerPrefab, spawnPosition, spawnRotation, player);
+        runner.SetPlayerObject(player, networkPlayer);
+        // GetComponent<VoiceClient>().
+        
         if (networkPlayer != null) _spawnedPlayers[player] = networkPlayer;
     }
 
@@ -61,7 +71,7 @@ public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
         networkRunner = gameObject.GetComponent<NetworkRunner>();
         networkRunner.ProvideInput = true;
         networkRunner.AddCallbacks(this);
-        _statusText.text = "NetworkRunner initialized";
+        if (_statusText != null) _statusText.text = "NetworkRunner initialized";
     }
 
     private async void InitializeNetworkRunner(NetworkRunner runner, GameMode mode)
@@ -89,7 +99,7 @@ public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
         }
         else
         {
-            _statusText.text += $"\nFailed to connect to room: {result.ShutdownReason} - {result.ErrorMessage}";
+            if (_statusText != null) _statusText.text += $"\nFailed to connect to room: {result.ShutdownReason} - {result.ErrorMessage}";
             Debug.LogError($"Failed to connect to room: {result.ShutdownReason} - {result.ErrorMessage}");
         }
     }
@@ -101,13 +111,14 @@ public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
         if (runner.IsClient)
         {
             Debug.Log("Connected to Fusion server.");
-            _statusText.text += "\nConnected to Fusion server.";
+            if (_statusText != null) _statusText.text += "\nConnected to Fusion server.";
         }
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         if (!runner.IsServer) return;
+        
         HandlePlayerJoined(runner, player);
     }
 
@@ -120,9 +131,8 @@ public class MultiplayerManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
-        
     }
-    
+
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
     }

@@ -20014,7 +20014,7 @@ GameObject:
   - component: {fileID: 9123288081186968033}
   - component: {fileID: 682716741012247643}
   - component: {fileID: 1660081455178729196}
-  - component: {fileID: 5743657902740889995}
+  - component: {fileID: 4169189962582464529}
   m_Layer: 3
   m_Name: Dodge Ball Base
   m_TagString: Untagged
@@ -20297,9 +20297,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a33f76ea08394295899aed871bfd3d49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  index: 0
-  team: 0
-  type: 1
+  _index: 0
+  _team: 0
+  _type: 0
+  rigidBody: {fileID: 4169189962582464529}
 --- !u!114 &1660081455178729196
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20318,8 +20319,8 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 682716741012247643}
-  - {fileID: 5743657902740889995}
---- !u!114 &5743657902740889995
+  - {fileID: 4169189962582464529}
+--- !u!114 &4169189962582464529
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -20328,13 +20329,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 3610005978619497574}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Script: {fileID: 11500000, guid: 0a591d221a634417e9827eb58e17de84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   SyncScale: 0
   SyncParent: 0
-  _autoAOIOverride: 1
-  DisableSharedModeInterpolation: 0
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 0
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01
 --- !u!1 &4139360765618871867
 GameObject:
   m_ObjectHideFlags: 0

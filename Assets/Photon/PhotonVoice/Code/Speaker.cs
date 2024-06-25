@@ -9,11 +9,12 @@
 // ----------------------------------------------------------------------------
 
 using System;
+using FMODUnity;
 using UnityEngine;
 
 namespace Photon.Voice.Unity
 {
-    [RequireComponent(typeof(AudioSource))]
+    [RequireComponent(typeof(StudioEventEmitter))]
     [AddComponentMenu("Photon Voice/Speaker")]
     [DisallowMultipleComponent]
     public class Speaker : VoiceComponent
