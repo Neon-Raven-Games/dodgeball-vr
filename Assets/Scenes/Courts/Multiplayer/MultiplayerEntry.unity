@@ -215,7 +215,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &177348959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -299,67 +299,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!1001 &180118212
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -12.988486
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 2.743423
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1490087262365975830, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1660081455178729196, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: SortKey
-      value: 675535058
-      objectReference: {fileID: 0}
-    - target: {fileID: 3610005978619497574, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
-      propertyPath: m_Name
-      value: Dodge Ball Base
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 0193f14b8034a7b4a8029239780fb0d8, type: 3}
 --- !u!1 &236825018 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5784487045585534595, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
@@ -1705,4 +1644,3 @@ SceneRoots:
   - {fileID: 1047252261}
   - {fileID: 693775776}
   - {fileID: 501690784}
-  - {fileID: 180118212}

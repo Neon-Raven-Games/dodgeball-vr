@@ -13,6 +13,6 @@ namespace Unity.Template.VR.Multiplayer.Players
     {
         public BallType ballType;
         public Team team;
-        public NetBallPossession possession;
+        public NetworkId owner;
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
-using Unity.Template.VR.Multiplayer;
 using Unity.Template.VR.Multiplayer.Players;
 using UnityEngine;
 
@@ -85,6 +84,14 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         _gripCancelledAction = gripCancelled;
     }
 
+    public void Update()
+    {
+        // tested p2 client for state authority sync issues
+        // if (!Object.HasInputAuthority || Object.HasStateAuthority) return;
+        // if (Keyboard.current.aKey.wasPressedThisFrame) RPC_PossessBall(NetBallPossession.LeftHand, 1);
+        // if (Keyboard.current.sKey.wasPressedThisFrame) RPC_ThrownBall(1, _leftHandPosition, _leftHandPosition.normalized * 20f, NetBallPossession.LeftHand);
+    }
+
     public void UnsubscribeGrips()
     {
         _gripCancelledAction = null;
@@ -107,6 +114,8 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         }
         else
         {
+            UpdateNetBallPossessions();
+
             var input = GetInput<IKInput>();
             if (input == null) return true;
 
@@ -122,6 +131,12 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         }
 
         return false;
+    }
+
+    private void UpdateNetBallPossessions()
+    {
+        leftBallIndex.UpdatePossession(Object.Id);
+        rightBallIndex.UpdatePossession(Object.Id);
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -145,113 +160,37 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     #region ball RPC
 
     private int _throwCount;
-    private readonly Dictionary<int, NetworkObject> _dodgeballDictionary = new();
-    [SerializeField] private NetDodgeball ballPrefab;
 
-    // This method on the non-state authority client does not remove the net ball, but does spawn local
-    // this method is either not being called by non-state authority
-    // or the _dodgeballDictionary on the state authority does not contain the key
-    // ie. junk in/junk out, or rpc not being called. likely the former
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
-    public void RPC_PossessBall(NetBallPossession possession, BallType type, int ballIndex)
+    public void RPC_PossessBall(NetBallPossession possession, int ballIndex)
     {
         if (possession == NetBallPossession.None)
-        {
-            Debug.LogError("Invalid ball possession: " + possession + " index: " + ballIndex + " type: " + type);
-        }
-        
-        // scene context can possibly be obtained from this object. 
-        // we should set the scene context for players and balls
-        // Runner.SimulationUnityScene
-        
-        // dodgeball dictionary needs to be scene context because we no longer have
-        // only one state authority
-        if (_dodgeballDictionary.ContainsKey(ballIndex))
-        {
-            var ballObject = _dodgeballDictionary[ballIndex];
-            _dodgeballDictionary.Remove(ballIndex);
-            Runner.Despawn(ballObject);
-        }
-        else
-        {
-            Debug.LogError("Ball not found: " + ballIndex);
-        }
+            Debug.LogError("Invalid ball possession: " + possession + " index: " + ballIndex);
 
-        RPC_SetBallPossession(possession, type);
+        NetBallController.PossessBall(Runner, Object.Id, possession, ballIndex);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
-    public void RPC_ThrownBall(BallType type, Vector3 position, Vector3 velocity, Team ownerTeam,
-        NetBallPossession possession)
+    public void RPC_ThrownBall(int index, Vector3 position, Vector3 velocity, NetBallPossession possession)
     {
-        var ballIndex = _throwCount++;
-        
-        // the main difference between these two, is that before spawning, we call the init method
-        // on the first. The second lets the object spawn then calls the init method
-        // based on our network rigidbody, I think the latter is more appropriate, so will comment this
-        // first one out
-        
-        // ===== code from documentation research ======
-        /*
-        Runner.Spawn(ballPrefab, position, Quaternion.identity, Object.InputAuthority,
-            (runner, obj) =>
-            {
-                // dodgeball dictionary needs to be scene context because we no longer have
-                // only one state authority
-                // var db = obj.GetBehaviour<NetDodgeball>();
-                _dodgeballDictionary.Add(ballIndex, obj);
-                db.Initialize(type, velocity, ballIndex, ownerTeam);
-            });
-         */
-        
-        // ====== code made from example usage ======
-        var db = Runner.Spawn(ballPrefab, position, Quaternion.identity, Object.InputAuthority);
-
-        // dodgeball dictionary needs to be scene context because we no longer have
-        // only one state authority
-        _dodgeballDictionary.Add(ballIndex, db.GetComponent<NetworkObject>());
-
-        db.Initialize(type, velocity, ballIndex, ownerTeam);
-        RPC_SetBallPossession(possession, BallType.None);
+        NetBallController.ThrowBall(Runner, possession, position, velocity, Object.Id, index);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, TickAligned = false)]
     public void RPC_TargetHit(Team ownerTeam, Team targetTeam, int ballIndex)
     {
-        // dodgeball dictionary needs to be scene context because we no longer have
-        // only one state authority
-        if (_dodgeballDictionary.ContainsKey(ballIndex) && ownerTeam != targetTeam)
-        {
-            if (ownerTeam == Team.TeamOne) GameManager.teamOneScore++;
-            else if (ownerTeam == Team.TeamTwo) GameManager.teamTwoScore++;
-            GameManager.UpdateScore();
-            Debug.Log("Hit player!");
-        }
-        else
-        {
-            Debug.LogError("Ball not found: " + ballIndex + " " + ownerTeam + " -> " + targetTeam);
-        }
-    }
+        NetBallController.SetDeadBall(ballIndex);
 
-    // this needs to only be called on this object
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
-    private void RPC_SetBallPossession(NetBallPossession possession, BallType type)
-    {
-        if (Object.HasInputAuthority) return;
+        // Friendly Fire or hit surface
+        if (ownerTeam == targetTeam) return;
 
-        if (possession == NetBallPossession.None)
-        {
-            leftBallIndex.SetBallType(BallType.None);
-            rightBallIndex.SetBallType(BallType.None);
-        }
-        else if (possession == NetBallPossession.LeftHand)
-        {
-            leftBallIndex.SetBallType(type);
-        }
-        else if (possession == NetBallPossession.RightHand)
-        {
-            rightBallIndex.SetBallType(type);
-        }
+        // Score
+        if (ownerTeam == Team.TeamOne) GameManager.teamOneScore++;
+        else if (ownerTeam == Team.TeamTwo) GameManager.teamTwoScore++;
+        GameManager.UpdateScore();
+
+
+        Debug.Log("Hit player!");
     }
 
     #endregion
@@ -269,32 +208,23 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     public override void Spawned()
     {
         var client = Object.HasInputAuthority;
+        NetBallController.AddPlayerData(Object.Id, Team.TeamOne);
         if (client)
         {
             Object.Runner.AddCallbacks(this);
             localPlayer.playerModel.SetActive(true);
             ikTargetModel.playerModel.SetActive(false);
 
-            // no longer synchronizing the player model
             if (Object.HasStateAuthority)
             {
-                _dodgeballDictionary.Add(_throwCount,
-                    NetBallController.SpawnInitialBall(0, Object.Runner).GetComponent<NetworkObject>());
-                _dodgeballDictionary[_throwCount].GetComponent<NetDodgeball>()
-                    .Initialize(BallType.Dodgeball, Vector3.zero, _throwCount, Team.None);
-                _throwCount++;
+                var dodgeball = NetBallController.SpawnInitialBall(0, Object.Runner);
+                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 0, Team.None);
 
-                _dodgeballDictionary.Add(_throwCount,
-                    NetBallController.SpawnInitialBall(1, Object.Runner).GetComponent<NetworkObject>());
-                _dodgeballDictionary[_throwCount].GetComponent<NetDodgeball>()
-                    .Initialize(BallType.Dodgeball, Vector3.zero, _throwCount, Team.None);
-                _throwCount++;
+                dodgeball = NetBallController.SpawnInitialBall(1, Object.Runner);
+                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 1, Team.None);
 
-                _dodgeballDictionary.Add(_throwCount,
-                    NetBallController.SpawnInitialBall(2, Object.Runner).GetComponent<NetworkObject>());
-                _dodgeballDictionary[_throwCount].GetComponent<NetDodgeball>()
-                    .Initialize(BallType.Dodgeball, Vector3.zero, _throwCount, Team.None);
-                _throwCount++;
+                dodgeball = NetBallController.SpawnInitialBall(2, Object.Runner);
+                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 2, Team.None);
 
                 return;
             }

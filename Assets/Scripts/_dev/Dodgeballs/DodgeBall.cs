@@ -78,7 +78,7 @@ public class DodgeBall : MonoBehaviour
         skinnedMeshRenderer.SetBlendShapeWeight(index, endValue);
     }
 
-    // When a ball hits something, we will set the param to below:
+    // todo, make this enum
     // 0 is other (discard?)
     // 1 is ground
     // 2 is walls
@@ -90,11 +90,13 @@ public class DodgeBall : MonoBehaviour
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
             param = 1;
+            SetDeadBall();
         }
 
         if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
             param = 2;
+            SetDeadBall();
         }
 
         if (_ballState == BallState.Live)
@@ -140,6 +142,10 @@ public class DodgeBall : MonoBehaviour
         if (param > 0) hitSound.Play();
     }
 
+    private void SetNetDeadBall()
+    {
+        _owner.networkPlayer.RPC_TargetHit(Team.None, Team.None, GetComponent<NetDodgeball>().index);
+    }
     private void FriendlyFire()
     {
         if (_ballState != BallState.Live) return;

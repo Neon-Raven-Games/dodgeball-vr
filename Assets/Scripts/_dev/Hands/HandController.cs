@@ -4,6 +4,8 @@ using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+// todo, after physics refactor, test the logical flow
+// refactor for NetBallController may have to switch up logical flow a bit
 public class HandController : MonoBehaviour
 {
     [SerializeField] private NetworkPlayer networkPlayer;
@@ -110,10 +112,11 @@ public class HandController : MonoBehaviour
     private void InitializeNetworkPossessedBall()
     {
         // set net possession, despawning original ball
+        var grabbedBall = _ball.GetComponent<NetDodgeball>();
+        var localBall = NetBallController.SpawnLocalBall(grabTransform.position, grabbedBall.index);
         NetworkedPossession();
 
         // set the ball to a new ball and initialize it 
-        var localBall = NetBallController.SpawnNewBall(grabTransform.position);
         
         _ball = localBall.gameObject;
         
@@ -175,11 +178,9 @@ public class HandController : MonoBehaviour
             Debug.LogError("Dodgeball not found");
         }
 
-        var dodgeballType = dodgeBall.type;
         var position = dodgeBall.transform.position;
         var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
-        networkPlayer.RPC_ThrownBall(dodgeballType, position, velocity, _controller.team, possession);
-        
+        networkPlayer.RPC_ThrownBall(dodgeBall.index, position, velocity, possession);
         Destroy(dodgeBall.gameObject);
         _ball = null;
     }
@@ -193,9 +194,7 @@ public class HandController : MonoBehaviour
         }
 
         var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
-        networkPlayer.RPC_PossessBall(possession,
-            dodgeBall.type, dodgeBall.GetComponent<NetDodgeball>().index);
-        
+        networkPlayer.RPC_PossessBall(possession, dodgeBall.GetComponent<NetDodgeball>().index);
     }
 
     #endregion

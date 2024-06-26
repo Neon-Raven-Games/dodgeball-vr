@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using CloudFine.ThrowLab;
+using Fusion;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 
@@ -7,9 +9,8 @@ using UnityEngine;
 public class NetBallPossessionHandler : MonoBehaviour
 {
     [SerializeField] private List<DodgeballIndex> dodgeballs = new();
-    
+    [SerializeField] private HandSide handSide;
     private readonly Dictionary<BallType, DodgeballIndex> _dodgeballDictionary = new();
-    
     private HandPose _handPose;
     private GameObject _currentDodgeball;
     private Transform[] _fingerTransforms;
@@ -25,9 +26,24 @@ public class NetBallPossessionHandler : MonoBehaviour
             _dodgeballDictionary[dodgeball.type] = dodgeball;
     }
 
+    private NetBallPossession _possession;
+
+    public void UpdatePossession(NetworkId id)
+    {
+        var netPossession = NetBallController.GetBallPossession(id, handSide);
+        if (_possession == netPossession) return;
+        _possession = netPossession;
+        var ballType = NetBallController.GetBallType(id);
+        SetBallType(ballType);
+    }
+
     public void SetBallType(BallType type)
     {
         if (!_anim) return;
+
+        if (type == BallType.None) _possession = NetBallPossession.None;
+        else _possession = handSide == HandSide.LEFT ? NetBallPossession.LeftHand : NetBallPossession.RightHand;
+
         if (_currentDodgeball && (type == BallType.None || _dodgeballDictionary[type].dodgeball != _currentDodgeball))
             _currentDodgeball.SetActive(false);
         if (type == BallType.None)
@@ -36,7 +52,7 @@ public class NetBallPossessionHandler : MonoBehaviour
             _anim.SetBool(_SGrabbing, false);
             return;
         }
-        
+
         _anim.SetBool(_SGrabbing, true);
         _currentDodgeball = _dodgeballDictionary[type].dodgeball;
         _currentDodgeball.SetActive(true);
@@ -52,7 +68,7 @@ public class NetBallPossessionHandler : MonoBehaviour
             _fingerTransforms[i].localRotation = _handPose.fingerTransforms[i].localRotation;
         }
     }
-    
+
     public void Editor_SetBallType(BallType type)
     {
         if (_currentDodgeball && (type == BallType.None || _dodgeballDictionary[type].dodgeball != _currentDodgeball))
@@ -63,9 +79,10 @@ public class NetBallPossessionHandler : MonoBehaviour
             ApplyHandPose();
             return;
         }
+
         _currentDodgeball = _dodgeballDictionary[type].dodgeball;
         _currentDodgeball.SetActive(true);
-        
+
         ApplyHandPose();
     }
 }

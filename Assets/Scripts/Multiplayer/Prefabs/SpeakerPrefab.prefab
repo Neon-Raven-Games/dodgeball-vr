@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4973381658274221763}
   - component: {fileID: 3554773880125222614}
-  - component: {fileID: 6530149944746901526}
   - component: {fileID: 957434556255070223}
   m_Layer: 0
   m_Name: SpeakerPrefab
@@ -60,37 +59,6 @@ MonoBehaviour:
       Data3: -588985708
       Data4: 119728458
     Path: event:/Test_VC2
---- !u!114 &6530149944746901526
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4973381658274221766}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a6610d2e704f1648819acc8d7460285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CollisionTag: 
-  EventReference:
-    Guid:
-      Data1: -1444669233
-      Data2: 1278056271
-      Data3: -588985708
-      Data4: 119728458
-    Path: event:/Test_VC2
-  Event: 
-  PlayEvent: 1
-  StopEvent: 12
-  AllowFadeout: 1
-  TriggerOnce: 0
-  Preload: 0
-  AllowNonRigidbodyDoppler: 0
-  Params: []
-  OverrideAttenuation: 0
-  OverrideMinDistance: 1
-  OverrideMaxDistance: 20
 --- !u!82 &957434556255070223
 AudioSource:
   m_ObjectHideFlags: 0

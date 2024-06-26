@@ -29,7 +29,7 @@ namespace Unity.Template.VR.Multiplayer
             NetBallController.SetBallConfig(GetComponent<ThrowHandle>());
         }
 
-        public void SetBallType(BallType ballType)
+        private void SetBallType(BallType ballType)
         {
             if (ballType == BallType.None)
             {
@@ -40,17 +40,17 @@ namespace Unity.Template.VR.Multiplayer
             gameObject.SetActive(true);
         }
 
-        public void ThrowBall(Vector3 velocity)
+        private void ThrowBall(Vector3 velocity)
         {
             rigidBody.Rigidbody.velocity = velocity;
         }
-
-        public void Initialize(BallType type, Vector3 velocity, int throwCount, Team ownerTeam)
+        
+        public void Initialize(BallType spawnType, Vector3 velocity, int mappedIndex, Team ownerTeam)
         {
-            SetBallType(type);
+            SetBallType(spawnType);
             ThrowBall(velocity);
             team = ownerTeam;
-            index = throwCount;
+            index = mappedIndex;
         }
     }
 }

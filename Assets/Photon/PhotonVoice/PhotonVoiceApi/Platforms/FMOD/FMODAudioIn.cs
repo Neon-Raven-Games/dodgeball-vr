@@ -55,6 +55,7 @@ namespace Photon.Voice.FMOD
                 this.samplingRate = suggestedFrequency;
 
                 // set this.channels to driver's value
+                // this.device = 7; // hard coded 7 for my mic and worked better, passed this.device
                 res = this.coreSystem.getRecordDriverInfo(device, out string name, 1, out Guid guid, out int systemrate, out FMODLib.SPEAKERMODE speakermode, out this.channels, out FMODLib.DRIVER_STATE state);
                 if (res != FMODLib.RESULT.OK)
                 {
@@ -116,6 +117,9 @@ namespace Photon.Voice.FMOD
 
         public void Dispose()
         {
+            // this disposes the device which is mapped improperly. 58 hard coded 7 for my mic and worked
+            // the device property was not updated, so threw an error here.
+            // double check this on the occulus, but I think it's fine
             this.coreSystem.recordStop(device);
             sound.release();
         }

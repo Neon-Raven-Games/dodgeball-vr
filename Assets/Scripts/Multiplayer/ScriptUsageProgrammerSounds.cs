@@ -16,7 +16,7 @@ class ScriptUsageProgrammerSounds : MonoBehaviour
     }
 #endif
 
-    void Start()
+    private void Start()
     {
         dialogueCallback = DialogueEventCallback;
     }
@@ -105,7 +105,7 @@ class ScriptUsageProgrammerSounds : MonoBehaviour
 
     void Update()
     {
-            PlayDialogue("Test_VC2");
+            PlayDialogue("");
     }
 
     private void OnDestroy()
