@@ -16,7 +16,6 @@ Material:
   - _MK_ARTISTIC_HATCHING
   - _MK_COLOR_GRADING_FINAL_OUTPUT
   - _MK_ENVIRONMENT_REFLECTIONS_AMBIENT
-  - _MK_LIGHT_CEL
   - _MK_OUTLINE_NOISE
   - _MK_RECEIVE_SHADOWS
   - _MK_SPECULAR_ISOTROPIC
@@ -217,7 +216,7 @@ Material:
     - _IridescenceSize: 1
     - _IridescenceSmoothness: 0.5
     - _IridescenceThresholdOffset: 0
-    - _Light: 1
+    - _Light: 0
     - _LightBands: 4
     - _LightBandsScale: 0.5
     - _LightThreshold: 0.149
