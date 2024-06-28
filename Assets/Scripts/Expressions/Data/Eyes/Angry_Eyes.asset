@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2732550b87ab461d80a37f4c6e670ff2, type: 3}
+  m_Name: Angry_Eyes
+  m_EditorClassIdentifier: 
+  expression: 0
+  blendShapeValue:
+  - blendShapeName: F_Angry.F_Angry1
+    blendShapeIndex: 0
+    blendShapeValue: 27.3
+  - blendShapeName: F_Happy.F_PlayerHead4
+    blendShapeIndex: 1
+    blendShapeValue: 27.3
+  - blendShapeName: Female_01_Blink.F_PlayerHead1
+    blendShapeIndex: 2
+    blendShapeValue: 0
