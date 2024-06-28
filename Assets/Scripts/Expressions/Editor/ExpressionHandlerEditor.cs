@@ -218,11 +218,10 @@ public class ExpressionHandlerEditor : EditorWindow
         {
             SaveExpressions(false);
         }
-
-        if (GUILayout.Button("Save All Expressions", _buttonStyle, GUILayout.Height(22)))
-        {
-            SaveExpressions();
-        }
+        // if (GUILayout.Button("Save All Expressions", _buttonStyle, GUILayout.Height(22)))
+        // {
+            // SaveExpressions();
+        // }
 
         if (GUILayout.Button("Reload Mouth Sprites", _buttonStyle, GUILayout.Height(22)))
         {
@@ -232,8 +231,12 @@ public class ExpressionHandlerEditor : EditorWindow
             InitializeMouthSpriteMap();
         }
 
-
-
+        GUI.backgroundColor = Color.red;
+        
+        if (GUILayout.Button("Delete Current Expression", _buttonStyle, GUILayout.Height(22)))
+        {
+            Debug.LogError("LMFAO, you can't delete expressions yet.");
+        }
         GUILayout.EndVertical();
         GUILayout.EndScrollView();
         
@@ -367,6 +370,7 @@ public class ExpressionHandlerEditor : EditorWindow
             _showMouth = EditorGUILayout.Foldout(_showMouth, "Mouth", true);
             if (_showMouth)
             {
+                EditorGUI.indentLevel++;
                 _mouthIndex = (int)_mouthData.spriteIndex;
                 var selectedMouthSprite = (MouthSprites)Enum.Parse(typeof(MouthSprites), _mouthNames[_mouthIndex]);
                 _faceAnimator.mouthHandler.SetMouthSprite(_mouthSpriteMap[selectedMouthSprite][_mouthFrame]);
@@ -388,6 +392,7 @@ public class ExpressionHandlerEditor : EditorWindow
                 EditorGUILayout.LabelField("Step Frames", GUILayout.Width(80));
                 _mouthFrame = (int)EditorGUILayout.Slider(_mouthFrame, 0, _mouthSpriteMap[selectedMouthSprite].Count - 1);
                 EditorGUILayout.EndHorizontal();
+                EditorGUI.indentLevel--;
             }
         }
     }
@@ -444,6 +449,7 @@ public class ExpressionHandlerEditor : EditorWindow
 
         if (!_showEyes) return;
 
+        EditorGUI.indentLevel++;
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.EndHorizontal();
 
@@ -472,6 +478,7 @@ public class ExpressionHandlerEditor : EditorWindow
         {
             Debug.LogError("Did not find eyes in the expression data.");
         }
+        EditorGUI.indentLevel--;
     }
 
     private void AddExpressionToFaceAnimator()
@@ -502,6 +509,7 @@ public class ExpressionHandlerEditor : EditorWindow
 
         if (!_showEyebrows) return;
 
+        EditorGUI.indentLevel++;
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Brow Height", GUILayout.Width(80));
 
@@ -514,6 +522,7 @@ public class ExpressionHandlerEditor : EditorWindow
         _eyeBrowData.browRotation = EditorGUILayout.Slider(_eyeBrowData.browRotation, -30f, 70f);
         EditorGUILayout.EndHorizontal();
 
+        EditorGUI.indentLevel--;
 
         if (_expressionData.ContainsKey(_currentExpression))
         {
