@@ -147,9 +147,10 @@ public class HandController : MonoBehaviour
             _ball.GetComponent<ThrowHandle>().OnDetach();
         }
     }
-
+    
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log("Trigger enter");
         if (!_ball && !_grabbing && other.gameObject.layer == _ballLayer)
             _ball = other.gameObject;
     }

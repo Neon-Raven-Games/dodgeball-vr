@@ -501,7 +501,7 @@ public class ExpressionHandlerEditor : EditorWindow
 
         _showEyebrows = EditorGUILayout.Foldout(_showEyebrows, "Eyebrows", true);
 
-        if (!_transitioning && _stepTime == 0)
+        if (!_transitioning || _stepTime == 0)
         {
             _faceAnimator.RotateEyebrows(_eyeBrowData.browRotation);
             _faceAnimator.RaiseEyebrows(_eyeBrowData.browHeight);
@@ -668,9 +668,9 @@ public class ExpressionHandlerEditor : EditorWindow
 
         string fileName = Path.GetFileNameWithoutExtension(assetPath);
 
+        data.name = fileName;
         if (existingAsset == null)
         {
-            data.name = fileName;
             AssetDatabase.CreateAsset(data, assetPath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

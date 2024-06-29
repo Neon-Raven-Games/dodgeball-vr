@@ -229,14 +229,15 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
                 return;
             }
 
-            networkPlayerTarget.GetComponent<NetworkTransform>().enabled = false;
-            ikTargetModel.leftHandTarget.GetComponent<NetworkTransform>().enabled = false;
-            ikTargetModel.rightHandTarget.GetComponent<NetworkTransform>().enabled = false;
+            // networkPlayerTarget.GetComponent<NetworkTransform>().enabled = false;
+            // ikTargetModel.leftHandTarget.GetComponent<NetworkTransform>().enabled = false;
+            // ikTargetModel.rightHandTarget.GetComponent<NetworkTransform>().enabled = false;
         }
         else
         {
             localPlayer.playerModel.SetActive(false);
             ikTargetModel.playerModel.SetActive(true);
+            Debug.Log("Setting net player active");
 
             _netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
         }
