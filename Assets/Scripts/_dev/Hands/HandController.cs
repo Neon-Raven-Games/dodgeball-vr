@@ -26,8 +26,8 @@ public class HandController : MonoBehaviour
     {
         if (networkPlayer != null)
         {
-            _gripAction.performed -= NetRightGripPerform;
-            _gripAction.canceled -= NetRightGripCancel;
+            _gripAction.performed -= NetGripPerform;
+            _gripAction.canceled -= NetGripCancel;
             networkPlayer.UnsubscribeGrips();
         }
         else
@@ -51,14 +51,9 @@ public class HandController : MonoBehaviour
                 true);
         if (networkPlayer != null)
         {
-            // this does not account for both hand interactions
-            // this will fire both of them.
-            if (handSide == HandSide.RIGHT)
-            {
-                networkPlayer.SubscribeRightInput(SetGrab, SetGrabReleased);
-                _gripAction.performed += NetRightGripPerform;
-                _gripAction.canceled += NetRightGripCancel;
-            }
+            networkPlayer.SubscribeInput(SetGrab, SetGrabReleased);
+            _gripAction.performed += NetGripPerform;
+            _gripAction.canceled += NetGripCancel;
         }
         else
         {
@@ -77,10 +72,10 @@ public class HandController : MonoBehaviour
         SetGrab(new InputAction.CallbackContext());
     }
 
-    private void NetRightGripCancel(InputAction.CallbackContext obj) =>
+    private void NetGripCancel(InputAction.CallbackContext obj) =>
         networkPlayer.RightGripCancel();
 
-    public void NetRightGripPerform(InputAction.CallbackContext e) =>
+    public void NetGripPerform(InputAction.CallbackContext e) =>
         networkPlayer.RightGripPerform();
 
 
@@ -90,23 +85,25 @@ public class HandController : MonoBehaviour
     {
         if (_ball && !_grabbing)
         {
-            _grabbing = true;
             _animator.SetInteger(_SState, 1);
             _ball.GetComponent<DodgeBall>().SetOwner(_controller);
-            
+
             var rb = _ball.GetComponent<NetworkRigidbody3D>();
+            rb.RBIsKinematic = true;
             if (!rb.Rigidbody.isKinematic) rb.Rigidbody.velocity = Vector3.zero;
+            rb.Teleport(grabTransform.position);
             _grabbing = true;
             
             var throwHandle = _ball.GetComponent<ThrowHandle>();
             throwHandle.OnAttach(gameObject, gameObject);
             throwHandle.onFinalTrajectory += ThrowNetBallAfterTrajectory;
-            
+
             if (!_netDodgeball) _netDodgeball = _ball.GetComponent<NetDodgeball>();
             if (!_netDodgeball) return;
-            
+
             _netDodgeball.SetOwner(networkPlayer.Object, handSide == HandSide.RIGHT
-                ? NetBallPossession.RightHand : NetBallPossession.LeftHand);
+                ? NetBallPossession.RightHand
+                : NetBallPossession.LeftHand);
         }
     }
 
@@ -114,6 +111,7 @@ public class HandController : MonoBehaviour
     {
         if (_grabbing)
         {
+            _ball.GetComponent<NetworkRigidbody3D>().RBIsKinematic = false;
             _ball.GetComponent<DodgeBall>().SetLiveBall();
             _ball.GetComponent<ThrowHandle>().OnDetach();
         }
@@ -142,8 +140,7 @@ public class HandController : MonoBehaviour
         if (!_grabbing || !_ball) return;
         if (!_netDodgeball) _netDodgeball = _ball.GetComponent<NetDodgeball>();
         if (!_netDodgeball) return;
-        _netDodgeball.SetLocalOwnerPosition(grabTransform.position);
-        
+        _netDodgeball.SetLocalOwnerPosition(grabTransform);
         _ball.transform.position = grabTransform.position;
         _ball.transform.rotation = grabTransform.rotation;
     }
@@ -161,8 +158,9 @@ public class HandController : MonoBehaviour
 
         Debug.Log("Throwing Ball!");
         dodgeBall.ThrowBall(transform.position, velocity);
-        _ball = null;
+
         _netDodgeball = null;
+        _ball = null;
     }
 
     #endregion
