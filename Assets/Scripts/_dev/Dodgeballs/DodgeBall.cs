@@ -15,7 +15,7 @@ public class DodgeBall : MonoBehaviour
     public float pauseTime = 0.5f;
     private Team _team;
     private DevController _owner;
-    private BallState _ballState = BallState.Dead;
+    public BallState _ballState = BallState.Dead;
 
 
     public void SetOwner(DevController owner)
@@ -23,7 +23,7 @@ public class DodgeBall : MonoBehaviour
         if (_ballState == BallState.Live) catchSound.Play();
         else pickupSound.Play();
 
-        _ballState = BallState.Dead;
+        _ballState = BallState.Possessed;
         _owner = owner;
         _team = owner.team;
     }
@@ -116,7 +116,7 @@ public class DodgeBall : MonoBehaviour
                     // controller.Die();
                     // _owner.Score();
                     
-                    HitOppositeTeam(controller);
+                    // HitOppositeTeam(controller);
                     Debug.Log($"Hit Player! {_owner.team} hit {controller.team}!");
                 }
             }
@@ -126,7 +126,7 @@ public class DodgeBall : MonoBehaviour
                 Debug.Log("Team One Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
-                FriendlyFire();
+                // FriendlyFire();
                 param = 3;
             }
             else if (_owner != controller && _team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
@@ -134,7 +134,7 @@ public class DodgeBall : MonoBehaviour
                 Debug.Log("Team Two Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
-                FriendlyFire();
+                // FriendlyFire();
                 param = 3;
             }
         }

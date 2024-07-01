@@ -1,5 +1,5 @@
 using CloudFine.ThrowLab;
-using Fusion;
+using Fusion.Addons.Physics;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,20 +14,20 @@ public class HandController : MonoBehaviour
     [SerializeField] private InputActionAsset actionAsset;
     [SerializeField] private HandSide handSide;
     private LayerMask _ballLayer;
-    private GameObject _ball;
+    internal GameObject _ball;
     private bool _grabbing;
     private InputAction _gripAction;
     private Animator _animator;
     private static readonly int _SState = Animator.StringToHash("State");
     private DevController _controller;
-
+    private NetDodgeball _netDodgeball;
 
     private void OnDestroy()
     {
         if (networkPlayer != null)
         {
-            _gripAction.performed -= NetGripPerform;
-            _gripAction.canceled -= NetGripCancel;
+            _gripAction.performed -= NetRightGripPerform;
+            _gripAction.canceled -= NetRightGripCancel;
             networkPlayer.UnsubscribeGrips();
         }
         else
@@ -44,16 +44,21 @@ public class HandController : MonoBehaviour
         _animator = GetComponentInChildren<Animator>();
         _controller = GetComponentInParent<DevController>();
         _ballLayer = LayerMask.NameToLayer("Ball");
-        
+
         _gripAction =
-                 actionAsset.FindAction(
-                     handSide == HandSide.RIGHT ? "XRI RightHand Interaction/Select" : "XRI LeftHand Interaction/Select",
-                     true);
+            actionAsset.FindAction(
+                handSide == HandSide.RIGHT ? "XRI RightHand Interaction/Select" : "XRI LeftHand Interaction/Select",
+                true);
         if (networkPlayer != null)
         {
-            networkPlayer.SubscribeInput(SetNetGrab, LogGripRelease);
-            _gripAction.performed += NetGripPerform;
-            _gripAction.canceled += NetGripCancel;
+            // this does not account for both hand interactions
+            // this will fire both of them.
+            if (handSide == HandSide.RIGHT)
+            {
+                networkPlayer.SubscribeRightInput(SetGrab, SetGrabReleased);
+                _gripAction.performed += NetRightGripPerform;
+                _gripAction.canceled += NetRightGripCancel;
+            }
         }
         else
         {
@@ -62,14 +67,21 @@ public class HandController : MonoBehaviour
         }
     }
 
-    private void NetGripCancel(InputAction.CallbackContext obj) =>
-        networkPlayer.GripCancel();
+    private void SetGrabReleased()
+    {
+        SetGrabReleased(new InputAction.CallbackContext());
+    }
 
-    public void NetGripPerform(InputAction.CallbackContext e) =>
-        networkPlayer.GripPerform();
+    private void SetGrab()
+    {
+        SetGrab(new InputAction.CallbackContext());
+    }
 
-    public void LogGripRelease() =>
-        SetNetGrabReleased();
+    private void NetRightGripCancel(InputAction.CallbackContext obj) =>
+        networkPlayer.RightGripCancel();
+
+    public void NetRightGripPerform(InputAction.CallbackContext e) =>
+        networkPlayer.RightGripPerform();
 
 
     #region single player grabs
@@ -81,76 +93,40 @@ public class HandController : MonoBehaviour
             _grabbing = true;
             _animator.SetInteger(_SState, 1);
             _ball.GetComponent<DodgeBall>().SetOwner(_controller);
-            var rb = _ball.GetComponent<Rigidbody>();
-            if (!rb.isKinematic) rb.velocity = Vector3.zero;
+            
+            var rb = _ball.GetComponent<NetworkRigidbody3D>();
+            if (!rb.Rigidbody.isKinematic) rb.Rigidbody.velocity = Vector3.zero;
             _grabbing = true;
+            
+            var throwHandle = _ball.GetComponent<ThrowHandle>();
+            throwHandle.OnAttach(gameObject, gameObject);
+            throwHandle.onFinalTrajectory += ThrowNetBallAfterTrajectory;
+            
+            if (!_netDodgeball) _netDodgeball = _ball.GetComponent<NetDodgeball>();
+            if (!_netDodgeball) return;
+            
+            _netDodgeball.SetOwner(networkPlayer.Object, handSide == HandSide.RIGHT
+                ? NetBallPossession.RightHand : NetBallPossession.LeftHand);
         }
     }
 
     private void SetGrabReleased(InputAction.CallbackContext e)
     {
-        if (_grabbing) _ball.GetComponent<DodgeBall>().SetLiveBall();
+        if (_grabbing)
+        {
+            _ball.GetComponent<DodgeBall>().SetLiveBall();
+            _ball.GetComponent<ThrowHandle>().OnDetach();
+        }
+
+        _netDodgeball = null;
         _animator.SetInteger(_SState, 2);
-        _ball = null;
         _grabbing = false;
     }
 
     #endregion
 
-    private void SetNetGrab()
-    {
-        if (_ball && !_grabbing)
-        {
-            _grabbing = true;
-
-            _animator = GetComponentInChildren<Animator>();
-            _animator.SetInteger(_SState, 1);
-            InitializeNetworkPossessedBall();
-        }
-    }
-
-    private void InitializeNetworkPossessedBall()
-    {
-        // set net possession, despawning original ball
-        var grabbedBall = _ball.GetComponent<NetDodgeball>();
-        var localBall = NetBallController.SpawnLocalBall(grabTransform.position, grabbedBall.index);
-        NetworkedPossession();
-
-        // set the ball to a new ball and initialize it 
-        
-        _ball = localBall.gameObject;
-        
-        // set owner
-        _ball.GetComponent<DodgeBall>().SetOwner(_controller);
-        
-        // override the select enter to resume grab state
-       var throwHandle = _ball.GetComponent<ThrowHandle>();
-        throwHandle.OnAttach(gameObject, gameObject);
-        
-        // set it's velocity to zero if we are not kinematic
-        var rb = _ball.GetComponent<Rigidbody>();
-        if (!rb.isKinematic) rb.velocity = Vector3.zero;
-    }
- 
-
-    private void SetNetGrabReleased()
-    {
-        if (_grabbing)
-        {
-            _ball.GetComponent<DodgeBall>().SetLiveBall();
-        }
-        _animator.SetInteger(_SState, 2);
-        _grabbing = false;
-        if (_ball)
-        {
-            _ball.GetComponent<ThrowHandle>().onFinalTrajectory += ThrowNetBallAfterTrajectory;
-            _ball.GetComponent<ThrowHandle>().OnDetach();
-        }
-    }
-    
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Trigger enter");
         if (!_ball && !_grabbing && other.gameObject.layer == _ballLayer)
             _ball = other.gameObject;
     }
@@ -164,6 +140,10 @@ public class HandController : MonoBehaviour
     private void LateUpdate()
     {
         if (!_grabbing || !_ball) return;
+        if (!_netDodgeball) _netDodgeball = _ball.GetComponent<NetDodgeball>();
+        if (!_netDodgeball) return;
+        _netDodgeball.SetLocalOwnerPosition(grabTransform.position);
+        
         _ball.transform.position = grabTransform.position;
         _ball.transform.rotation = grabTransform.rotation;
     }
@@ -179,23 +159,10 @@ public class HandController : MonoBehaviour
             Debug.LogError("Dodgeball not found");
         }
 
-        var position = dodgeBall.transform.position;
-        var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
-        networkPlayer.RPC_ThrownBall(dodgeBall.index, position, velocity, possession);
-        Destroy(dodgeBall.gameObject);
+        Debug.Log("Throwing Ball!");
+        dodgeBall.ThrowBall(transform.position, velocity);
         _ball = null;
-    }
-    
-    private void NetworkedPossession()
-    {
-        var dodgeBall = _ball.GetComponent<NetDodgeball>();
-        if (!dodgeBall)
-        {
-            Debug.LogError("Dodgeball not found");
-        }
-
-        var possession = handSide == HandSide.RIGHT ? NetBallPossession.RightHand : NetBallPossession.LeftHand;
-        networkPlayer.RPC_PossessBall(possession, dodgeBall.GetComponent<NetDodgeball>().index);
+        _netDodgeball = null;
     }
 
     #endregion

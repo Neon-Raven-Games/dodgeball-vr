@@ -64,6 +64,11 @@ public class NetBallController : NetworkBehaviour
         return NetBallPossession.None;
     }
 
+    public static void PossessBall(NetworkId id, NetBallPossession possession)
+    {
+        UpdatePlayerPossessionData(id, possession, BallType.Dodgeball);
+    }
+    
     public static void PossessBall(NetworkRunner runner, NetworkId id, NetBallPossession possession, int ballIndex)
     {
         var ball = _instance.ballMap.Get(ballIndex);
@@ -90,7 +95,7 @@ public class NetBallController : NetworkBehaviour
             (networkRunner, o) =>
             {
                 var db = o.GetComponent<NetDodgeball>();
-                db.Initialize(_instance.ballMap[index].ballType, velocity, index, _instance.ballMap[index].team);
+                db.Initialize(_instance.ballMap[index].ballType, velocity, index, _instance.ballMap[index].team, runner);
             });
         // LogBallData(index);
         _networkBalls[index] = thrownBall;

@@ -215,7 +215,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &177348959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -299,11 +299,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!1 &236825018 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5784487045585534595, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
-  m_PrefabInstance: {fileID: 220937644363143883}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &501690782
 GameObject:
   m_ObjectHideFlags: 0
@@ -1547,6 +1542,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -4073823677522750790, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
+      propertyPath: SetUnityFixedTimestep
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -4073823677522750790, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
+      propertyPath: ClientPhysicsSimulation
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 216462934079342029, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1598,39 +1601,19 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5784487045585534595, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1838180946432910228}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
 --- !u!114 &1838180946432910223 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2411670133349451518, guid: 2ce0da9a0294e94449c51553a84f3269, type: 3}
   m_PrefabInstance: {fileID: 220937644363143883}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 236825018}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3a3cd3b24b3204a45ac4bb5101d35b22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1838180946432910228
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 236825018}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b5a1ff9dee264bfd829a39e6542dcbd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _physicsAuthority: 2
-  _physicsTiming: 3
-  ClientPhysicsSimulation: 1
-  DeltaTimeMultiplier: 1
-  SetUnityFixedTimestep: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

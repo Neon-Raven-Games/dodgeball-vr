@@ -20014,7 +20014,7 @@ GameObject:
   - component: {fileID: 9123288081186968033}
   - component: {fileID: 682716741012247643}
   - component: {fileID: 1660081455178729196}
-  - component: {fileID: 4169189962582464529}
+  - component: {fileID: -612885485847457770}
   m_Layer: 3
   m_Name: Dodge Ball Base
   m_TagString: Untagged
@@ -20086,6 +20086,7 @@ MonoBehaviour:
   skinnedMeshRenderer: {fileID: 6327207839396823541}
   transitionTime: 0.3
   pauseTime: 0
+  _ballState: 2
 --- !u!54 &2910980798290559304
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -20256,7 +20257,7 @@ MonoBehaviour:
   m_SmoothRotation: 0
   m_SmoothRotationAmount: 5
   m_TightenRotation: 0.5
-  m_TrackScale: 1
+  m_TrackScale: 0
   m_SmoothScale: 0
   m_SmoothScaleAmount: 8
   m_TightenScale: 0.1
@@ -20300,7 +20301,6 @@ MonoBehaviour:
   _index: 0
   _team: 2
   _type: 1
-  rigidBody: {fileID: 4169189962582464529}
 --- !u!114 &1660081455178729196
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20319,8 +20319,8 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 682716741012247643}
-  - {fileID: 4169189962582464529}
---- !u!114 &4169189962582464529
+  - {fileID: -612885485847457770}
+--- !u!114 &-612885485847457770
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -20333,7 +20333,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncScale: 0
-  SyncParent: 0
+  SyncParent: 1
   _interpolationTarget: {fileID: 0}
   UsePreciseRotation: 0
   UseRenderSleepThresholds: 1

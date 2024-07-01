@@ -59,29 +59,28 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     private Vector2 _moveInput;
     private NetIKTargetHelper _netIKTargetHelper;
 
-    private bool _gripPreformed;
-    private Action _gripPerformedAction;
+    private bool _rightGripPreformed;
+    private Action _rightGripPerformedAction;
 
-    private bool _gripCancelled;
-    private Action _gripCancelledAction;
+    private bool _rightGripCancelled;
+    private Action _rightGripCancelledAction;
 
-
-    public void GripPerform()
+    public void RightGripPerform()
     {
         if (!Object.HasInputAuthority) return;
-        _gripPreformed = true;
+        _rightGripPreformed = true;
     }
 
-    public void GripCancel()
+    public void RightGripCancel()
     {
         if (!Object.HasInputAuthority) return;
-        _gripCancelled = true;
+        _rightGripCancelled = true;
     }
 
-    public void SubscribeInput(Action gripPerformed, Action gripCancelled)
+    public void SubscribeRightInput(Action gripPerformed, Action gripCancelled)
     {
-        _gripPerformedAction = gripPerformed;
-        _gripCancelledAction = gripCancelled;
+        _rightGripPerformedAction = gripPerformed;
+        _rightGripCancelledAction = gripCancelled;
     }
 
     public void Update()
@@ -94,8 +93,8 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     public void UnsubscribeGrips()
     {
-        _gripCancelledAction = null;
-        _gripPerformedAction = null;
+        _rightGripCancelledAction = null;
+        _rightGripPerformedAction = null;
     }
 
     private bool ExtractNetInput()
@@ -161,7 +160,7 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     private int _throwCount;
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
     public void RPC_PossessBall(NetBallPossession possession, int ballIndex)
     {
         if (possession == NetBallPossession.None)
@@ -170,13 +169,13 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         NetBallController.PossessBall(Runner, Object.Id, possession, ballIndex);
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
     public void RPC_ThrownBall(int index, Vector3 position, Vector3 velocity, NetBallPossession possession)
     {
         NetBallController.ThrowBall(Runner, possession, position, velocity, Object.Id, index);
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, TickAligned = false)]
+    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, TickAligned = false)]
     public void RPC_TargetHit(Team ownerTeam, Team targetTeam, int ballIndex)
     {
         NetBallController.SetDeadBall(ballIndex);
@@ -218,27 +217,25 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             if (Object.HasStateAuthority)
             {
                 var dodgeball = NetBallController.SpawnInitialBall(0, Object.Runner);
-                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 0, Team.None);
+                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 0, Team.None, Runner);
 
                 dodgeball = NetBallController.SpawnInitialBall(1, Object.Runner);
-                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 1, Team.None);
+                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 1, Team.None, Runner);
 
                 dodgeball = NetBallController.SpawnInitialBall(2, Object.Runner);
-                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 2, Team.None);
+                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 2, Team.None, Runner);
 
                 return;
             }
 
             // networkPlayerTarget.GetComponent<NetworkTransform>().enabled = false;
-            // ikTargetModel.leftHandTarget.GetComponent<NetworkTransform>().enabled = false;
-            // ikTargetModel.rightHandTarget.GetComponent<NetworkTransform>().enabled = false;
+            ikTargetModel.leftHandTarget.GetComponent<NetworkTransform>().enabled = false;
+            ikTargetModel.rightHandTarget.GetComponent<NetworkTransform>().enabled = false;
         }
         else
         {
             localPlayer.playerModel.SetActive(false);
             ikTargetModel.playerModel.SetActive(true);
-            Debug.Log("Setting net player active");
-
             _netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
         }
     }
@@ -248,24 +245,24 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
         if (ExtractNetInput()) return;
 
         if (!Object.HasInputAuthority) _netIKTargetHelper.SetAxis(_moveInput);
-        else InvokeActions();
         if (!Object.HasStateAuthority) return;
-
+        
+        InvokeActions();
         UpdateHostNetModels();
     }
 
     private void InvokeActions()
     {
-        if (_gripPreformed)
+        if (_rightGripPreformed)
         {
-            _gripPreformed = false;
-            _gripPerformedAction?.Invoke();
+            _rightGripPreformed = false;
+            _rightGripPerformedAction?.Invoke();
         }
 
-        if (_gripCancelled)
+        if (_rightGripCancelled)
         {
-            _gripCancelled = false;
-            _gripCancelledAction?.Invoke();
+            _rightGripCancelled = false;
+            _rightGripCancelledAction?.Invoke();
         }
     }
 
@@ -282,10 +279,6 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     {
         MoveNetIKTarget(networkHeadTarget.transform, _hmdPosition);
         RotateNextIKTarget(networkHeadTarget, _hmdRotation);
-
-        // this is trying to move the players head, but we are using the ik targets now
-        // ikTargetModel.hmdTarget.position = networkHeadTarget.position;
-        // ikTargetModel.hmdTarget.rotation = networkHeadTarget.rotation;
     }
 
 

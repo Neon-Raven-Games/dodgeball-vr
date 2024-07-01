@@ -7,6 +7,7 @@
 
 public enum BallState
 {
-    Live, 
+    Live,
+    Possessed,
     Dead
 }
