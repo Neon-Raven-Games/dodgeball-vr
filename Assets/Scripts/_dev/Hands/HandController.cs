@@ -1,9 +1,17 @@
 using CloudFine.ThrowLab;
+using Fusion;
 using Fusion.Addons.Physics;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public struct GrabData : INetworkInput
+{
+    public int ballIndex;
+    public Vector3 position;
+    public Vector3 velocity;
+    public NetBallPossession possession;
+}
 // todo, after physics refactor, test the logical flow
 // refactor for NetBallController may have to switch up logical flow a bit
 public class HandController : MonoBehaviour
@@ -12,7 +20,7 @@ public class HandController : MonoBehaviour
 
     [SerializeField] private Transform grabTransform;
     [SerializeField] private InputActionAsset actionAsset;
-    [SerializeField] private HandSide handSide;
+    [SerializeField] internal HandSide handSide;
     private LayerMask _ballLayer;
     internal GameObject _ball;
     private bool _grabbing;
@@ -73,18 +81,35 @@ public class HandController : MonoBehaviour
     }
 
     private void NetGripCancel(InputAction.CallbackContext obj) =>
-        networkPlayer.RightGripCancel();
+        networkPlayer.GripCancel();
 
     public void NetGripPerform(InputAction.CallbackContext e) =>
-        networkPlayer.RightGripPerform();
+        networkPlayer.GripPreform();
 
 
     #region single player grabs
 
+    public void SetGrabData(Vector3 velocity, NetBallPossession possession)
+    {
+        networkPlayer.SetGrabData(
+        new GrabData
+        {
+            ballIndex = _ballIndex,
+            position = grabTransform.position,
+            velocity = velocity,
+            possession = possession
+        });
+    }
+
+    private int _ballIndex;
     private void SetGrab(InputAction.CallbackContext e)
     {
         if (_ball && !_grabbing)
         {
+            _ballIndex = _ball.GetComponent<NetDodgeball>().index;
+            
+            Debug.Log("Setting ball with index: " + _ballIndex);
+            
             _animator.SetInteger(_SState, 1);
             _ball.GetComponent<DodgeBall>().SetOwner(_controller);
 
@@ -93,7 +118,9 @@ public class HandController : MonoBehaviour
             if (!rb.Rigidbody.isKinematic) rb.Rigidbody.velocity = Vector3.zero;
             rb.Teleport(grabTransform.position);
             _grabbing = true;
-            
+            SetGrabData(Vector3.zero, handSide == HandSide.RIGHT
+                            ? NetBallPossession.RightHand
+                            : NetBallPossession.LeftHand);
             var throwHandle = _ball.GetComponent<ThrowHandle>();
             throwHandle.OnAttach(gameObject, gameObject);
             throwHandle.onFinalTrajectory += ThrowNetBallAfterTrajectory;
@@ -140,7 +167,10 @@ public class HandController : MonoBehaviour
         if (!_grabbing || !_ball) return;
         if (!_netDodgeball) _netDodgeball = _ball.GetComponent<NetDodgeball>();
         if (!_netDodgeball) return;
-        _netDodgeball.SetLocalOwnerPosition(grabTransform);
+        
+        SetGrabData(Vector3.zero, handSide == HandSide.RIGHT
+            ? NetBallPossession.RightHand
+            : NetBallPossession.LeftHand);
         _ball.transform.position = grabTransform.position;
         _ball.transform.rotation = grabTransform.rotation;
     }
@@ -156,9 +186,8 @@ public class HandController : MonoBehaviour
             Debug.LogError("Dodgeball not found");
         }
 
-        Debug.Log("Throwing Ball!");
-        dodgeBall.ThrowBall(transform.position, velocity);
-
+        SetGrabData(velocity, NetBallPossession.None);
+        _ballIndex = -1;
         _netDodgeball = null;
         _ball = null;
     }

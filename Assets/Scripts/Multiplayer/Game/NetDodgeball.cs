@@ -11,6 +11,8 @@ public struct BallInput : INetworkInput
     public NetBallPossession possession;
     public NetworkId player;
     public Vector3 ownerHandPosition;
+    public Vector3 velocity;
+    public Vector3 position;
 }
 
 namespace Unity.Template.VR.Multiplayer
@@ -24,13 +26,14 @@ namespace Unity.Template.VR.Multiplayer
 
     // we need to make the hand grab the dodgeball
     // IK final should be able to handle this
-    public class NetDodgeball : NetworkBehaviour, INetworkRunnerCallbacks
+    public class NetDodgeball : NetworkBehaviour
     {
         [Networked] public int index { get; set; }
         [Networked] public Team team { get; set; }
         [Networked] public BallType type { get; set; }
 
         private NetworkRigidbody3D _rb;
+        [SerializeField] private GameObject visualBall;
         public override void Spawned()
         {
             base.Spawned();
@@ -38,23 +41,16 @@ namespace Unity.Template.VR.Multiplayer
             NetBallController.SetBallConfig(GetComponent<ThrowHandle>());
         }
 
-        private void SetBallType(BallType ballType)
+        internal void SetBallType(BallType ballType)
         {
             if (ballType == BallType.None)
             {
-                gameObject.SetActive(false);
+                visualBall.SetActive(false);
                 return;
             }
 
             type = ballType;
-            gameObject.SetActive(true);
-        }
-
-        public void ThrowBall(Vector3 position, Vector3 velocity)
-        {
-            ownerHandPosition = Vector3.zero;
-            _rb.Teleport(position);
-            _rb.Rigidbody.velocity = velocity;
+            visualBall.SetActive(true);
         }
 
         // todo, this is how we need to handle the ball possession
@@ -77,137 +73,17 @@ namespace Unity.Template.VR.Multiplayer
             }
         }
 */
-        private NetworkId ownerId;
-        private NetBallPossession currentPossession;
-        [Networked] private Vector3 ownerHandPosition { get; set; }
 
-        public override void FixedUpdateNetwork()
+
+        public void SetOwner(NetworkId playerRef, NetBallPossession possession)
         {
-            if (GetComponent<DodgeBall>()._ballState == BallState.Possessed)
-            {
-                if (!GetInput<BallInput>(out var ballInput)) return;
-                
-                // update position
-                if (ballInput.ownerHandPosition != Vector3.zero)
-                {
-                    ownerHandPosition = ballInput.ownerHandPosition;
-                    transform.position = ownerHandPosition;
-                    _rb.Teleport(transform.position);
-                }
-                
-                // update possession
-                currentPossession = ballInput.possession;
-                ownerId = ballInput.player;
-                if (HasStateAuthority) NetBallController.PossessBall(ownerId, currentPossession);
-            }
         }
 
-        // something is wrong here
-        public void OnInput(NetworkRunner runner, NetworkInput input)
-        {
-            var ballInput = new BallInput()
-            {
-                ownerHandPosition = ownerHandPosition,
-                possession = currentPossession,
-                player = ownerId
-            };
-            
-            input.Set(ballInput);
-        }
-
-        public void Initialize(BallType spawnType, Vector3 velocity, int mappedIndex, Team ownerTeam,
-            NetworkRunner runner)
+        public void Initialize(BallType spawnType, int mappedIndex, Team ownerTeam, NetworkRunner runner)
         {
             SetBallType(spawnType);
             team = ownerTeam;
             index = mappedIndex;
-
-            runner.AddCallbacks(this);
-        }
-
-        public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
-        {
-        }
-
-        public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
-        {
-        }
-
-        public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
-        {
-        }
-
-        public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
-        {
-        }
-
-        public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input)
-        {
-        }
-
-        public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
-        {
-        }
-
-        public void OnConnectedToServer(NetworkRunner runner)
-        {
-        }
-
-        public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
-        {
-        }
-
-        public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request,
-            byte[] token)
-        {
-        }
-
-        public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
-        {
-        }
-
-        public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)
-        {
-        }
-
-        public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
-        {
-        }
-
-        public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data)
-        {
-        }
-
-        public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
-        {
-        }
-
-        public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key,
-            ArraySegment<byte> data)
-        {
-        }
-
-        public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress)
-        {
-        }
-
-        public void OnSceneLoadDone(NetworkRunner runner)
-        {
-        }
-
-        public void OnSceneLoadStart(NetworkRunner runner)
-        {
-        }
-
-        public void SetLocalOwnerPosition(Vector3 position)
-        {
-            ownerHandPosition = position;
-        }
-
-        public void SetOwner(NetworkId playerRef, NetBallPossession possession)
-        {
-            ownerId = playerRef;
-            currentPossession = possession;
         }
     }
 }

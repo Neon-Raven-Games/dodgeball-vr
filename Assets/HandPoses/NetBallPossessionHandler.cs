@@ -31,6 +31,7 @@ public class NetBallPossessionHandler : MonoBehaviour
     public void UpdatePossession(NetworkId id)
     {
         var netPossession = NetBallController.GetBallPossession(id, handSide);
+        
         if (_possession == netPossession) return;
         _possession = netPossession;
         var ballType = NetBallController.GetBallType(id);

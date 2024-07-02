@@ -144,16 +144,12 @@ public class DodgeBall : MonoBehaviour
 
     private void SetNetDeadBall()
     {
-        _owner.networkPlayer.RPC_TargetHit(Team.None, Team.None, GetComponent<NetDodgeball>().index);
     }
     private void FriendlyFire()
     {
-        if (_ballState != BallState.Live) return;
-        _owner.networkPlayer.RPC_TargetHit(_owner.team, _owner.team, GetComponent<NetDodgeball>().index);
     }
 
     private void HitOppositeTeam(DevController controller)
     {
-        _owner.networkPlayer.RPC_TargetHit(_owner.team, controller.team, GetComponent<NetDodgeball>().index);
     }
 }

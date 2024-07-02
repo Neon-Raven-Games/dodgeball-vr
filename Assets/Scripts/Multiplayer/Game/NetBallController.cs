@@ -73,12 +73,11 @@ public class NetBallController : NetworkBehaviour
     {
         var ball = _instance.ballMap.Get(ballIndex);
         UpdatePlayerPossessionData(id, possession, ball.ballType);
+        
         ball.owner = id;
         ball.team = _instance.playerData.Get(id).team;
         _instance.ballMap.Set(ballIndex, ball);
-
-        // LogBallData(ballIndex);
-
+        
         var destroyedBall = _networkBalls[ballIndex];
         runner.Despawn(destroyedBall);
     }
@@ -95,7 +94,7 @@ public class NetBallController : NetworkBehaviour
             (networkRunner, o) =>
             {
                 var db = o.GetComponent<NetDodgeball>();
-                db.Initialize(_instance.ballMap[index].ballType, velocity, index, _instance.ballMap[index].team, runner);
+                db.Initialize(_instance.ballMap[index].ballType, index, _instance.ballMap[index].team, runner);
             });
         // LogBallData(index);
         _networkBalls[index] = thrownBall;
@@ -119,7 +118,7 @@ public class NetBallController : NetworkBehaviour
         // LogPlayerData(id);
     }
 
-    private static void UpdatePlayerPossessionData(NetworkId id, NetBallPossession possession, BallType type)
+    internal static void UpdatePlayerPossessionData(NetworkId id, NetBallPossession possession, BallType type)
     {
         var playerData = _instance.playerData[id];
         if (possession == NetBallPossession.None)
@@ -214,4 +213,9 @@ public class NetBallController : NetworkBehaviour
     }
 
     #endregion
+
+    public static NetDodgeball GetBall(int grabDataBallIndex)
+    {
+        return _networkBalls[grabDataBallIndex].GetComponent<NetDodgeball>();
+    }
 }

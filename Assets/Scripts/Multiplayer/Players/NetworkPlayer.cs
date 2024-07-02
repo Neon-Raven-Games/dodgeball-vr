@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Fusion;
+using Fusion.Addons.Physics;
 using Fusion.Sockets;
 using Unity.Template.VR.Multiplayer.Players;
 using UnityEngine;
@@ -59,42 +60,47 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     private Vector2 _moveInput;
     private NetIKTargetHelper _netIKTargetHelper;
 
-    private bool _rightGripPreformed;
-    private Action _rightGripPerformedAction;
+    private bool _gripPreformed;
+    private Action _gripPerformedAction;
 
-    private bool _rightGripCancelled;
-    private Action _rightGripCancelledAction;
+    private bool _gripCancelled;
+    private Action _gripCancelledAction;
 
-    public void RightGripPerform()
+    public void GripPreform()
     {
-        if (!Object.HasInputAuthority) return;
-        _rightGripPreformed = true;
+        _gripPreformed = true;
     }
 
-    public void RightGripCancel()
+    public void GripCancel()
     {
-        if (!Object.HasInputAuthority) return;
-        _rightGripCancelled = true;
+        _gripCancelled = true;
     }
 
-    public void SubscribeRightInput(Action gripPerformed, Action gripCancelled)
+    public void SubscribeInput(Action gripPerformed, Action gripCancelled)
     {
-        _rightGripPerformedAction = gripPerformed;
-        _rightGripCancelledAction = gripCancelled;
+        _gripPerformedAction = gripPerformed;
+        _gripCancelledAction = gripCancelled;
     }
 
     public void Update()
     {
-        // tested p2 client for state authority sync issues
+        // // tested p2 client for state authority sync issues
         // if (!Object.HasInputAuthority || Object.HasStateAuthority) return;
-        // if (Keyboard.current.aKey.wasPressedThisFrame) RPC_PossessBall(NetBallPossession.LeftHand, 1);
-        // if (Keyboard.current.sKey.wasPressedThisFrame) RPC_ThrownBall(1, _leftHandPosition, _leftHandPosition.normalized * 20f, NetBallPossession.LeftHand);
+        // if (Keyboard.current.aKey.wasPressedThisFrame)
+        // {
+        //     GripPreform();
+        // }
+        //
+        // if (Keyboard.current.sKey.wasPressedThisFrame)
+        // {
+        //     GripCancel();
+        // }
     }
 
     public void UnsubscribeGrips()
     {
-        _rightGripCancelledAction = null;
-        _rightGripPerformedAction = null;
+        _gripCancelledAction = null;
+        _gripPerformedAction = null;
     }
 
     private bool ExtractNetInput()
@@ -110,6 +116,7 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             _hmdRotation = localPlayer.hmdTarget.rotation;
 
             _moveInput = localController.GetMoveInput();
+            InvokeActions();
         }
         else
         {
@@ -127,15 +134,31 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             _hmdRotation = input.Value.hmdRotation;
 
             _moveInput = input.Value.axis;
+            _gripPreformed = input.Value.gripPreformed != 0;
+            _gripCancelled = input.Value.gripCancelled != 0;
+
+            _grabData = input.Value.grabData;
+            InvokeActions();
         }
 
         return false;
     }
 
+    private void RefreshInput()
+    {
+        
+    }
     private void UpdateNetBallPossessions()
     {
         leftBallIndex.UpdatePossession(Object.Id);
         rightBallIndex.UpdatePossession(Object.Id);
+    }
+
+    private GrabData _grabData;
+
+    public void SetGrabData(GrabData grabData)
+    {
+        _grabData = grabData;
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -149,47 +172,12 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             hmdPosition = _hmdPosition,
             hmdRotation = _hmdRotation,
             axis = _moveInput,
+            gripPreformed = _gripPreformed ? 1 : 0,
+            gripCancelled = _gripCancelled ? 1 : 0,
+            grabData = _grabData
         };
 
         input.Set(ikInput);
-    }
-
-    #endregion
-
-    #region ball RPC
-
-    private int _throwCount;
-
-    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
-    public void RPC_PossessBall(NetBallPossession possession, int ballIndex)
-    {
-        if (possession == NetBallPossession.None)
-            Debug.LogError("Invalid ball possession: " + possession + " index: " + ballIndex);
-
-        NetBallController.PossessBall(Runner, Object.Id, possession, ballIndex);
-    }
-
-    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
-    public void RPC_ThrownBall(int index, Vector3 position, Vector3 velocity, NetBallPossession possession)
-    {
-        NetBallController.ThrowBall(Runner, possession, position, velocity, Object.Id, index);
-    }
-
-    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, TickAligned = false)]
-    public void RPC_TargetHit(Team ownerTeam, Team targetTeam, int ballIndex)
-    {
-        NetBallController.SetDeadBall(ballIndex);
-
-        // Friendly Fire or hit surface
-        if (ownerTeam == targetTeam) return;
-
-        // Score
-        if (ownerTeam == Team.TeamOne) GameManager.teamOneScore++;
-        else if (ownerTeam == Team.TeamTwo) GameManager.teamTwoScore++;
-        GameManager.UpdateScore();
-
-
-        Debug.Log("Hit player!");
     }
 
     #endregion
@@ -207,6 +195,7 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
     public override void Spawned()
     {
         var client = Object.HasInputAuthority;
+        _grabData.ballIndex = -1;
         NetBallController.AddPlayerData(Object.Id, Team.TeamOne);
         if (client)
         {
@@ -217,18 +206,17 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
             if (Object.HasStateAuthority)
             {
                 var dodgeball = NetBallController.SpawnInitialBall(0, Object.Runner);
-                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 0, Team.None, Runner);
+                dodgeball.Initialize(BallType.Dodgeball, 0, Team.None, Runner);
 
                 dodgeball = NetBallController.SpawnInitialBall(1, Object.Runner);
-                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 1, Team.None, Runner);
+                dodgeball.Initialize(BallType.Dodgeball, 1, Team.None, Runner);
 
                 dodgeball = NetBallController.SpawnInitialBall(2, Object.Runner);
-                dodgeball.Initialize(BallType.Dodgeball, Vector3.zero, 2, Team.None, Runner);
+                dodgeball.Initialize(BallType.Dodgeball, 2, Team.None, Runner);
 
                 return;
             }
 
-            // networkPlayerTarget.GetComponent<NetworkTransform>().enabled = false;
             ikTargetModel.leftHandTarget.GetComponent<NetworkTransform>().enabled = false;
             ikTargetModel.rightHandTarget.GetComponent<NetworkTransform>().enabled = false;
         }
@@ -242,27 +230,66 @@ public class NetworkPlayer : NetworkBehaviour, INetworkRunnerCallbacks
 
     public override void FixedUpdateNetwork()
     {
-        if (ExtractNetInput()) return;
 
+        if (ExtractNetInput()) return;
+        
+        if (_grabData.velocity != Vector3.zero)
+        {
+            NetBallController.PossessBall(Object.Id, _grabData.possession);
+            var ball = NetBallController.GetBall(_grabData.ballIndex);
+            if (ball == null)
+            {
+                Debug.LogError("Ball not found");
+                return;
+            }
+
+            ball.SetBallType(BallType.Dodgeball);
+            var ballRb = ball.GetComponent<NetworkRigidbody3D>();
+            ballRb.Teleport(_grabData.position);
+            ballRb.RBIsKinematic = false;
+            ballRb.Rigidbody.velocity = _grabData.velocity;
+
+
+            NetBallController.UpdatePlayerPossessionData(Object.Id, _grabData.possession, BallType.None);
+            _grabData = new GrabData
+            {
+                ballIndex = -1
+            };
+        }
+        
+        UpdateBallPosition();
+        
         if (!Object.HasInputAuthority) _netIKTargetHelper.SetAxis(_moveInput);
         if (!Object.HasStateAuthority) return;
-        
-        InvokeActions();
+
         UpdateHostNetModels();
+    }
+
+    private void UpdateBallPosition()
+    {
+        if (_grabData.ballIndex >= 0 && _grabData.velocity == Vector3.zero)
+        {
+            NetBallController.PossessBall(Object.Id, _grabData.possession);
+            var ball = NetBallController.GetBall(_grabData.ballIndex);
+            if (ball == null) return;
+
+            if (!Object.HasInputAuthority) ball.SetBallType(BallType.None);
+            ball.transform.position = _grabData.position;
+        }
     }
 
     private void InvokeActions()
     {
-        if (_rightGripPreformed)
+        if (_gripPreformed)
         {
-            _rightGripPreformed = false;
-            _rightGripPerformedAction?.Invoke();
+            _gripPreformed = false;
+            _gripPerformedAction?.Invoke();
         }
 
-        if (_rightGripCancelled)
+        if (_gripCancelled)
         {
-            _rightGripCancelled = false;
-            _rightGripCancelledAction?.Invoke();
+            _gripCancelled = false;
+            _gripCancelledAction?.Invoke();
         }
     }
 

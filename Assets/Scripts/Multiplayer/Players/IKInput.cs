@@ -14,5 +14,8 @@ namespace Unity.Template.VR.Multiplayer.Players
         public Quaternion hmdRotation;
         
         public Vector2 axis;
+        public int gripPreformed;
+        public int gripCancelled;
+        public GrabData grabData { get; set; }
     }
 }

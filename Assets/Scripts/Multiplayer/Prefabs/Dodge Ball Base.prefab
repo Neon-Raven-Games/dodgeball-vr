@@ -20299,8 +20299,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _index: 0
-  _team: 2
+  _team: 0
   _type: 1
+  visualBall: {fileID: 1225641094161966262}
 --- !u!114 &1660081455178729196
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30150,11 +30151,11 @@ MonoBehaviour:
   CollisionTag: 
   EventReference:
     Guid:
-      Data1: 1124316849
-      Data2: 1302590886
-      Data3: -1716166723
-      Data4: -976584052
-    Path: event:/Test_FLY
+      Data1: 1224669578
+      Data2: 1144271527
+      Data3: 794069888
+      Data4: -567067940
+    Path: event:/Test_BEEP
   Event: 
   PlayEvent: 0
   StopEvent: 12
@@ -30610,6 +30611,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+--- !u!1 &1225641094161966262 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
+  m_PrefabInstance: {fileID: 2144614769626716647}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1894197642457873932 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 05362f2c4b8a9d143852e032c48424a2, type: 3}
