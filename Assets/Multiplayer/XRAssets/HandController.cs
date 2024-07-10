@@ -62,7 +62,7 @@ namespace Hands
 
                 var netDodgeball = _ball.GetComponent<NetDodgeball>();
                 ServerOwnershipManager.RequestOwnershipFromServer(netDodgeball,
-                    _controller.GetComponentInParent<NetworkBehaviour>().LocalConnection);
+                    _controller.GetComponentInParent<NetworkBehaviour>().LocalConnection, handSide);
             }
         }
 
@@ -105,15 +105,9 @@ namespace Hands
 
             _grabbing = false;
             _ball.GetComponent<ThrowHandle>().onFinalTrajectory -= ThrowNetBallAfterTrajectory;
-
-            // the net dodgeball should not be calling this method
-            // we are relying on the net dodgeball to call the server RPC
-            // which will not let us move the hand controller to VR. 
-            // If we can decouple these two, we can move the hand controller to VR
-            _ball.GetComponent<NetDodgeball>().ApplyThrowVelocityServerRpc(velocity, _ball.transform.position);
+            _ball.GetComponent<NetDodgeball>().ApplyThrowVelocityServerRpc(velocity, _ball.transform.position, handSide);
 
             Debug.Log($"Final server trajectory: {velocity}");
-
             _ball = null;
         }
 

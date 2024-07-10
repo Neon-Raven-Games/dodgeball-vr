@@ -16,22 +16,27 @@ namespace Unity.Template.VR.Multiplayer
 
     public class NetDodgeball : NetworkBehaviour
     {
+        [SerializeField] private GameObject visualBall;
+        
+        #region syncvar
+
         private readonly SyncVar<Vector3> _syncPosition = new();
         private readonly SyncVar<Vector3> _syncVelocity = new();
-        private Rigidbody rb;
-        // do we need this anymore?
-        public int index { get; set; }
-        
-        // we should use a sync var for this and set it before transferring ownership
-        public Team team { get; set; }
-        public BallType type { get; set; }
 
         public readonly SyncVar<BallState> state = new();
 
-        [SerializeField] private GameObject visualBall;
+        #endregion
+
+        #region unsynced vars, need to sync
+
+        public Team team { get; set; }
+        private BallType type { get; set; }
+
+        #endregion
+
+        private Rigidbody rb;
         private int _layerMask;
         private int _deadBallLayer;
-
         private float _radius;
 
         private void Start()
@@ -58,9 +63,8 @@ namespace Unity.Template.VR.Multiplayer
             visualBall.SetActive(true);
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
-            // this !IsOwner is breaking the ball
             if (HasAuthority && !IsOwner)
             {
                 _syncPosition.Value = transform.position;
@@ -68,38 +72,45 @@ namespace Unity.Template.VR.Multiplayer
 
                 if (state.Value == BallState.Live) PerformHitDetection();
             }
-            else if (!IsOwner)
-            {
-                // todo, this was 10. Using prediction seemed more fitting here to keep the ball in sync and smooth
-                transform.position = Vector3.Lerp(transform.position, _syncPosition.Value, Time.deltaTime * (NetworkManager.TimeManager.RoundTripTime / 2f));
-                if (!rb.isKinematic)
-                    rb.velocity = Vector3.Lerp(rb.velocity, _syncVelocity.Value, Time.deltaTime * (NetworkManager.TimeManager.RoundTripTime / 2f));
-
-                if (state.Value == BallState.Possessed) 
-                    visualBall.SetActive(false);
-            }
         }
 
-        public void ApplyThrowVelocityServerRpc(Vector3 throwVelocity, Vector3 position)
+        private void Update()
         {
-            ServerOwnershipManager.ReleaseOwnershipFromServer(this, throwVelocity, position);
+            if (!HasAuthority) SmoothSync();
         }
+
+        private void SmoothSync()
+        {
+            var interpolationFactor = Time.deltaTime / (NetworkManager.TimeManager.RoundTripTime / 2f);
+
+            transform.position = Vector3.Lerp(transform.position, _syncPosition.Value, interpolationFactor);
+            if (!rb.isKinematic)
+                rb.velocity = Vector3.Lerp(rb.velocity, _syncVelocity.Value, interpolationFactor);
+
+            visualBall.SetActive(state.Value != BallState.Possessed);
+        }
+
 
         internal IEnumerator WaitForServerOwner(Vector3 throwVelocity, Vector3 position)
         {
             yield return new WaitUntil(() => HasAuthority);
-            
+
             _syncPosition.Value = position;
             _syncVelocity.Value = throwVelocity;
 
             transform.position = position;
             rb.velocity = throwVelocity;
-            
+
             // set the ball to a live state
             state.Value = BallState.Live;
 
             // update the visuals to net clients
             visualBall.SetActive(true);
+        }
+
+        public void ApplyThrowVelocityServerRpc(Vector3 throwVelocity, Vector3 position, HandSide handSide)
+        {
+            ServerOwnershipManager.ReleaseOwnershipFromServer(this, throwVelocity, position, handSide);
         }
 
         private void PerformHitDetection()

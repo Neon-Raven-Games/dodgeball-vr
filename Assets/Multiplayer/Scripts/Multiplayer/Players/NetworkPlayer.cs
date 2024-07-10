@@ -1,5 +1,4 @@
 using System;
-using FishNet.Object;
 using Unity.Template.VR.Multiplayer.Server;
 using UnityEngine;
 
@@ -21,7 +20,6 @@ namespace Unity.Template.VR.Multiplayer
     {
         [SerializeField] private PlayerRig localPlayer;
         [SerializeField] public PlayerRig ikTargetModel;
-        [SerializeField] private Transform networkPlayerTarget;
         [SerializeField] private Transform networkHeadTarget;
 
         [SerializeField] private NetBallPossessionHandler leftBallIndex;
@@ -29,6 +27,7 @@ namespace Unity.Template.VR.Multiplayer
 
         #region inputs
 
+        // todo, need movement animations hooked up here
         private NetIKTargetHelper _netIKTargetHelper;
 
         private bool _gripPreformed;
@@ -36,28 +35,6 @@ namespace Unity.Template.VR.Multiplayer
 
         private bool _gripCancelled;
         private Action _gripCancelledAction;
-
-        public void GripPreform()
-        {
-            _gripPreformed = true;
-        }
-
-        public void GripCancel()
-        {
-            _gripCancelled = true;
-        }
-
-        public void SubscribeInput(Action gripPerformed, Action gripCancelled)
-        {
-            _gripPerformedAction = gripPerformed;
-            _gripCancelledAction = gripCancelled;
-        }
-
-        public void UnsubscribeGrips()
-        {
-            _gripCancelledAction = null;
-            _gripPerformedAction = null;
-        }
 
         private void UpdateNetBallPossessions()
         {
@@ -88,6 +65,7 @@ namespace Unity.Template.VR.Multiplayer
 
             if (IsOwner)
             {
+                ServerOwnershipManager.AddPlayer(OwnerId);
                 localPlayer.playerModel.SetActive(true);
                 ikTargetModel.playerModel.SetActive(false);
             }
@@ -103,28 +81,10 @@ namespace Unity.Template.VR.Multiplayer
 
         public void FixedUpdate()
         {
-            // todo, I think this needs to be by !owner   
-            // double check this when server is up
-            // UpdateNetBallPossessions();
+            UpdateNetBallPossessions();
 
             if (!initialized || !IsOwner) return;
             UpdateHostNetModels();
-        }
-
-        // I don't think we need this if we use the hand controller. Dodgeballs should update
-        private void InvokeActions()
-        {
-            if (_gripPreformed)
-            {
-                _gripPreformed = false;
-                _gripPerformedAction?.Invoke();
-            }
-
-            if (_gripCancelled)
-            {
-                _gripCancelled = false;
-                _gripCancelledAction?.Invoke();
-            }
         }
 
         #region IKTargets

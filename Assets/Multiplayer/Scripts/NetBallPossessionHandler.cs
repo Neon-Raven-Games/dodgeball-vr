@@ -30,15 +30,15 @@ public class NetBallPossessionHandler : MonoBehaviour
 
     public void UpdatePossession(int id)
     {
-        // var netPossession = NetBallController.GetBallPossession(id, handSide);
-        
-        // if (_possession == netPossession) return;
-        // _possession = netPossession;
-        // var ballType = NetBallController.GetBallType(id);
-        // SetBallType(ballType);
+        var netPossession = ServerOwnershipManager.GetBallPossession(id, handSide);
+
+        if (_possession == netPossession) return;
+        _possession = netPossession;
+        var ballType = ServerOwnershipManager.GetBallType(id, handSide);
+        SetBallType(ballType);
     }
 
-    public void SetBallType(BallType type)
+    private void SetBallType(BallType type)
     {
         if (!_anim) return;
 
