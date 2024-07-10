@@ -13,7 +13,7 @@ public class ConcreteClientXRObject : IClientXRObject
         InitializeClientObject(go, objectType);
     }
 
-    public void InitializeClientObject(GameObject go, ClientXRObjectType type)
+    public void InitializeClientObject(GameObject go, ClientXRObjectType type, ThrowConfiguration config = null)
     {
         // switch
         if (type == ClientXRObjectType.Ball)
@@ -22,7 +22,6 @@ public class ConcreteClientXRObject : IClientXRObject
             throwHandle.SetConfigSet(new ThrowConfigurationSet(1));
             
             // todo, we need to get a throw config
-            var config = ScriptableObject.CreateInstance<ThrowConfiguration>();
             throwHandle.SetConfigForDevice(Device.UNSPECIFIED, config);
             
             var interactable = go.AddComponent<ThrowLabXRGrabInteractable>();
