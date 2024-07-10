@@ -1,3 +1,4 @@
+using System;
 using FishNet.Managing;
 using FishNet.Object;
 using FishNet.Transporting;
@@ -9,6 +10,7 @@ public class MultiplayerManager : MonoBehaviour
     [SerializeField] private NetworkObject serverOwnershipManager;
     [SerializeField] private NetworkObject dodgeballPrefab;
     [SerializeField] private Transform dodgeballPosition;
+
     public void StartServerGameAsHost()
     {
         _networkManager.ServerManager.StartConnection();
@@ -19,22 +21,39 @@ public class MultiplayerManager : MonoBehaviour
     {
         Debug.Log(args.ConnectionState);
         if (args.ConnectionState != LocalConnectionState.Started) return;
-        
+
         // _networkManager.ClientManager.StartConnection();
         _networkManager.ServerManager.OnServerConnectionState -= ConnectOnServerStart;
-        
+
         // can the server not spawn our dodgeball? We are getting an object reference error?
-        NetworkObject nob = _networkManager.GetPooledInstantiated(dodgeballPrefab, dodgeballPosition.position,Quaternion.identity, true);
+        NetworkObject nob = _networkManager.GetPooledInstantiated(dodgeballPrefab, dodgeballPosition.position,
+            Quaternion.identity, true);
         _networkManager.ServerManager.Spawn(nob);
-        NetworkObject ownership = _networkManager.GetPooledInstantiated(serverOwnershipManager, Vector3.zero, Quaternion.identity, true);
+        NetworkObject ownership =
+            _networkManager.GetPooledInstantiated(serverOwnershipManager, Vector3.zero, Quaternion.identity, true);
         _networkManager.ServerManager.Spawn(ownership);
     }
 
-    public void StartClientGame() =>
+    public void StartClientGame()
+    {
         _networkManager.ClientManager.StartConnection();
+    }
 
-    private void Start() =>
+    [SerializeField] private string webSocketUrl = "ws://localhost/ws";
+    [SerializeField] private bool useClientDiagnostics = true;
+
+    private NetworkDiagnosticConnection _networkDiagnosticConnection;
+    private void Start()
+    {
         _networkManager = GetComponent<NetworkManager>();
+        if (useClientDiagnostics)
+            _networkDiagnosticConnection = new NetworkDiagnosticConnection(webSocketUrl, _networkManager);
+    }
+
+    private void OnDisable()
+    {
+        _networkDiagnosticConnection.Close();
+    }
 }
 
 

@@ -83,8 +83,7 @@ namespace Unity.Template.VR.Multiplayer
         {
             base.OnStartClient();
 
-            // this will boot strap the VR controller for the XR
-            // rig if not on the server
+            // todo, think this is obsolete
             InitializeClient(gameObject);
 
             if (IsOwner)

@@ -31,19 +31,16 @@ public class ServerOwnershipManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void RequestOwnershipServerRpc(NetworkBehaviour networkObject, NetworkConnection requestingPlayer)
     {
-        Debug.Log("Attempting to transfer ownership...");
         if (IsOwnershipRequestValid(networkObject, requestingPlayer))
         {
             networkObject.GetComponent<NetDodgeball>().state.Value = BallState.Possessed;
             networkObject.GiveOwnership(requestingPlayer);
-            Debug.Log($"Ownership of {networkObject.name} granted to {requestingPlayer.ClientId}");
         }
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void ReleaseOwnershipServerRpc(NetworkBehaviour networkObject,  Vector3 velocity, Vector3 position)
     {
-        Debug.Log("Removing ownership...");
         networkObject.RemoveOwnership();
         var netDb = networkObject.GetComponent<NetDodgeball>();
         netDb.StartCoroutine(netDb.WaitForServerOwner(velocity, position));
