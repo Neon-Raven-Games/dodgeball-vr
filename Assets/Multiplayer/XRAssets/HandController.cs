@@ -50,7 +50,9 @@ namespace Hands
             if (_ball && !_grabbing)
             {
                 _animator.SetInteger(_SState, 1);
-                _ball.GetComponent<DodgeBall>().SetOwner(_controller);
+                // todo, set owner coupled the dev controller and input to server
+                // _ball.GetComponent<DodgeBall>().SetOwner(_controller);
+                _ball.GetComponent<DodgeBall>().SetOwner();
 
                 var rb = _ball.GetComponent<Rigidbody>();
                 if (!rb.isKinematic) rb.velocity = Vector3.zero;
@@ -107,7 +109,7 @@ namespace Hands
             _ball.GetComponent<ThrowHandle>().onFinalTrajectory -= ThrowNetBallAfterTrajectory;
             _ball.GetComponent<NetDodgeball>().ApplyThrowVelocityServerRpc(velocity, _ball.transform.position, handSide);
 
-            Debug.Log($"Final server trajectory: {velocity}");
+            Debug.Log($"Final server trajectory: {velocity}, position: {_ball.transform.position}");
             _ball = null;
         }
 

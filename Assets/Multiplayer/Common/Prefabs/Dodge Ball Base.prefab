@@ -20156,7 +20156,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 4
+  <PrefabId>k__BackingField: 1
   <SpawnableCollectionId>k__BackingField: 0
   <SceneId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 13647503724683268544
@@ -20176,6 +20176,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 3628287079600763293}
   _networkObjectCache: {fileID: 3628287079600763293}
   visualBall: {fileID: 1225641094161966262}
+  interpolateFactor: 0.8
 --- !u!82 &5857482318764256823
 AudioSource:
   m_ObjectHideFlags: 0

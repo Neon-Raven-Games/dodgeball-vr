@@ -42,14 +42,15 @@ public class ServerOwnershipManager : NetworkBehaviour
     }
     
     public static void ReleaseOwnershipFromServer(NetworkBehaviour networkObject, Vector3 velocity, Vector3 position,
-        HandSide handSide)
+        HandSide handSide, uint tick)
     {
-        _instance.ReleaseOwnershipServerRpc(networkObject, velocity, position, handSide);
+        _instance.ReleaseOwnershipServerRpc(networkObject, velocity, position, handSide, tick);
     }
     
     [ServerRpc(RequireOwnership = false)]
     public void RequestOwnershipServerRpc(NetworkBehaviour networkObject, NetworkConnection requestingPlayer, HandSide handSide)
     {
+        Debug.Log($"requesting ownership from {requestingPlayer}, on hand side {handSide}."); 
         if (!IsOwnershipRequestValid(networkObject, requestingPlayer)) return;
         
         Debug.Log("Requested ownership of ball, setting state to possessed");
@@ -58,17 +59,19 @@ public class ServerOwnershipManager : NetworkBehaviour
         netBall.state.Value = BallState.Possessed;
         if (handSide == HandSide.LEFT) _playerBallPossessions[requestingPlayer.ClientId].leftBall = NetBallPossession.LeftHand;
         else _playerBallPossessions[requestingPlayer.ClientId].rightBall = NetBallPossession.RightHand;
-            
-        // todo, handle power-up balls here
         _playerBallPossessions[requestingPlayer.ClientId].leftBallType = BallType.Dodgeball;
-           
+        
+        Debug.Log($"Setting player {requestingPlayer.ClientId} possession to dirty. left ball: {_playerBallPossessions[requestingPlayer.ClientId].leftBall}");
+        _playerBallPossessions.Dirty(requestingPlayer.ClientId);
+        
         networkObject.GiveOwnership(requestingPlayer);
     }
 
-    [ServerRpc(RequireOwnership = false)]
+    [ServerRpc(RequireOwnership = false, OrderType = DataOrderType.Last)]
     public void ReleaseOwnershipServerRpc(NetworkBehaviour networkObject, Vector3 velocity, Vector3 position,
-        HandSide handSide)
+        HandSide handSide, uint tick)
     {
+        Debug.Log($"Releasing ownership from {networkObject.OwnerId}. Throwing ball at velocity: {velocity} and setting position: {position}");
         var netDb = networkObject.GetComponent<NetDodgeball>();
         if (handSide == HandSide.RIGHT)
         {
@@ -81,7 +84,9 @@ public class ServerOwnershipManager : NetworkBehaviour
             _playerBallPossessions[netDb.OwnerId].leftBallType = BallType.None;
         }
         
-        netDb.StartCoroutine(netDb.WaitForServerOwner(velocity, position));
+        _playerBallPossessions.Dirty(netDb.OwnerId);
+        
+        netDb.WaitForServerOwner(velocity, position, tick);
         networkObject.RemoveOwnership();
     }
 

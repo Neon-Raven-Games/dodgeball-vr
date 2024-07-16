@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4973381658274221763}
-  - component: {fileID: 3554773880125222614}
   - component: {fileID: 957434556255070223}
   m_Layer: 0
   m_Name: SpeakerPrefab
@@ -33,32 +32,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3554773880125222614
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4973381658274221766}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b48641606c80c44098bcb0a55fcd445, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playDelayConfig:
-    Low: 200
-    High: 200
-    Max: 1000
-    SpeedUpPerc: 5
-  restartOnDeviceChange: 1
-  useEvent: 1
-  eventReference:
-    Guid:
-      Data1: -1444669233
-      Data2: 1278056271
-      Data3: -588985708
-      Data4: 119728458
-    Path: event:/Test_VC2
 --- !u!82 &957434556255070223
 AudioSource:
   m_ObjectHideFlags: 0

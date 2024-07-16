@@ -12,18 +12,15 @@ public class DodgeBall : MonoBehaviour
     public float transitionTime = 1.0f; // Time in seconds to complete one half of the animation (0 to 100 or 100 to 0)
     public float pauseTime = 0.5f;
     private Team _team;
-    private DevController _owner;
     public BallState _ballState = BallState.Dead;
 
 
-    public void SetOwner(DevController owner)
+    public void SetOwner()
     {
         if (_ballState == BallState.Live) catchSound.Play();
         else pickupSound.Play();
 
         _ballState = BallState.Possessed;
-        _owner = owner;
-        _team = owner.team;
     }
 
     public void SetLiveBall()
@@ -103,23 +100,24 @@ public class DodgeBall : MonoBehaviour
             // Debug.Log("Velocity: " + GetComponent<Rigidbody>().velocity.magnitude);
 
 
-            if (collision.gameObject.TryGetComponent(out DevController controller))
-            {
-                if (controller != _owner && controller.team != _team)
-                {
-                    HitSquash(collision);
-                    SetDeadBall();
-                    
-                    param = 4;
-                    // controller.Die();
-                    // _owner.Score();
-                    
-                    // HitOppositeTeam(controller);
-                    Debug.Log($"Hit Player! {_owner.team} hit {controller.team}!");
-                }
-            }
+            // todo, we need to make a networked script to hold data for the player 
+            // if (collision.gameObject.TryGetComponent(out DevController controller))
+            // {
+            //     if (controller != _owner && controller.team != _team)
+            //     {
+            //         HitSquash(collision);
+            //         SetDeadBall();
+            //         
+            //         param = 4;
+            //         // controller.Die();
+            //         // _owner.Score();
+            //         
+            //         // HitOppositeTeam(controller);
+            //         Debug.Log($"Hit Player! {_owner.team} hit {controller.team}!");
+            //     }
+            // }
 
-            if (_owner != controller && _team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
+            if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
                 Debug.Log("Team One Friendly Fire");
                 SetDeadBall();
@@ -127,12 +125,28 @@ public class DodgeBall : MonoBehaviour
                 // FriendlyFire();
                 param = 3;
             }
-            else if (_owner != controller && _team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
+            else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
                 Debug.Log("Team Two Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
                 // FriendlyFire();
+                param = 3;
+            }
+            else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
+            {
+                Debug.Log("Team two score!");
+                SetDeadBall();
+                HitSquash(collision);
+                // Score(Team.TeamTwo);
+                param = 3;
+            }
+            else if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
+            {
+                Debug.Log("Team Two Friendly Fire");
+                SetDeadBall();
+                HitSquash(collision);
+                // Score(Team.TeamOne);
                 param = 3;
             }
         }

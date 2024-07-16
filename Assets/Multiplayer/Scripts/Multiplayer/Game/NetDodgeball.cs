@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -17,14 +16,15 @@ namespace Unity.Template.VR.Multiplayer
     public class NetDodgeball : NetworkBehaviour
     {
         [SerializeField] private GameObject visualBall;
-        
+
         #region syncvar
+        public float interpolateFactor = 0.1f;
 
         private readonly SyncVar<Vector3> _syncPosition = new();
         private readonly SyncVar<Vector3> _syncVelocity = new();
 
         public readonly SyncVar<BallState> state = new();
-
+        private const float MAX_PASSED_TIME = 0.3f;
         #endregion
 
         #region unsynced vars, need to sync
@@ -49,6 +49,7 @@ namespace Unity.Template.VR.Multiplayer
             var teamTwoLayer = LayerMask.NameToLayer("TeamTwo");
             _layerMask = (1 << teamOneLayer) | (1 << teamTwoLayer);
             _radius = GetComponent<SphereCollider>().radius;
+            TimeManager.OnTick += TickUpdate;
         }
 
         internal void SetBallType(BallType ballType)
@@ -63,56 +64,60 @@ namespace Unity.Template.VR.Multiplayer
             visualBall.SetActive(true);
         }
 
-        private void FixedUpdate()
+        private void TickUpdate()
         {
-            if (HasAuthority && !IsOwner)
+            if (HasAuthority && !IsOwner && state.Value != BallState.Possessed)
             {
                 _syncPosition.Value = transform.position;
                 _syncVelocity.Value = rb.velocity;
 
                 if (state.Value == BallState.Live) PerformHitDetection();
             }
+
+            if (HasAuthority && !IsOwner && state.Value == BallState.Possessed)
+            {
+                Debug.Log($"Setting ballstate live. Sync var position: {_syncPosition.Value}, Sync var velocity: {_syncVelocity.Value}");
+                transform.position = _syncPosition.Value;
+                rb.velocity = _syncVelocity.Value;
+                state.Value = BallState.Live;
+            }
         }
 
+        
         private void Update()
         {
-            if (!HasAuthority) SmoothSync();
+            // if (!IsOwner && state.Value != BallState.Possessed) SmoothSync();
+            
+            // if it's possessed, set the visuals inactive
+            visualBall.SetActive(IsOwner || state.Value != BallState.Possessed);
         }
 
         private void SmoothSync()
         {
-            var interpolationFactor = Time.deltaTime / (NetworkManager.TimeManager.RoundTripTime / 2f);
-
-            transform.position = Vector3.Lerp(transform.position, _syncPosition.Value, interpolationFactor);
-            if (!rb.isKinematic)
-                rb.velocity = Vector3.Lerp(rb.velocity, _syncVelocity.Value, interpolationFactor);
-
-            visualBall.SetActive(state.Value != BallState.Possessed);
+            // transform.position =  Vector3.Lerp(transform.position, _syncPosition.Value, interpolateFactor);
+            // if (!rb.isKinematic)
+                // rb.velocity = Vector3.Lerp(rb.velocity, _syncVelocity.Value, interpolateFactor);
         }
-
-
-        internal IEnumerator WaitForServerOwner(Vector3 throwVelocity, Vector3 position)
+        
+        internal void WaitForServerOwner(Vector3 throwVelocity, Vector3 position, uint tick)
         {
-            yield return new WaitUntil(() => HasAuthority);
-
-            _syncPosition.Value = position;
+            var passedTime = (float) TimeManager.TimePassed(tick);
+            passedTime = Mathf.Min(MAX_PASSED_TIME / 2f, passedTime);
+            
+            Debug.Log($"Calling ball thrown rpc: Position: {position}, Velocity: {throwVelocity}. Time passed since throw: {passedTime}");
+         
+            var futurePosition = position + throwVelocity * passedTime;
+            _syncPosition.Value = futurePosition;
             _syncVelocity.Value = throwVelocity;
-
-            transform.position = position;
             rb.velocity = throwVelocity;
-
-            // set the ball to a live state
-            state.Value = BallState.Live;
-
-            // update the visuals to net clients
-            visualBall.SetActive(true);
         }
+
 
         public void ApplyThrowVelocityServerRpc(Vector3 throwVelocity, Vector3 position, HandSide handSide)
         {
-            ServerOwnershipManager.ReleaseOwnershipFromServer(this, throwVelocity, position, handSide);
+            ServerOwnershipManager.ReleaseOwnershipFromServer(this, throwVelocity, position, handSide, TimeManager.Tick);
         }
-
+        
         private void PerformHitDetection()
         {
             var latency = NetworkManager.TimeManager.RoundTripTime / 2f;
@@ -136,10 +141,10 @@ namespace Unity.Template.VR.Multiplayer
 
         private void UpdateGameState(Collider hitCollider)
         {
-            var hitPlayer = hitCollider.GetComponent<DevController>();
+            var hitPlayer = hitCollider.GetComponent<NetIKTargetHelper>();
             if (hitPlayer != null)
             {
-                Debug.Log("Hit player! Player team: " + hitPlayer.team);
+                Debug.Log("Hit player! Need to get team from layer mask :3 ");
                 // todo, hoist dodgeball hit logic to the player
                 // hitPlayer.MarkAsOut();
             }

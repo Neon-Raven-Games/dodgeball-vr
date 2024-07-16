@@ -146,7 +146,6 @@ MonoBehaviour:
   speed: 3
   rotationSpeed: 100
   team: 0
-  networkPlayer: {fileID: 0}
 --- !u!1 &2050728872602850272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1793,7 +1792,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 934a0da31ccf72f42a08f0243e3aac66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkPlayer: {fileID: 0}
   grabTransform: {fileID: 5899939520484777293}
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   handSide: 0
@@ -2243,7 +2241,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 934a0da31ccf72f42a08f0243e3aac66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkPlayer: {fileID: 0}
   grabTransform: {fileID: 1340563304958094827}
   actionAsset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   handSide: 1
