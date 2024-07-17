@@ -60,23 +60,30 @@ namespace Unity.Template.VR.Multiplayer
         {
             base.OnStartClient();
 
-            // todo, think this is obsolete
             InitializeClient(gameObject);
 
             if (IsOwner)
             {
                 ServerOwnershipManager.AddPlayer(OwnerId);
+                NetTeamController.AddPlayerToTeam(NetworkObject);
+                SetTeam(NetTeamController.GetTeamForPlayer());
+                
                 localPlayer.playerModel.SetActive(true);
                 ikTargetModel.playerModel.SetActive(false);
+                NetBallController.SetBalls();
+                // var foundObjects = FindObjectsByType<NetDodgeball>(FindObjectsSortMode.None);
+                // foreach (var ball in foundObjects) ball.SubscribeClientToData();
             }
             else
             {
                 localPlayer.playerModel.SetActive(false);
                 ikTargetModel.playerModel.SetActive(true);
                 _netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
+                SetTeam(NetTeamController.GetTeamForPlayer());
             }
 
             initialized = true;
+            Debug.Log($"Client joined! Current Debug Ball Count: {NetBallController.GetCurrentBallCount()}");
         }
 
         public void FixedUpdate()
@@ -137,5 +144,13 @@ namespace Unity.Template.VR.Multiplayer
         }
 
         #endregion
+
+        public void SetTeam(Team team)
+        {
+            Debug.Log($"Setting team for player {OwnerId} to {team}. Need to assign collision layer.");
+            // this is where we assign the team layer to collision objects
+            Debug.Log(IsOwner ? $"Setting local colliders for {OwnerId}" :
+                "Setting up networked components from !IsOwner.");
+        }
     }
 }

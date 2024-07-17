@@ -11,10 +11,10 @@ using UnityEngine.SceneManagement;
 public class CustomBuildScript
 {
     private const string _BUILD_PATH = @"C:/Users/maros/Desktop/NeonRaven/Dodgeball2.0/";
-    private const string _POST_REQUEST_URL = "https://192.168.0.104:5001/api/Server/upload";
+    private const string _POST_REQUEST_URL = "https://192.168.0.100:5001/api/Server/upload";
     private const string _BUILD_NAME = "DodgeballServer";
-    private const string _START_SERVER_URL = "https://192.168.0.104:5001/api/Server/start?serverName=DodgeballServer";
-    private const string _STOP_SERVER_URL = "https://192.168.0.104:5001/api/Server/stop?serverName=DodgeballServer";
+    private const string _START_SERVER_URL = "https://192.168.0.100:5001/api/Server/start?serverName=DodgeballServer";
+    private const string _STOP_SERVER_URL = "https://192.168.0.100:5001/api/Server/stop?serverName=DodgeballServer";
 
     [MenuItem("Build/Start Remote Server")]
     public static void StartRemoteServer()

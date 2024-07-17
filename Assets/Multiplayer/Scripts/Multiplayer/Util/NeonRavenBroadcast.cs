@@ -11,7 +11,7 @@ public class NeonRavenBroadcast : MonoBehaviour
 {
     public const int MAX_SIZE = 32000;
     private const int _MAX_SEND_PER_ATTEMPT = 1;
-    private const float _SEND_INTERVAL = 0.33f;
+    private const float _SEND_INTERVAL = 0.1f;
 
     public bool debug;
     private static RavenMessage _currentlyProcessing;

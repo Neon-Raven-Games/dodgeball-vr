@@ -9,12 +9,13 @@ public class MultiplayerManager : MonoBehaviour
 {
     private NetworkManager _networkManager;
     [SerializeField] private NetworkObject serverOwnershipManager;
-    [SerializeField] private NetworkObject dodgeballPrefab;
-    [SerializeField] private Transform dodgeballPosition;
-
+    [SerializeField] private NetworkObject netBallController;
+    [SerializeField] private NetworkObject netTeamController;
     [SerializeField] private ushort serverConnectionPort;
     [SerializeField] private ushort internalServerPort;
     [SerializeField] private string serverAddress;
+
+    public void ResetBalls() => NetBallController.ResetBalls();
 
     public void StartServerGameAsHost()
     {
@@ -50,13 +51,33 @@ public class MultiplayerManager : MonoBehaviour
 
         _networkManager.ServerManager.OnServerConnectionState -= ConnectOnServerStart;
         Debug.Log("Server Started Successfully");
-        NetworkObject nob = _networkManager.GetPooledInstantiated(dodgeballPrefab, dodgeballPosition.position,
-            Quaternion.identity, true);
-        _networkManager.ServerManager.Spawn(nob);
-        NetworkObject ownership =
+        InitializeBalls();
+        SetUpOwnership();
+        SetUpTeams();
+        Debug.Log("Spawned Dodgeball Controller, Balls, and Ownership Manager on Server");
+    }
+
+    private void SetUpTeams()
+    {
+        var teamController =
+            _networkManager.GetPooledInstantiated(netTeamController, Vector3.zero, Quaternion.identity, true);
+        _networkManager.ServerManager.Spawn(teamController);
+    }
+    
+    private void SetUpOwnership()
+    {
+        var ownership =
             _networkManager.GetPooledInstantiated(serverOwnershipManager, Vector3.zero, Quaternion.identity, true);
         _networkManager.ServerManager.Spawn(ownership);
-        Debug.Log("Spawned Dodgeball and Ownership Manager on Server");
+    }
+
+    private void InitializeBalls()
+    {
+        var ballController =
+            _networkManager.GetPooledInstantiated(netBallController, Vector3.zero, Quaternion.identity, true);
+        _networkManager.ServerManager.Spawn(ballController);
+
+        for (var i = 0; i < 3; i++) NetBallController.SpawnBallWithIndex(i);
     }
 
     public void StartClientGame()

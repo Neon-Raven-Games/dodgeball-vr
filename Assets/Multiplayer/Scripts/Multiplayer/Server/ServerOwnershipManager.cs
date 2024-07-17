@@ -17,6 +17,38 @@ public class ServerOwnershipManager : NetworkBehaviour
     private readonly SyncDictionary<int, NetPlayerData> _playerBallPossessions = new();
     private static ServerOwnershipManager _instance;
 
+    // keep collection of balls in dictionary,
+    // create an index for the ball numbers and populate the dictionary for a lookup map
+    // when we throw the ball, we take the team from the player and set the ball to the team
+    // whenever the ball is deemed dead, we set the ball team to none.
+    // We have invocation for ball thrown and the ownership lifecycle.
+    // We need invocation for RegisteringHit, RegisteringCatch, RegisteringDead
+
+    // we need to out the player who does get hit, so we do need to keep reference to the id who is out
+    public void RegisterHit(int ballIndex, int hitPlayerId)
+    {
+        // score the point
+        // out the hit player -> hitPlayerId
+        NetBallController.SetBallData(ballIndex, -1);
+    }
+    
+    // this needs to out the throwing player, so we do need to keep reference to the id who threw the ball
+    public void RegisterCatch(int ballIndex, int catcherId)
+    {
+        // score the point
+        // out the current owner
+        NetBallController.SetBallData(ballIndex, catcherId);
+    }
+    
+    // no client events, just set team to none, ball to dead
+    public void RegisterDeadBall(int ballIndex)
+    {
+        
+        NetBallController.SetBallData(ballIndex, -1);
+    }
+    
+    
+    
     public static void AddPlayer(int id) =>
         _instance.AddPlayerWithNewData(id);
 
@@ -50,10 +82,7 @@ public class ServerOwnershipManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void RequestOwnershipServerRpc(NetworkBehaviour networkObject, NetworkConnection requestingPlayer, HandSide handSide)
     {
-        Debug.Log($"requesting ownership from {requestingPlayer}, on hand side {handSide}."); 
         if (!IsOwnershipRequestValid(networkObject, requestingPlayer)) return;
-        
-        Debug.Log("Requested ownership of ball, setting state to possessed");
         
         var netBall = networkObject.GetComponent<NetDodgeball>();
         netBall.state.Value = BallState.Possessed;
@@ -61,17 +90,16 @@ public class ServerOwnershipManager : NetworkBehaviour
         else _playerBallPossessions[requestingPlayer.ClientId].rightBall = NetBallPossession.RightHand;
         _playerBallPossessions[requestingPlayer.ClientId].leftBallType = BallType.Dodgeball;
         
-        Debug.Log($"Setting player {requestingPlayer.ClientId} possession to dirty. left ball: {_playerBallPossessions[requestingPlayer.ClientId].leftBall}");
         _playerBallPossessions.Dirty(requestingPlayer.ClientId);
         
         networkObject.GiveOwnership(requestingPlayer);
+        NetBallController.SetBallData(netBall.ballIndex.Value, requestingPlayer.ClientId);
     }
 
     [ServerRpc(RequireOwnership = false, OrderType = DataOrderType.Last)]
     public void ReleaseOwnershipServerRpc(NetworkBehaviour networkObject, Vector3 velocity, Vector3 position,
         HandSide handSide, uint tick)
     {
-        Debug.Log($"Releasing ownership from {networkObject.OwnerId}. Throwing ball at velocity: {velocity} and setting position: {position}");
         var netDb = networkObject.GetComponent<NetDodgeball>();
         if (handSide == HandSide.RIGHT)
         {
@@ -88,6 +116,8 @@ public class ServerOwnershipManager : NetworkBehaviour
         
         netDb.WaitForServerOwner(velocity, position, tick);
         networkObject.RemoveOwnership();
+        
+        NetBallController.SetBallData(netDb.ballIndex.Value, -1);
     }
 
     private bool IsOwnershipRequestValid(NetworkBehaviour networkObject, NetworkConnection requestingPlayer)
