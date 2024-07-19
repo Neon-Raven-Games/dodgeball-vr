@@ -98,41 +98,14 @@ namespace Unity.Template.VR.Multiplayer
 
         internal void WaitForServerOwner(Vector3 throwVelocity, Vector3 position, uint tick)
         {
-            var passedTime = (float) TimeManager.TimePassed(tick);
-            passedTime = Mathf.Min(MAX_PASSED_TIME / 2f, passedTime);
-
-            Debug.Log($"Calling ball thrown rpc: Position: {position}, Velocity: " +
-                      $"{throwVelocity}. Time passed since throw: {passedTime}");
-
-            var futurePosition = position + throwVelocity * passedTime;
-            rb.velocity = throwVelocity;
+            Debug.Log($"Calling ball thrown rpc: Position: {position}, Velocity: {throwVelocity}.");
 
             _syncPositions.Clear();
             _syncPositions[tick] = position;
-            _syncPositions[tick + 1] = futurePosition;
             transform.position = position;
+            rb.velocity = throwVelocity;
             
-            SendPositionData();
-
             state.Value = BallState.Live;
-        }
-
-        [ObserversRpc]
-        public void UpdatePositions(Vector3 throwVelocity, Vector3 position, uint tick)
-        {
-            var passedTime = (float) TimeManager.TimePassed(tick);
-            passedTime = Mathf.Min(MAX_PASSED_TIME / 2f, passedTime);
-
-            Debug.Log($"Calling Update Positions Rpc: {position}, Velocity: " +
-                      $"{throwVelocity}. Time passed since throw: {passedTime}");
-
-            var futurePosition = position + throwVelocity * passedTime;
-            transform.position = position;
-            rb.velocity = throwVelocity;
-
-            _syncPositions.Clear();
-            _syncPositions[tick] = position;
-            _syncPositions[tick + 1] = futurePosition;
         }
 
         public void ApplyThrowVelocityServerRpc(Vector3 throwVelocity, Vector3 position, HandSide handSide)
@@ -267,8 +240,6 @@ namespace Unity.Template.VR.Multiplayer
             Debug.Log(
                 $"[BALL:{ballIndex.Value}|OUT:{OwnerId}] Shipping tick: {ServerManager.NetworkManager.TimeManager.Tick}, position: {transform.position}, velocity: {rb.velocity}");
 
-            // todo, i think this was adding the last position over the rpc
-            // _syncPositions[TimeManager.Tick] = transform.position;
             var index = ballIndex.Value;
             if (IsOwner) NeonRavenBroadcast.QueueSendBytes(index, RavenDataIndex.BallState, _writer.GetBuffer(), true);
             else NeonRavenBroadcast.QueueSendBytes(index, RavenDataIndex.BallState, _writer.GetBuffer());
@@ -314,7 +285,6 @@ namespace Unity.Template.VR.Multiplayer
                     break;
             }
         }
-
         #endregion
     }
 }
