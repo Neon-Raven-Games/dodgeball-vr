@@ -54,6 +54,7 @@ public class MultiplayerManager : MonoBehaviour
         InitializeBalls();
         SetUpOwnership();
         SetUpTeams();
+        NeonRavenBroadcast.Initialize();
         Debug.Log("Spawned Dodgeball Controller, Balls, and Ownership Manager on Server");
     }
 
@@ -77,7 +78,8 @@ public class MultiplayerManager : MonoBehaviour
             _networkManager.GetPooledInstantiated(netBallController, Vector3.zero, Quaternion.identity, true);
         _networkManager.ServerManager.Spawn(ballController);
 
-        for (var i = 0; i < 3; i++) NetBallController.SpawnBallWithIndex(i);
+        // for (var i = 0; i < 3; i++) NetBallController.SpawnBallWithIndex(i);
+        NetBallController.SpawnBallWithIndex(1);
     }
 
     public void StartClientGame()

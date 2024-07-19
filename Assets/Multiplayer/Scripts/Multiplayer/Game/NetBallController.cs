@@ -59,12 +59,13 @@ public class NetBallController : NetworkBehaviour
         var db = nob.GetComponent<NetDodgeball>();
         db.ballIndex.Value = index;
         db.ballIndex.DirtyAll();
-
-        SetBallData(index, -1);
         
+        SetBallData(index, -1);
+
         if (index == 0) _instance._ballOne = nob.gameObject;
         if (index == 1) _instance._ballTwo = nob.gameObject;
         if (index == 2) _instance._ballThree = nob.gameObject;
+        db.AddReceiver();
     }
 
     public static void SetBallData(int index, int ownerId)
@@ -105,14 +106,17 @@ public class NetBallController : NetworkBehaviour
             if (db.ballIndex.Value == 0)
             {
                 _instance._ballOne = db.gameObject;
+                db.AddReceiver();
             }
             else if (db.ballIndex.Value == 1)
             {
                 _instance._ballTwo = db.gameObject;
+                db.AddReceiver();
             }
             else if (db.ballIndex.Value == 2)
             {
                 _instance._ballThree = db.gameObject;
+                db.AddReceiver();
             }
         }
         if (_instance._ballOne == null || _instance._ballTwo == null || _instance._ballThree == null)

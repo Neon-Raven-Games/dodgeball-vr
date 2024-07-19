@@ -71,8 +71,7 @@ namespace Unity.Template.VR.Multiplayer
                 localPlayer.playerModel.SetActive(true);
                 ikTargetModel.playerModel.SetActive(false);
                 NetBallController.SetBalls();
-                // var foundObjects = FindObjectsByType<NetDodgeball>(FindObjectsSortMode.None);
-                // foreach (var ball in foundObjects) ball.SubscribeClientToData();
+                NeonRavenBroadcast.Initialize();
             }
             else
             {

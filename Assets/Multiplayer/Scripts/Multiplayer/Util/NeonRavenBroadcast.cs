@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Client;
@@ -25,7 +26,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     /// <summary>
     /// Subscribers to the messages, set in <see cref="AddReceiver"/> and <see cref="RemoveReceiver"/>.
     /// </summary>
-    private static readonly List<INeonBroadcastReceiver> _SReceivers = new();
+    private static readonly Dictionary<int, INeonBroadcastReceiver> _SReceivers = new();
 
     /// <summary>
     /// The message queue to enqueue messages to send.
@@ -63,7 +64,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     /// <param name="dataIndex">The type of data you defined this message as.</param>
     /// <param name="data">The data to send to the server.</param>
     /// <param name="sendToServer">If true, sends only to the server.</param>
-    /// <param name="toSpecificID">If -1, send only to the server, otherwise the client who is the target.</param>
+    /// <param name="toSpecificID">If -1, send to all clients, otherwise the client who is the target.</param>
     public static void QueueSendBytes(int senderID, RavenDataIndex dataIndex, byte[] data, bool sendToServer = false,
         int toSpecificID = -1)
     {
@@ -85,18 +86,20 @@ public class NeonRavenBroadcast : MonoBehaviour
     /// Add a receiver to the messages sent.
     /// </summary>
     /// <param name="receiver">Interface's concrete type to remove to messaging.</param>
-    public static void AddReceiver(INeonBroadcastReceiver receiver)
+    /// <param name="receiverId">The receiver Id</param>
+    public static void AddReceiver(INeonBroadcastReceiver receiver, int receiverId)
     {
-        if (!_SReceivers.Contains(receiver)) _SReceivers.Add(receiver);
+        if (!_SReceivers.ContainsKey(receiverId)) _SReceivers.Add(receiverId, receiver);
     }
 
     /// <summary>
     /// Remove a receiver from the messages sent.
     /// </summary>
     /// <param name="receiver">Interface's concrete type to remove from messaging.</param>
-    public static void RemoveReceiver(INeonBroadcastReceiver receiver)
+    /// <param name="receiverId">the receive id</param>
+    public static void RemoveReceiver(INeonBroadcastReceiver receiver, int receiverId)
     {
-        if (_SReceivers.Contains(receiver)) _SReceivers.Remove(receiver);
+        if (_SReceivers.ContainsKey(receiverId)) _SReceivers.Remove(receiverId);
     }
 
     #endregion
@@ -118,19 +121,16 @@ public class NeonRavenBroadcast : MonoBehaviour
         }
     }
 
-    // todo, to handle the lifecycle better, we can create the manager on the start of the server or client.
-    // these callbacks will not be subscribing to potentially uninitialized client/server managers.
-    private void OnEnable()
+    public static void Initialize()
     {
-        ClientManager.RegisterBroadcast<RavenMessageSegment>(ReceiveLocalClientBroadcast);
-        ServerManager.RegisterBroadcast<RavenMessageSegment>(ReceiveLocalServerBroadcast);
+        ClientManager.RegisterBroadcast<RavenMessageSegment>(_instance.ReceiveLocalClientBroadcast);
+        ServerManager.RegisterBroadcast<RavenMessageSegment>(_instance.ReceiveLocalServerBroadcast);
     }
 
-    // handle this on disconnect, since we might have a case where the game object is not destroyed/deactivated.
     private void OnDisable()
     {
-        ClientManager.UnregisterBroadcast<RavenMessageSegment>(ReceiveLocalClientBroadcast);
-        ServerManager.UnregisterBroadcast<RavenMessageSegment>(ReceiveLocalServerBroadcast);
+        if (ClientManager != null) ClientManager.UnregisterBroadcast<RavenMessageSegment>(ReceiveLocalClientBroadcast);
+        if (ServerManager != null) ServerManager.UnregisterBroadcast<RavenMessageSegment>(ReceiveLocalServerBroadcast);
     }
 
     private void OnDestroy()
@@ -142,7 +142,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     // todo, to keep consistent with the network, we could probably move this over to OnTick callbacks.
     private void Update()
     {
-        if (WaitForFrame()) return;
+        // if (WaitForFrame()) return;
 
         if (_hasCurrentlyProcessing)
         {
@@ -224,7 +224,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     private static void BroadcastMessageToClients(RavenMessageSegment newBroadcast)
     {
         if (_currentlyProcessing.targetClientId != -1) RelayClientMessage(newBroadcast);
-        else ServerManager.Broadcast(newBroadcast);
+        else ServerManager.Broadcast(newBroadcast, true, Channel.Unreliable);
     }
 
     /// <summary>
@@ -235,7 +235,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     private void BroadcastMessageToServer(RavenMessageSegment newBroadcast)
     {
         if (IsServer) InvokeServerBroadcast(newBroadcast);
-        else ClientManager.Broadcast(newBroadcast);
+        else ClientManager.Broadcast(newBroadcast, Channel.Unreliable);
     }
 
     /// <summary>
@@ -255,12 +255,12 @@ public class NeonRavenBroadcast : MonoBehaviour
     #region Receiving
 
     /// <summary>
-    /// Called whenever a message is fully received and reassembled on the server side. Calls the respective client's
+    /// Called whenever a message is fully received and reassembled on the server side. Calls the respective client's sender Id
     /// <see cref="INeonBroadcastReceiver.ReceiveLazyLoadedMessage"/> when the <see cref="RavenMessage.senderID"/> is
-    /// equal to their own. The default message is sent to all clients.
+    /// equal to their own. The default message is sent to all clients. 
     /// </summary>
     private static void ReceiveTargetClientMessage(RavenMessage dataPart) =>
-        _SReceivers[dataPart.targetClientId]
+        _SReceivers[dataPart.senderID]
             .ReceiveLazyLoadedMessage(dataPart.FullArray, dataPart.senderID, dataPart.dataIndex);
 
     /// <summary>
@@ -275,7 +275,7 @@ public class NeonRavenBroadcast : MonoBehaviour
         if (DoDebug) Debug.Log($"Received message {dataIndex} with length {data.Length} from sender {senderId}");
 
         foreach (var receiver in _SReceivers)
-            receiver.ReceiveLazyLoadedMessage(data, senderId, dataIndex);
+            receiver.Value.ReceiveLazyLoadedMessage(data, senderId, dataIndex);
     }
 
     /// <summary>
@@ -301,7 +301,7 @@ public class NeonRavenBroadcast : MonoBehaviour
 
         var data = dataPart.FullArray;
 
-        if (dataPart.targetClientId != -1) ReceiveCompletedMessage(data, dataPart.senderID, dataPart.dataIndex);
+        if (dataPart.targetClientId == -1) ReceiveCompletedMessage(data, dataPart.senderID, dataPart.dataIndex);
         else ReceiveTargetClientMessage(dataPart);
 
         _SPool.Release(dataPart);
@@ -329,7 +329,6 @@ public class NeonRavenBroadcast : MonoBehaviour
     private void ReceiveLocalClientBroadcast(RavenMessageSegment msg, Channel channel) =>
         ReceiveRavenSegment(msg);
 
-    // todo, factory method for extensibility
     private RavenMessageSegment CreateBroadcastMessage(bool completed) =>
         new(_currentlyProcessing.senderID,
             _currentlyProcessing.dataIndex,
@@ -347,4 +346,14 @@ public class NeonRavenBroadcast : MonoBehaviour
             newBroadcast, Channel.Reliable);
 
     #endregion
+
+    public static int GetReceiverNumber(INeonBroadcastReceiver receiver)
+    {
+        foreach (var subbed in _SReceivers)
+        {
+            if (subbed.Value != receiver) continue;
+            return subbed.Key;
+        }
+        return -1;
+    }
 }

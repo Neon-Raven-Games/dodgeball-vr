@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum RavenDataIndex
 {
-    GameState = 0
+    BallState = 0
 }
 
 /// <summary>
@@ -39,7 +39,6 @@ public class RavenMessage
     
     public void Initialize(byte[] array, int sendSize)
     {
-
         FullArray = array;
         totalSize = sendSize;
         currentSlowSenderIndex = 0;
