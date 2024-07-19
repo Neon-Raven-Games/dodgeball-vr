@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using FishNet.Object;
+#if !UNITY_SERVER
 using Unity.Template.VR.Multiplayer;
+#endif
 using UnityEngine;
 
 public class ClientInitialization : NetworkBehaviour

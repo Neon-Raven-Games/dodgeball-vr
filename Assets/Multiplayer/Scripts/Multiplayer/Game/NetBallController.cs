@@ -33,6 +33,7 @@ public class NetBallController : NetworkBehaviour
     #endif
 
     [SerializeField] private GameObject ballPrefab;
+    // todo, make a new serialized object that will hold: ball index and ball spawn position
     [SerializeField] private Vector3 firstBallSpawn;
     [SerializeField] private Vector3 secondBallSpawn;
     [SerializeField] private Vector3 thirdBallSpawn;
@@ -46,7 +47,7 @@ public class NetBallController : NetworkBehaviour
     {
         var position = index switch
         {
-            0 => _instance.firstBallSpawn,
+            -1 => _instance.firstBallSpawn,
             1 => _instance.secondBallSpawn,
             2 => _instance.thirdBallSpawn,
             _ => Vector3.zero
@@ -62,7 +63,7 @@ public class NetBallController : NetworkBehaviour
         
         SetBallData(index, -1);
 
-        if (index == 0) _instance._ballOne = nob.gameObject;
+        if (index == -1) _instance._ballOne = nob.gameObject;
         if (index == 1) _instance._ballTwo = nob.gameObject;
         if (index == 2) _instance._ballThree = nob.gameObject;
         db.AddReceiver();
@@ -93,7 +94,7 @@ public class NetBallController : NetworkBehaviour
     
     public static void ResetBall(int index)
     {
-        if (index == 0) _instance._ballOne.transform.position = _instance.firstBallSpawn;
+        if (index == -1) _instance._ballOne.transform.position = _instance.firstBallSpawn;
         if (index == 1) _instance._ballTwo.transform.position = _instance.secondBallSpawn;
         if (index == 2) _instance._ballThree.transform.position = _instance.thirdBallSpawn;
     }
@@ -103,7 +104,7 @@ public class NetBallController : NetworkBehaviour
         var foundObjects = FindObjectsByType<NetDodgeball>(FindObjectsSortMode.None);
         foreach (var db in foundObjects)
         {
-            if (db.ballIndex.Value == 0)
+            if (db.ballIndex.Value == -1)
             {
                 _instance._ballOne = db.gameObject;
                 db.AddReceiver();

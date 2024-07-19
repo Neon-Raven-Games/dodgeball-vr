@@ -63,6 +63,7 @@ namespace Unity.Template.VR.Multiplayer
 
         public void AddReceiver()
         {
+            Debug.Log($"Adding receiver with index {ballIndex.Value}");
             NeonRavenBroadcast.AddReceiver(this, ballIndex.Value);
         }
 
@@ -104,7 +105,8 @@ namespace Unity.Template.VR.Multiplayer
             _syncPositions[tick] = position;
             transform.position = position;
             rb.velocity = throwVelocity;
-            
+            SendPositionData();
+
             state.Value = BallState.Live;
         }
 
@@ -190,6 +192,12 @@ namespace Unity.Template.VR.Multiplayer
             uint previousTick = ticks[^2]; // Second last element
             uint nextTick = ticks[^1]; // Last element
 
+            // todo, see if the smooth damn will work better
+            // we can keep up with the velocity in a collection too, and clear
+            // the collection on the server throw?
+            // var velocity = rb.velocity;
+            // Vector3.SmoothDamp(transform.position, syncCollection[nextTick], ref velocity, SMOOTHING_FACTOR);
+            
             var previousValue = syncCollection[previousTick];
             var nextValue = syncCollection[nextTick];
 
@@ -261,21 +269,32 @@ namespace Unity.Template.VR.Multiplayer
 
         public void ReceiveLazyLoadedMessage(byte[] data, int senderId, RavenDataIndex dataIndex)
         {
-            var reader = new Reader(data, NetworkManager);
             switch (dataIndex)
             {
                 case RavenDataIndex.BallState:
-                    if (senderId != ballIndex.Value || IsOwner) break;
+                    // if the owner, we want to toss the server data
+                    // we can optimize this by not sending one back to the owner
+                    // would require refactor on the broadcast side, but worth it for the 
+                    // player sync
+                    if (senderId != ballIndex.Value) break;
+
+                    if (IsOwner)
+                    {
+                        _syncPositions.Clear();
+                        break;
+                    }
+                    var reader = new Reader(data, NetworkManager);
                     var position = reader.ReadVector3();
                     var velocity = reader.ReadVector3();
                     var ticks = reader.ReadUInt32();
-                    
+
                     if (IsServerInitialized)
                     {
                         Debug.Log("Received ball state data from server, updating client positions.");
-                        NeonRavenBroadcast.QueueSendBytes(ballIndex.Value, RavenDataIndex.BallState, data);
                         _syncPositions.Clear();
                         transform.position = position;
+                        _syncPositions[ticks] = position;
+                        NeonRavenBroadcast.QueueSendBytes(ballIndex.Value, RavenDataIndex.BallState, data);
                     }
 
                     _syncPositions[ticks] = position;
@@ -285,6 +304,7 @@ namespace Unity.Template.VR.Multiplayer
                     break;
             }
         }
+
         #endregion
     }
 }

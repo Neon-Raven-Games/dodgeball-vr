@@ -79,7 +79,7 @@ public class MultiplayerManager : MonoBehaviour
         _networkManager.ServerManager.Spawn(ballController);
 
         // for (var i = 0; i < 3; i++) NetBallController.SpawnBallWithIndex(i);
-        NetBallController.SpawnBallWithIndex(1);
+        NetBallController.SpawnBallWithIndex(-1);
     }
 
     public void StartClientGame()

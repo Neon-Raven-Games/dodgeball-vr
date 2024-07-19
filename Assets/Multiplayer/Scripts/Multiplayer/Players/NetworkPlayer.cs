@@ -1,5 +1,5 @@
 using System;
-using Unity.Template.VR.Multiplayer.Server;
+using FishNet.Object;
 using UnityEngine;
 
 [Serializable]
@@ -16,7 +16,7 @@ public class PlayerRig
 
 namespace Unity.Template.VR.Multiplayer
 {
-    public class NetworkPlayer : NetworkClientXRObject
+    public class NetworkPlayer : NetworkBehaviour
     {
         [SerializeField] private PlayerRig localPlayer;
         [SerializeField] public PlayerRig ikTargetModel;
@@ -60,10 +60,10 @@ namespace Unity.Template.VR.Multiplayer
         {
             base.OnStartClient();
 
-            InitializeClient(gameObject);
 
             if (IsOwner)
             {
+                // InitializeClient(gameObject);
                 ServerOwnershipManager.AddPlayer(OwnerId);
                 NetTeamController.AddPlayerToTeam(NetworkObject);
                 SetTeam(NetTeamController.GetTeamForPlayer());
@@ -150,6 +150,12 @@ namespace Unity.Template.VR.Multiplayer
             // this is where we assign the team layer to collision objects
             Debug.Log(IsOwner ? $"Setting local colliders for {OwnerId}" :
                 "Setting up networked components from !IsOwner.");
+
+            if (IsOwner) return;
+            Debug.Log("Setting the visuals for the networked player. This is where the collider and appearance code goes");
+            ikTargetModel.playerModel.SetActive(true);
+            _netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
+            Debug.Log($"Set visuals: {ikTargetModel.playerModel.activeInHierarchy}. Animation object: {_netIKTargetHelper.name}");
         }
     }
 }
