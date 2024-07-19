@@ -3,6 +3,7 @@ using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Object;
 using FishNet.Transporting;
+using Multiplayer.Scripts.Multiplayer.SyncComponents;
 using UnityEngine;
 
 public class MultiplayerManager : MonoBehaviour
@@ -11,6 +12,7 @@ public class MultiplayerManager : MonoBehaviour
     [SerializeField] private NetworkObject serverOwnershipManager;
     [SerializeField] private NetworkObject netBallController;
     [SerializeField] private NetworkObject netTeamController;
+    [SerializeField] private BroadcastCollection broadcastCollection;
     [SerializeField] private ushort serverConnectionPort;
     [SerializeField] private ushort internalServerPort;
     [SerializeField] private string serverAddress;
@@ -55,7 +57,13 @@ public class MultiplayerManager : MonoBehaviour
         SetUpOwnership();
         SetUpTeams();
         NeonRavenBroadcast.Initialize();
+        SubscribeServerToBroadcasts();
         Debug.Log("Spawned Dodgeball Controller, Balls, and Ownership Manager on Server");
+    }
+
+    private void SubscribeServerToBroadcasts()
+    {
+        broadcastCollection.InitializeServerObjects();
     }
 
     private void SetUpTeams()
@@ -77,9 +85,8 @@ public class MultiplayerManager : MonoBehaviour
         var ballController =
             _networkManager.GetPooledInstantiated(netBallController, Vector3.zero, Quaternion.identity, true);
         _networkManager.ServerManager.Spawn(ballController);
-
         // for (var i = 0; i < 3; i++) NetBallController.SpawnBallWithIndex(i);
-        NetBallController.SpawnBallWithIndex(-1);
+        // NetBallController.SpawnBallWithIndex(-1);
     }
 
     public void StartClientGame()

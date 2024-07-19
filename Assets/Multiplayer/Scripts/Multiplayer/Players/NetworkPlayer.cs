@@ -1,5 +1,6 @@
 using System;
 using FishNet.Object;
+using Multiplayer.Scripts.Multiplayer.SyncComponents;
 using UnityEngine;
 
 [Serializable]
@@ -70,8 +71,15 @@ namespace Unity.Template.VR.Multiplayer
                 
                 localPlayer.playerModel.SetActive(true);
                 ikTargetModel.playerModel.SetActive(false);
-                NetBallController.SetBalls();
+                // NetBallController.SetBalls();
+                
+                // initialize the broadcast callbacks for the client
                 NeonRavenBroadcast.Initialize();
+                // populate broadcasts with all the objects in our broadcast collection
+                var broadcastCollection = FindAnyObjectByType<BroadcastCollection>();
+                
+                if (!broadcastCollection) Debug.LogError("Could not find broadcast collection!");
+                else broadcastCollection.SubscribeNewReceiver();
             }
             else
             {

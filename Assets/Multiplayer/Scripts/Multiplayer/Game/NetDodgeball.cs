@@ -4,6 +4,7 @@ using System.Linq;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Serializing;
+using Multiplayer.Scripts.Multiplayer.SyncComponents;
 using UnityEngine;
 
 
@@ -24,13 +25,11 @@ namespace Unity.Template.VR.Multiplayer
     public class NetDodgeball : NetworkBehaviour, INeonBroadcastReceiver
     {
         [SerializeField] private GameObject visualBall;
-
+        private BroadcastSyncComponent _broadcastSyncComponent;
         #region syncvar
 
         public readonly SyncVar<BallState> state = new();
         public readonly SyncVar<int> ballIndex = new();
-
-        private const float MAX_PASSED_TIME = 0.3f;
 
         #endregion
 
@@ -58,7 +57,8 @@ namespace Unity.Template.VR.Multiplayer
             _layerMask = (1 << teamOneLayer) | (1 << teamTwoLayer);
             _radius = GetComponent<SphereCollider>().radius;
 
-            TimeManager.OnTick += OnFramedTick;
+            _broadcastSyncComponent = GetComponent<BroadcastSyncComponent>();
+            // TimeManager.OnTick += OnFramedTick;
         }
 
         public void AddReceiver()
@@ -69,7 +69,7 @@ namespace Unity.Template.VR.Multiplayer
 
         private void OnDestroy()
         {
-            TimeManager.OnTick -= OnFramedTick;
+            // TimeManager.OnTick -= OnFramedTick;
         }
 
         public void SetBallPosition(Vector3 position)
@@ -101,11 +101,12 @@ namespace Unity.Template.VR.Multiplayer
         {
             Debug.Log($"Calling ball thrown rpc: Position: {position}, Velocity: {throwVelocity}.");
 
-            _syncPositions.Clear();
-            _syncPositions[tick] = position;
-            transform.position = position;
-            rb.velocity = throwVelocity;
-            SendPositionData();
+            _broadcastSyncComponent.CleanServerPositionData(tick, position, throwVelocity);
+            // _syncPositions.Clear();
+            // _syncPositions[tick] = position;
+            // transform.position = position;
+            // rb.velocity = throwVelocity;
+            // SendPositionData();
 
             state.Value = BallState.Live;
         }
@@ -114,7 +115,7 @@ namespace Unity.Template.VR.Multiplayer
         {
             ServerOwnershipManager.ReleaseOwnershipFromServer(this, throwVelocity, position, handSide,
                 TimeManager.Tick);
-            _syncPositions[TimeManager.Tick] = position;
+            _broadcastSyncComponent.AddPositionForCurrentTick(position);
         }
 
         private void PerformHitDetection()
@@ -170,11 +171,11 @@ namespace Unity.Template.VR.Multiplayer
             }
         }
 
-        private void FixedUpdate()
-        {
-            if (!HasAuthority && !IsOwner) InterpolateCollection(_syncPositions, true);
-            ClearOldSyncData(_syncPositions);
-        }
+        // private void FixedUpdate()
+        // {
+        //     if (!HasAuthority && !IsOwner) InterpolateCollection(_syncPositions, true);
+        //     ClearOldSyncData(_syncPositions);
+        // }
 
         private static void ClearOldSyncData(SortedDictionary<uint, Vector3> syncCollection)
         {
@@ -269,6 +270,7 @@ namespace Unity.Template.VR.Multiplayer
 
         public void ReceiveLazyLoadedMessage(byte[] data, int senderId, RavenDataIndex dataIndex)
         {
+            Debug.Log("Wrong lazy loaded message being called");
             switch (dataIndex)
             {
                 case RavenDataIndex.BallState:

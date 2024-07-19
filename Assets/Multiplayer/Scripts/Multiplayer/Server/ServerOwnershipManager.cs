@@ -43,7 +43,6 @@ public class ServerOwnershipManager : NetworkBehaviour
     // no client events, just set team to none, ball to dead
     public void RegisterDeadBall(int ballIndex)
     {
-        
         NetBallController.SetBallData(ballIndex, -1);
     }
     
