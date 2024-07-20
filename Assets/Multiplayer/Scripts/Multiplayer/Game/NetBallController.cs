@@ -1,5 +1,7 @@
+using FishNet;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using Multiplayer.Scripts.Multiplayer.SyncComponents;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 
@@ -20,7 +22,7 @@ public class NetBallController : NetworkBehaviour
     private GameObject _ballOne;
     private GameObject _ballTwo;
     private GameObject _ballThree;
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -30,7 +32,7 @@ public class NetBallController : NetworkBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawSphere(thirdBallSpawn, 0.5f);
     }
-    #endif
+#endif
 
     [SerializeField] private GameObject ballPrefab;
     [SerializeField] private Vector3 firstBallSpawn;
@@ -38,7 +40,7 @@ public class NetBallController : NetworkBehaviour
     [SerializeField] private Vector3 thirdBallSpawn;
 
     private static NetBallController _instance;
-    
+
     // todo, testing client side
     public static int GetCurrentBallCount() => _instance._ballDataDictionary.Count;
 
@@ -49,22 +51,44 @@ public class NetBallController : NetworkBehaviour
             ballIndex = index,
             ownerConnectionId = ownerId
         };
-        
+
         Debug.Log($"setting ball data from server, [{index}] {ownerId}.");
         _instance._ballDataDictionary[index] = ballData;
         _instance._ballDataDictionary.Dirty(index);
     }
 
-    public static void ResetBalls() => _instance.ResetBallsInstanced();
+    public static void ResetBalls()
+    {
+        
+        _instance.ResetBallsInstanced();
+        _instance.SubscribeNewReceiver();
+       
+    }
+    
+    private void SubscribeNewReceiver()
+    {
+        // todo, method sub and invocation instead of direct call from client player
+        Debug.Log("this shit don't work.");
+        var collection = FindFirstObjectByType<BroadcastCollection>();
+        collection.SubscribeNewReceiver();
+    }
 
     [ServerRpc(RequireOwnership = false)]
     private void ResetBallsInstanced()
     {
-        // _ballOne.GetComponent<NetDodgeball>().SetBallPosition(_instance.firstBallSpawn);
-        // _ballTwo.GetComponent<NetDodgeball>().SetBallPosition(_instance.secondBallSpawn);
-        // _ballThree.GetComponent<NetDodgeball>().SetBallPosition(_instance.thirdBallSpawn);
+        var collection = FindFirstObjectByType<BroadcastCollection>();
+        for (var i = -1; i > -4; i--)
+        {
+            var ball = collection.GetComponentByIndex(i);
+            ball.RemoveReceiver();
+            var netBall = ball.GetComponent<NetworkObject>();
+            InstanceFinder.NetworkManager.ServerManager.Despawn(netBall);
+        }
+
+        collection.InitializeServerObjects();
+        Debug.Log("Reset all the balls mane");
     }
-    
+
     public static void ResetBall(int index)
     {
         if (index == -1) _instance._ballOne.transform.position = _instance.firstBallSpawn;

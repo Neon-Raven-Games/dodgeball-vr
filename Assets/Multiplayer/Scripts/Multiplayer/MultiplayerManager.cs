@@ -85,6 +85,7 @@ public class MultiplayerManager : MonoBehaviour
         var ballController =
             _networkManager.GetPooledInstantiated(netBallController, Vector3.zero, Quaternion.identity, true);
         _networkManager.ServerManager.Spawn(ballController);
+        
         // for (var i = 0; i < 3; i++) NetBallController.SpawnBallWithIndex(i);
         // NetBallController.SpawnBallWithIndex(-1);
     }

@@ -28,6 +28,7 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
         private void OnDestroy()
         {
             TimeManager.OnTick -= OnFramedTick;
+            RemoveReceiver();
         }
 
         public void InitializeServerObject(int newIndex)
@@ -47,6 +48,12 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
             rb = GetComponent<Rigidbody>();
             Debug.Log($"Adding receiver with index {index.Value}");
             NeonRavenBroadcast.AddReceiver(this, index.Value);
+        }
+        
+        public void RemoveReceiver()
+        {
+            Debug.Log($"Removing receiver with index {index.Value}");
+            NeonRavenBroadcast.RemoveReceiver(this, index.Value);
         }
 
         private void FixedUpdate()

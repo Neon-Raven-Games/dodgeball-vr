@@ -15,25 +15,42 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
         public Vector3 initialPosition;
         public BroadcastSyncComponent syncComponent;
     }
+
     public class BroadcastCollection : MonoBehaviour
     {
         [SerializeField] private bool debugOneObject;
         [SerializeField] private int debugElementIndex;
-        
+
         public List<BroadcastServerIndex> broadcastSyncComponents = new();
         private readonly Dictionary<int, BroadcastSyncComponent> _broadcastSyncComponentDictionary = new();
-        
+
         public void InitializeServerObjects()
         {
+            _broadcastSyncComponentDictionary.Clear();
             if (debugOneObject) InitializeBroadcastComponent(broadcastSyncComponents[debugElementIndex]);
-            else foreach (var broadcastSyncComponent in broadcastSyncComponents) InitializeBroadcastComponent(broadcastSyncComponent);
-            
+            else
+                foreach (var broadcastSyncComponent in broadcastSyncComponents)
+                    InitializeBroadcastComponent(broadcastSyncComponent);
+
             Debug.Log("Broadcasts initialized on server.");
+        }
+
+        public Vector3 GetSpawnPosition(int index)
+        {
+            var obj = broadcastSyncComponents.Find(x => x.index == index);
+            if (obj == null)
+            {
+                Debug.LogWarning($"No spawn position found for index: {index}");
+                return Vector3.zero;
+            }
+
+            return obj.initialPosition;
         }
 
         private void InitializeBroadcastComponent(BroadcastServerIndex broadcastSyncComponent)
         {
-            var nob = InstanceFinder.NetworkManager.GetPooledInstantiated(broadcastSyncComponent.syncComponent.gameObject,
+            var nob = InstanceFinder.NetworkManager.GetPooledInstantiated(
+                broadcastSyncComponent.syncComponent.gameObject,
                 broadcastSyncComponent.initialPosition, Quaternion.identity, true);
             InstanceFinder.NetworkManager.ServerManager.Spawn(nob);
 
@@ -61,13 +78,15 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
             {
                 if (_broadcastSyncComponentDictionary.ContainsKey(component.index.Value))
                 {
-                    Debug.LogWarning($"Duplicate index found: {component.index.Value}. Not adding it to collection. Expect broadcasts to not be working properly.");
+                    Debug.LogWarning(
+                        $"Duplicate index found: {component.index.Value}. Not adding it to collection. Expect broadcasts to not be working properly.");
                     continue;
                 }
-                
+
                 _broadcastSyncComponentDictionary.Add(component.index.Value, component);
                 component.AddReceiver();
             }
+
             Debug.Log($"New receiver subscribed to {_broadcastSyncComponentDictionary.Count} components.");
         }
     }

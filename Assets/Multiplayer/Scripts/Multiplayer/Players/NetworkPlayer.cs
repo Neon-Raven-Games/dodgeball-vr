@@ -71,10 +71,9 @@ namespace Unity.Template.VR.Multiplayer
                 
                 localPlayer.playerModel.SetActive(true);
                 ikTargetModel.playerModel.SetActive(false);
-                // NetBallController.SetBalls();
-                
-                // initialize the broadcast callbacks for the client
                 NeonRavenBroadcast.Initialize();
+        
+                // todo, method sub and invocation instead of direct call from client player
                 // populate broadcasts with all the objects in our broadcast collection
                 var broadcastCollection = FindAnyObjectByType<BroadcastCollection>();
                 
