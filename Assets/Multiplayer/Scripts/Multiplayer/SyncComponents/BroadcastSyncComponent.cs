@@ -3,6 +3,7 @@ using System.Linq;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Serializing;
+using Multiplayer.Scripts.Multiplayer.Util;
 using UnityEngine;
 
 namespace Multiplayer.Scripts.Multiplayer.SyncComponents
@@ -11,7 +12,7 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
     {
         // todo, we can set these as serialized for now, and play with them in the inspector
         // but we should get the ball resetting first for quicker iteration
-        private const int _MAX_SYNC_DATA_COUNT = 4;
+        private const int _MAX_SYNC_DATA_COUNT = 5;
         private const uint _TICK_UPDATE_RATE = 10;
         private const float SMOOTHING_FACTOR = 0.05f;
         private readonly Writer _writer = new();
@@ -21,17 +22,14 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
 
         private void Start()
         {
-            Debug.Log("Assigning rigid body");
-            rb = GetComponent<Rigidbody>();
-            Debug.Log($"RigidBody: {rb}");
             TimeManager.OnTick += OnFramedTick;
         }
-        
+
         private void OnDestroy()
         {
             TimeManager.OnTick -= OnFramedTick;
         }
-        
+
         public void InitializeServerObject(int newIndex)
         {
             index.Value = newIndex;
@@ -46,14 +44,19 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
 
         public void AddReceiver()
         {
+            rb = GetComponent<Rigidbody>();
             Debug.Log($"Adding receiver with index {index.Value}");
             NeonRavenBroadcast.AddReceiver(this, index.Value);
         }
 
         private void FixedUpdate()
         {
-            if (!HasAuthority && !IsOwner) InterpolateCollection(_syncPositions, true);
-            ClearOldSyncData(_syncPositions);
+            if (!IsServerInitialized && !IsOwner)
+            {
+                InterpolationHelper.InterpolateSyncCollection(_syncPositions, transform);
+                // InterpolateCollection(_syncPositions);
+                // ClearOldSyncData(_syncPositions);
+            }
         }
 
         private static void ClearOldSyncData(SortedDictionary<uint, Vector3> syncCollection)
@@ -62,25 +65,18 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
                 syncCollection.Remove(syncCollection.Keys.First());
         }
 
-        private void InterpolateCollection(SortedDictionary<uint, Vector3> syncCollection, bool isPosition)
+        private void InterpolateCollection(SortedDictionary<uint, Vector3> syncCollection)
         {
             if (syncCollection.Count < 2) return;
 
             var ticks = new List<uint>(syncCollection.Keys);
-            uint previousTick = ticks[^2]; // Second last element
-            uint nextTick = ticks[^1]; // Last element
-
-            // todo, see if the smooth damn will work better
-            // we can keep up with the velocity in a collection too, and clear
-            // the collection on the server throw?
-            // var velocity = rb.velocity;
-            // Vector3.SmoothDamp(transform.position, syncCollection[nextTick], ref velocity, SMOOTHING_FACTOR);
+            uint previousTick = ticks[^2];
+            uint nextTick = ticks[^1];
 
             var previousValue = syncCollection[previousTick];
             var nextValue = syncCollection[nextTick];
 
             uint currentTick = ServerManager.NetworkManager.TimeManager.Tick;
-            Debug.Log($"CurrentTick: {currentTick}, PreviousTick: {previousTick}, NextTick: {nextTick}");
 
             if (currentTick > nextTick)
             {
@@ -89,16 +85,9 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
                 Vector3 velocity = (nextValue - previousValue) / (nextTick - previousTick);
                 Vector3 extrapolatedValue = nextValue + velocity * deltaTime;
 
-                if (isPosition)
-                {
-                    transform.position = Vector3.Lerp(transform.position, extrapolatedValue, SMOOTHING_FACTOR);
-                }
-                else if (!rb.isKinematic)
-                {
-                    rb.velocity = Vector3.Lerp(rb.velocity, velocity, SMOOTHING_FACTOR);
-                }
-
+                transform.position = Vector3.Lerp(transform.position, extrapolatedValue, SMOOTHING_FACTOR);
                 Debug.Log($"Extrapolated Value: {extrapolatedValue}, Velocity: {velocity}, DeltaTime: {deltaTime}");
+                _syncPositions[nextTick] = transform.position;
             }
             else
             {
@@ -107,21 +96,15 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
                 interpolationFactor = Mathf.Clamp(interpolationFactor, 0f, 1f); // Ensure factor is within range
                 Debug.Log($"Interpolation Factor: {interpolationFactor}");
 
-                if (isPosition)
-                {
-                    Vector3 interpolatedPosition = Vector3.Lerp(previousValue, nextValue, interpolationFactor);
-                    transform.position = Vector3.Lerp(transform.position, interpolatedPosition, SMOOTHING_FACTOR);
-                }
-                else if (!rb.isKinematic)
-                {
-                    Vector3 interpolatedVelocity = Vector3.Lerp(previousValue, nextValue, interpolationFactor);
-                    rb.velocity = Vector3.Lerp(rb.velocity, interpolatedVelocity, SMOOTHING_FACTOR);
-                }
+                Vector3 interpolatedPosition = Vector3.Lerp(previousValue, nextValue, interpolationFactor);
+                transform.position = Vector3.Lerp(transform.position, interpolatedPosition, SMOOTHING_FACTOR);
+                _syncPositions[nextTick] = transform.position;
             }
         }
 
         public void CleanServerPositionData(uint tick, Vector3 position, Vector3 throwVelocity)
         {
+            Debug.Log("Shipping throw data to all");
             _syncPositions.Clear();
             _syncPositions[tick] = position;
             transform.position = position;
@@ -131,7 +114,7 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
 
         private void OnFramedTick()
         {
-            if (HasAuthority && !IsOwner)
+            if (IsServerInitialized)
             {
                 // server is owner, send actual position
                 if (TimeManager.Tick % _TICK_UPDATE_RATE == 0) SendPositionData();
@@ -139,7 +122,7 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
             else if (IsOwner)
             {
                 // player is owner, send actual position
-                if (IsOwner && TimeManager.Tick % _TICK_UPDATE_RATE == 0) SendPositionData();
+                if (TimeManager.Tick % _TICK_UPDATE_RATE == 0) SendPositionData();
             }
         }
 
@@ -149,7 +132,9 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
             Debug.Log(
                 $"[BALL:{index.Value}|OUT:{OwnerId}] Shipping tick: {ServerManager.NetworkManager.TimeManager.Tick}, position: {transform.position}, velocity: {rb.velocity}");
 
-            if (IsOwner) NeonRavenBroadcast.QueueSendBytes(index.Value, RavenDataIndex.BallState, _writer.GetBuffer(), true);
+            // the IsOwner bool marks true when transfering ownership
+            // we send back to our server, from the server... for some reason?
+            if (OwnerId != -1) NeonRavenBroadcast.QueueSendBytes(index.Value, RavenDataIndex.BallState, _writer.GetBuffer(), true);
             else NeonRavenBroadcast.QueueSendBytes(index.Value, RavenDataIndex.BallState, _writer.GetBuffer());
         }
 
@@ -174,12 +159,7 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
             switch (dataIndex)
             {
                 case RavenDataIndex.BallState:
-                    // if the owner, we want to toss the server data
-                    // we can optimize this by not sending one back to the owner
-                    // would require refactor on the broadcast side, but worth it for the 
-                    // player sync
                     if (senderId != index.Value) break;
-
                     if (IsOwner)
                     {
                         _syncPositions.Clear();
@@ -191,18 +171,11 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
                     var velocity = reader.ReadVector3();
                     var ticks = reader.ReadUInt32();
 
-                    if (IsServerInitialized)
-                    {
-                        Debug.Log("Received ball state data from server, updating client positions.");
-                        _syncPositions.Clear();
-                        transform.position = position;
-                        _syncPositions[ticks] = position;
-                        NeonRavenBroadcast.QueueSendBytes(index.Value, RavenDataIndex.BallState, data);
-                    }
-
-                    _syncPositions[ticks] = position;
                     if (!rb.isKinematic) rb.velocity = velocity;
-
+                    _syncPositions[ticks] = position;
+                    
+                    if (OwnerId == -1) transform.position = position;
+                    
                     Debug.Log(
                         $"[BALL:{index.Value}|IN:{OwnerId}] Received tick: {ticks}, position: {position}, velocity: {velocity}, actual position: {transform.position}");
                     break;

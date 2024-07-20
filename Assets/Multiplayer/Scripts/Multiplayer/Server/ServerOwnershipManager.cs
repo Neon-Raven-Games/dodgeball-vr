@@ -1,6 +1,7 @@
 ﻿using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using Multiplayer.Scripts.Multiplayer.SyncComponents;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 
@@ -91,8 +92,9 @@ public class ServerOwnershipManager : NetworkBehaviour
         
         _playerBallPossessions.Dirty(requestingPlayer.ClientId);
         
-        networkObject.GiveOwnership(requestingPlayer);
-        NetBallController.SetBallData(netBall.ballIndex.Value, requestingPlayer.ClientId);
+        var sync = networkObject.GetComponent<BroadcastSyncComponent>();
+        sync.GiveOwnership(requestingPlayer);
+        NetBallController.SetBallData(sync.index.Value, requestingPlayer.ClientId);
     }
 
     [ServerRpc(RequireOwnership = false, OrderType = DataOrderType.Last)]
@@ -113,10 +115,12 @@ public class ServerOwnershipManager : NetworkBehaviour
         
         _playerBallPossessions.Dirty(netDb.OwnerId);
         
-        netDb.WaitForServerOwner(velocity, position, tick);
-        networkObject.RemoveOwnership();
+        var sync = networkObject.GetComponent<BroadcastSyncComponent>();
+        sync.CleanServerPositionData(tick, position, velocity);
+        netDb.WaitForServerOwner();
+        sync.RemoveOwnership();
         
-        NetBallController.SetBallData(netDb.ballIndex.Value, -1);
+        NetBallController.SetBallData(sync.index.Value, -1);
     }
 
     private bool IsOwnershipRequestValid(NetworkBehaviour networkObject, NetworkConnection requestingPlayer)

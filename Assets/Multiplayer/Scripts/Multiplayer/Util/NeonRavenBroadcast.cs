@@ -224,7 +224,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     private static void BroadcastMessageToClients(RavenMessageSegment newBroadcast)
     {
         if (_currentlyProcessing.targetClientId != -1) RelayClientMessage(newBroadcast);
-        else ServerManager.Broadcast(newBroadcast, true, Channel.Unreliable);
+        else ServerManager.Broadcast(newBroadcast);
     }
 
     /// <summary>
@@ -235,7 +235,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     private void BroadcastMessageToServer(RavenMessageSegment newBroadcast)
     {
         if (IsServer) InvokeServerBroadcast(newBroadcast);
-        else ClientManager.Broadcast(newBroadcast, Channel.Unreliable);
+        else ClientManager.Broadcast(newBroadcast);
     }
 
     /// <summary>
