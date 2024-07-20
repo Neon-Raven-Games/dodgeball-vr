@@ -17,7 +17,7 @@ public class PlayerRig
 
 namespace Unity.Template.VR.Multiplayer
 {
-    public class NetworkPlayer : NetworkBehaviour
+    public class NetworkPlayer : NetworkBehaviour, INeonBroadcastReceiver
     {
         [SerializeField] private PlayerRig localPlayer;
         [SerializeField] public PlayerRig ikTargetModel;
@@ -72,13 +72,9 @@ namespace Unity.Template.VR.Multiplayer
                 localPlayer.playerModel.SetActive(true);
                 ikTargetModel.playerModel.SetActive(false);
                 NeonRavenBroadcast.Initialize();
-        
-                // todo, method sub and invocation instead of direct call from client player
-                // populate broadcasts with all the objects in our broadcast collection
-                var broadcastCollection = FindAnyObjectByType<BroadcastCollection>();
-                
-                if (!broadcastCollection) Debug.LogError("Could not find broadcast collection!");
-                else broadcastCollection.SubscribeNewReceiver();
+                BroadcastCollection.OnBroadcastsInitialized();
+                NeonRavenBroadcast.AddReceiver(this, OwnerId);
+                Debug.Log($"[{OwnerId}] Subscribed to broadcasts.");
             }
             else
             {
@@ -163,6 +159,18 @@ namespace Unity.Template.VR.Multiplayer
             ikTargetModel.playerModel.SetActive(true);
             _netIKTargetHelper = ikTargetModel.playerModel.GetComponent<NetIKTargetHelper>();
             Debug.Log($"Set visuals: {ikTargetModel.playerModel.activeInHierarchy}. Animation object: {_netIKTargetHelper.name}");
+        }
+
+        public void ReceiveLazyLoadedMessage(byte[] data, int senderId, RavenDataIndex dataIndex)
+        {
+            Debug.Log($"client received message from {senderId}, with index {dataIndex}.");
+            switch (dataIndex)
+            {
+                case RavenDataIndex.BallReset:
+                    Debug.Log("Ball reset received. Calling broadcast initialized for subscribers!");
+                    BroadcastCollection.OnBroadcastsInitialized();
+                    break;
+            }
         }
     }
 }

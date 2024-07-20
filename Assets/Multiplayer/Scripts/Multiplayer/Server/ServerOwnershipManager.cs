@@ -116,7 +116,7 @@ public class ServerOwnershipManager : NetworkBehaviour
         _playerBallPossessions.Dirty(netDb.OwnerId);
         
         var sync = networkObject.GetComponent<BroadcastSyncComponent>();
-        sync.CleanServerPositionData(tick, position, velocity);
+        sync.ThrowBallOnTick(tick, position, velocity);
         netDb.WaitForServerOwner();
         sync.RemoveOwnership();
         

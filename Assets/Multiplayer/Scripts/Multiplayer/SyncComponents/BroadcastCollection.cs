@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishNet;
 using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 
@@ -16,23 +16,58 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
         public BroadcastSyncComponent syncComponent;
     }
 
+    // as of now, broadcast positive values are coupled on the 
+    // network connection for players (>=0)
+    // -1 is reserved for the server. 
+    // Populate the collection in any way with negative indicies below -1
     public class BroadcastCollection : MonoBehaviour
     {
+        public static event Action BroadcastsInitialized;
         [SerializeField] private bool debugOneObject;
         [SerializeField] private int debugElementIndex;
 
         public List<BroadcastServerIndex> broadcastSyncComponents = new();
         private readonly Dictionary<int, BroadcastSyncComponent> _broadcastSyncComponentDictionary = new();
 
+        private void Awake()
+        {
+            BroadcastsInitialized += SubscribeNewReceiver;
+        }
+
+        public void ReInitializeServerObjects()
+        {
+            var components = _broadcastSyncComponentDictionary.Values.ToList();
+            foreach (var component in components)
+            {
+                component.RemoveReceiver();
+                var netBall = component.GetComponent<NetworkObject>();
+                InstanceFinder.NetworkManager.ServerManager.Despawn(netBall);
+            }
+            _broadcastSyncComponentDictionary.Clear();
+            InitializeServerObjects();
+            foreach (var component in InstanceFinder.ServerManager.Clients.Values)
+            {
+                Debug.Log($"Shipping ball reset message to client {component.ClientId}");
+                NeonRavenBroadcast.SendEmptyMessage(-1, RavenDataIndex.BallReset, false, component.ClientId);
+            }
+        }
+        
         public void InitializeServerObjects()
         {
-            _broadcastSyncComponentDictionary.Clear();
             if (debugOneObject) InitializeBroadcastComponent(broadcastSyncComponents[debugElementIndex]);
             else
                 foreach (var broadcastSyncComponent in broadcastSyncComponents)
                     InitializeBroadcastComponent(broadcastSyncComponent);
 
             Debug.Log("Broadcasts initialized on server.");
+        }
+        
+        public static void OnBroadcastsInitialized() =>
+            BroadcastsInitialized?.Invoke();
+
+        public void RemoveReceivers()
+        {
+            foreach (var component in _broadcastSyncComponentDictionary.Values) component.RemoveReceiver();
         }
 
         public Vector3 GetSpawnPosition(int index)
@@ -72,19 +107,20 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
 
         public void SubscribeNewReceiver()
         {
+            Debug.Log("New receiver subscribed to broadcasts.");
             var components = FindObjectsByType<BroadcastSyncComponent>(FindObjectsSortMode.None);
 
             foreach (var component in components)
             {
                 if (_broadcastSyncComponentDictionary.ContainsKey(component.index.Value))
                 {
-                    Debug.LogWarning(
-                        $"Duplicate index found: {component.index.Value}. Not adding it to collection. Expect broadcasts to not be working properly.");
+                    component.AddReceiver();
+                    // if this works, safe to remove logs
+                    Debug.LogWarning($"Duplicate index found: {component.index.Value}. Was this reinitialized?");
                     continue;
                 }
-
-                _broadcastSyncComponentDictionary.Add(component.index.Value, component);
                 component.AddReceiver();
+                _broadcastSyncComponentDictionary.Add(component.index.Value, component);
             }
 
             Debug.Log($"New receiver subscribed to {_broadcastSyncComponentDictionary.Count} components.");

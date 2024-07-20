@@ -1,10 +1,10 @@
 using System;
-using FishNet.Broadcast;
 using UnityEngine;
 
 public enum RavenDataIndex
 {
-    BallState = 0
+    BallState = 0,
+    BallReset = 1,
 }
 
 /// <summary>
@@ -53,7 +53,9 @@ public class RavenMessage
 
         var bytesToSend = Mathf.Min(BytesLeft, _maxSize);
         buffer = new byte[bytesToSend];
-        Array.Copy(FullArray, _byteIndex, buffer, 0, bytesToSend);
+        
+        Buffer.BlockCopy(FullArray, _byteIndex, buffer, 0, bytesToSend);
+        // Array.Copy(FullArray, _byteIndex, buffer, 0, bytesToSend);
 
         _byteIndex += bytesToSend;
         BytesLeft -= bytesToSend;
@@ -66,6 +68,7 @@ public class RavenMessage
         var offset = index * _maxSize;
 
         if (FullArray.Length < desiredtotalsize) FullArray = new byte[desiredtotalsize];
-        Array.Copy(buffer, 0, FullArray, offset, buffer.Length);
+        // Array.Copy(buffer, 0, FullArray, offset, buffer.Length);
+        Buffer.BlockCopy(buffer, 0, FullArray, offset, buffer.Length);
     }
 }

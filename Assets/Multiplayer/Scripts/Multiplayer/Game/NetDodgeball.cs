@@ -80,7 +80,6 @@ namespace Unity.Template.VR.Multiplayer
 
         public void ApplyThrowVelocityServerRpc(Vector3 throwVelocity, Vector3 position, HandSide handSide)
         {
-            _broadcastSyncComponent.AddPositionForCurrentTick(position);
             ServerOwnershipManager.ReleaseOwnershipFromServer(this, throwVelocity, position, handSide,
                 TimeManager.Tick);
         }

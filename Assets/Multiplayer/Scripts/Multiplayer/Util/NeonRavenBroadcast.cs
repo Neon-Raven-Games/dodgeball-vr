@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Client;
@@ -7,7 +6,38 @@ using FishNet.Managing.Server;
 using FishNet.Transporting;
 using UnityEngine;
 
+public struct ServerMessage
+{
+    public static bool sendToServer = true;
+    public int toSpecificID;
+    public readonly int senderId;
+    public readonly RavenDataIndex dataIndex;
+    public byte[] data;
 
+    private ServerMessage(int senderId, RavenDataIndex dataIndex, byte[] data, int toSpecificID = -1)
+    {
+        this.senderId = senderId;
+        this.dataIndex = dataIndex;
+        this.data = data;
+        this.toSpecificID = toSpecificID;
+    }
+
+    public static ServerMessage Create(int senderId, RavenDataIndex dataIndex, byte[] data, int toSpecificId = -1) =>
+        new(senderId, dataIndex, data, toSpecificId);
+}
+// !-- IMPORTANT --!
+// as of now, broadcast positive values are coupled on the network connection for players (>=0)
+// -1 is reserved for the server.
+// You can replicate over the network with negative values
+
+// todo,
+// ** we need to make cleaner way to ship empty broadcast, yucky byte[2] array
+// ** Support for reliable and unreliable messages.
+// ** Need cleaner params on public api. (ServerMessage, ClientMessage?)
+// ** this is somewhat coupled on the network connection, where I want to subscribe objects themselves, too
+// the negative values are objects that are subscribed and replicate across the network
+// we can rework this into a more generic system, where we can subscribe objects to the network
+// ... later, it works for now lol
 public class NeonRavenBroadcast : MonoBehaviour
 {
     public const int MAX_SIZE = 32000;
@@ -19,7 +49,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     private static bool _hasCurrentlyProcessing;
 
     /// <summary>
-    /// The message pool for handling data effeciently.
+    /// The message pool for handling data efficiently.
     /// </summary>
     private static readonly RavenMessagePool _SPool = new();
 
@@ -32,11 +62,12 @@ public class NeonRavenBroadcast : MonoBehaviour
     /// The message queue to enqueue messages to send.
     /// </summary>
     private static readonly Queue<RavenMessage> _SSendQueue = new();
+
     private readonly Dictionary<int, RavenMessage> _receiverPoolMap = new();
 
     private float _lastTimeCheckedSendQueue;
     private byte[] _sendBuffer;
-    
+
     #region Singleton - Possible Refactor Needed
 
     // todo, we probably don't need this to be singleton, and can make this a static class.
@@ -55,6 +86,11 @@ public class NeonRavenBroadcast : MonoBehaviour
     #endregion
 
     #region public api. todo - bring in the byte array helper class
+
+    // todo, we need to make this cleaner, yucky byte[2] array
+    public static void SendEmptyMessage(int senderID, RavenDataIndex dataIndex, bool sendToServer = false,
+        int toSpecificID = -1) =>
+        QueueSendBytes(senderID, dataIndex, new byte[2], sendToServer, toSpecificID);
 
     /// <summary>
     /// Queue bytes to send to clients or server. This is helpful for sending large data packets that need to be broken up.
@@ -83,14 +119,20 @@ public class NeonRavenBroadcast : MonoBehaviour
     }
 
     /// <summary>
+    /// Convenient method to queue a message to send to the server.
+    /// </summary>
+    /// <param name="serverMessage">Struct to encapsulate all of the parameters.</param>
+    public static void QueueSendBytes(ServerMessage serverMessage) =>
+        QueueSendBytes(serverMessage.senderId, serverMessage.dataIndex, serverMessage.data, ServerMessage.sendToServer,
+            serverMessage.toSpecificID);
+
+    /// <summary>
     /// Add a receiver to the messages sent.
     /// </summary>
     /// <param name="receiver">Interface's concrete type to remove to messaging.</param>
     /// <param name="receiverId">The receiver Id</param>
-    public static void AddReceiver(INeonBroadcastReceiver receiver, int receiverId)
-    {
-        if (!_SReceivers.ContainsKey(receiverId)) _SReceivers.Add(receiverId, receiver);
-    }
+    public static void AddReceiver(INeonBroadcastReceiver receiver, int receiverId) =>
+        _SReceivers[receiverId] = receiver;
 
     /// <summary>
     /// Remove a receiver from the messages sent.
@@ -100,6 +142,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     public static void RemoveReceiver(INeonBroadcastReceiver receiver, int receiverId)
     {
         if (_SReceivers.ContainsKey(receiverId)) _SReceivers.Remove(receiverId);
+        else Debug.LogWarning($"[NRBroadcast] Tried to move receiver {receiverId} that does not exist.");
     }
 
     #endregion
@@ -139,7 +182,8 @@ public class NeonRavenBroadcast : MonoBehaviour
         _currentlyProcessing = null;
     }
 
-    // todo, to keep consistent with the network, we could probably move this over to OnTick callbacks.
+    // todo, to keep consistent with the network, we could probably move this over to OnTick callbacks
+    // todo, empty byte arrays should be supported - public api should support this
     private void Update()
     {
         // if (WaitForFrame()) return;
@@ -235,7 +279,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     private void BroadcastMessageToServer(RavenMessageSegment newBroadcast)
     {
         if (IsServer) InvokeServerBroadcast(newBroadcast);
-        else ClientManager.Broadcast(newBroadcast);
+        else ClientManager.Broadcast(newBroadcast, Channel.Unreliable);
     }
 
     /// <summary>
@@ -246,7 +290,12 @@ public class NeonRavenBroadcast : MonoBehaviour
     private static void RelayClientMessage(RavenMessageSegment newBroadcast)
     {
         if (ServerManager.Clients.TryGetValue(_currentlyProcessing.targetClientId, out var conn))
-            ServerManager.Broadcast(conn, newBroadcast);
+        {
+            Debug.Log($"Broadcasting to client.{conn.ClientId} with target {_currentlyProcessing.targetClientId}");
+            ServerManager.Broadcast(conn, newBroadcast, true, Channel.Unreliable);
+        }
+        else if (_SReceivers.TryGetValue(newBroadcast.targetClientId, out var receiver))
+            ServerManager.Broadcast(newBroadcast, true, Channel.Unreliable);
         else ClientNotFound();
     }
 
@@ -260,7 +309,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     /// equal to their own. The default message is sent to all clients. 
     /// </summary>
     private static void ReceiveTargetClientMessage(RavenMessage dataPart) =>
-        _SReceivers[dataPart.senderID]
+        _SReceivers[dataPart.targetClientId]
             .ReceiveLazyLoadedMessage(dataPart.FullArray, dataPart.senderID, dataPart.dataIndex);
 
     /// <summary>
@@ -295,12 +344,12 @@ public class NeonRavenBroadcast : MonoBehaviour
 
         dataPart.dataIndex = msg.dataIndex;
         dataPart.senderID = msg.senderID;
+        dataPart.targetClientId = msg.targetClientId;
         dataPart.WriteChunk(msg.data, msg.slowSenderIndex, msg.totalSize);
 
         if (!msg.complete) return;
 
         var data = dataPart.FullArray;
-
         if (dataPart.targetClientId == -1) ReceiveCompletedMessage(data, dataPart.senderID, dataPart.dataIndex);
         else ReceiveTargetClientMessage(dataPart);
 
@@ -331,6 +380,7 @@ public class NeonRavenBroadcast : MonoBehaviour
 
     private RavenMessageSegment CreateBroadcastMessage(bool completed) =>
         new(_currentlyProcessing.senderID,
+            _currentlyProcessing.targetClientId,
             _currentlyProcessing.dataIndex,
             _currentlyProcessing.currentSlowSenderIndex,
             _currentlyProcessing.FullArray.Length,
@@ -343,7 +393,7 @@ public class NeonRavenBroadcast : MonoBehaviour
     /// <param name="newBroadcast"></param>
     private void InvokeServerBroadcast(RavenMessageSegment newBroadcast) =>
         ReceiveLocalServerBroadcast(InstanceFinder.IsClientStarted ? ClientManager.Connection : default,
-            newBroadcast, Channel.Reliable);
+            newBroadcast, Channel.Unreliable);
 
     #endregion
 
@@ -354,6 +404,7 @@ public class NeonRavenBroadcast : MonoBehaviour
             if (subbed.Value != receiver) continue;
             return subbed.Key;
         }
+
         return -1;
     }
 }

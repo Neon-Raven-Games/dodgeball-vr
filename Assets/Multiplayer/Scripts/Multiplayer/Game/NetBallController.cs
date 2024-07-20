@@ -59,33 +59,16 @@ public class NetBallController : NetworkBehaviour
 
     public static void ResetBalls()
     {
-        
         _instance.ResetBallsInstanced();
-        _instance.SubscribeNewReceiver();
-       
     }
     
-    private void SubscribeNewReceiver()
-    {
-        // todo, method sub and invocation instead of direct call from client player
-        Debug.Log("this shit don't work.");
-        var collection = FindFirstObjectByType<BroadcastCollection>();
-        collection.SubscribeNewReceiver();
-    }
-
     [ServerRpc(RequireOwnership = false)]
     private void ResetBallsInstanced()
     {
         var collection = FindFirstObjectByType<BroadcastCollection>();
-        for (var i = -1; i > -4; i--)
-        {
-            var ball = collection.GetComponentByIndex(i);
-            ball.RemoveReceiver();
-            var netBall = ball.GetComponent<NetworkObject>();
-            InstanceFinder.NetworkManager.ServerManager.Despawn(netBall);
-        }
-
-        collection.InitializeServerObjects();
+        collection.ReInitializeServerObjects();
+        
+        // send a broadcast to the clients to resub the balls
         Debug.Log("Reset all the balls mane");
     }
 
