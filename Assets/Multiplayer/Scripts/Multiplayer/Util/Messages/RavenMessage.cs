@@ -5,6 +5,7 @@ public enum RavenDataIndex
 {
     BallState = 0,
     BallReset = 1,
+    BallThrow = 2,
 }
 
 /// <summary>

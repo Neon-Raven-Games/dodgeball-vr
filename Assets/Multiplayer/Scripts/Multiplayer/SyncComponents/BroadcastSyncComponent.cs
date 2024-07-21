@@ -19,7 +19,7 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
 
         private Rigidbody _rb;
         private ServerMessage _serverMessage;
-
+        private bool _inThrow;
         private void Start() => TimeManager.OnTick += OnFramedTick;
 
         private void OnDisable() => TimeManager.OnTick -= OnFramedTick;
@@ -32,21 +32,25 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
         }
 
         private const float MAX_PASSED_TIME = 0.3f;
-        [ObserversRpc]
+
         public void AddPositionForCurrentTick(uint tick, Vector3 position, Vector3 throwVelocity)
         {
-            Debug.Log("Clearing all data");
+            Debug.Log("Receiving throw data from broadcast");
             transform.position = position;
             _syncPositions.Clear();
             var passedTime = (float) TimeManager.TimePassed(tick);
             passedTime = Mathf.Min(MAX_PASSED_TIME / 2f, passedTime);
 
-            Debug.Log($"Calling ball thrown rpc: Position: {position}, Velocity: " +
-                      $"{throwVelocity}. Time passed since throw: {passedTime}. Future position: {position + throwVelocity * passedTime}");
+            Debug.Log(
+                $"Time passed since throw: {passedTime}. " +
+                $"[{tick}] {position}" +
+                $"[{TimeManager.Tick}] {position + throwVelocity * passedTime}");
 
             var futurePosition = position + throwVelocity * passedTime;
             _syncPositions[tick] = position;
             _syncPositions[TimeManager.Tick] = futurePosition;
+            Debug.Log(
+                $"Initial Sync Positions: {_syncPositions.Select(kvp => kvp.ToString()).Aggregate((a, b) => $"{a}, {b}")}");
         }
 
         public void AddReceiver()
@@ -64,6 +68,7 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
         }
 
         public float smoothFactor = 1f;
+
         private void FixedUpdate()
         {
             if (!IsServerInitialized && !IsOwner)
@@ -72,17 +77,25 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
 
         public void ThrowBallOnTick(uint tick, Vector3 position, Vector3 throwVelocity)
         {
-            AddPositionForCurrentTick(tick, position, throwVelocity);
-            Debug.Log("Shipping throw data to all");
-            _syncPositions.Clear();
-            _syncPositions[tick] = position;
+            throwTickDelay = 2;
+            Debug.Log("Shipping throw data to all via broadcast");
             transform.position = position;
             _rb.velocity = throwVelocity;
+            var data = WriteThrowData(position, throwVelocity, tick);
+            NeonRavenBroadcast.QueueSendBytes(index.Value, RavenDataIndex.BallThrow, data, false, index.Value);
         }
 
+        private uint throwTickDelay;
         private void OnFramedTick()
         {
-            if (IsServerInitialized)
+            if (throwTickDelay > 0)
+            {
+                throwTickDelay--;
+                Debug.Log("Delayed from throw tick");
+                return;
+            }
+            
+            if (HasAuthority && !IsOwner)
             {
                 // server is owner, send actual position
                 if (TimeManager.Tick % _TICK_UPDATE_RATE == 0) SendPositionData();
@@ -100,8 +113,6 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
             Debug.Log(
                 $"[BALL:{index.Value}|OUT:{OwnerId}] Shipping tick: {ServerManager.NetworkManager.TimeManager.Tick}, position: {transform.position}, velocity: {_rb.velocity}");
 
-            // the IsOwner bool marks true when transfering ownership
-            // we send back to our server, from the server... for some reason?
             if (OwnerId != -1) SendServerData();
             else
             {
@@ -131,10 +142,34 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
             _writer.WriteUInt32(ticks);
         }
 
+        private static byte[] WriteThrowData(Vector3 position, Vector3 velocity, uint ticks)
+        {
+            var writer = new Writer();
+            writer.Reset();
+
+            writer.WriteVector3(position);
+            writer.WriteVector3(velocity);
+            writer.WriteUInt32(ticks);
+            return writer.GetBuffer();
+        }
+        
+
         public void ReceiveLazyLoadedMessage(byte[] data, int senderId, RavenDataIndex dataIndex)
         {
             switch (dataIndex)
             {
+                case RavenDataIndex.BallThrow:
+                    _syncPositions.Clear();
+                    var throwReader = new Reader(data, NetworkManager);
+                    var pos = throwReader.ReadVector3();
+                    transform.position = pos;
+                    
+                    var vel = throwReader.ReadVector3();
+                    var tick = throwReader.ReadUInt32();
+                    AddPositionForCurrentTick(tick, pos, vel);
+                    throwTickDelay = 0;
+                    Debug.Log($"resetting throw delay in broadcast receiver {NetworkObject.LocalConnection.ClientId}");
+                    break;
                 case RavenDataIndex.BallState:
                     if (senderId != index.Value)
                     {
@@ -156,7 +191,10 @@ namespace Multiplayer.Scripts.Multiplayer.SyncComponents
                     if (!_rb.isKinematic) _rb.velocity = velocity;
                     _syncPositions[ticks] = position;
 
-                    if (OwnerId == -1) transform.position = position;
+                    if (HasAuthority && !IsOwner)
+                    {
+                        transform.position = position;
+                    }
 
                     Debug.Log(
                         $"[BALL:{index.Value}|IN:{OwnerId}] Received tick: {ticks}, position: {position}, velocity: {velocity}, actual position: {transform.position}");

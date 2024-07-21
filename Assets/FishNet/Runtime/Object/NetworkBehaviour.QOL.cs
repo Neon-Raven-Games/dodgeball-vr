@@ -106,6 +106,7 @@ namespace FishNet.Object
         /// <summary>
         /// True if this object has been initialized only on the server side.
         /// This is set true right before server start callbacks and after stop callbacks.
+        /// </summary>
         public bool IsServerOnlyInitialized => _networkObjectCache.IsServerOnlyInitialized;
         /// <summary>
         /// True if only the server is started.

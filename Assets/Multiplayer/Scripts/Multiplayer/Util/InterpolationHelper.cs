@@ -7,9 +7,9 @@ namespace Multiplayer.Scripts.Multiplayer.Util
 {
     public static class InterpolationHelper
     {
-        private const int _MAX_SYNC_DATA_COUNT = 10;
+        private const int _MAX_SYNC_DATA_COUNT = 4;
         private const uint _TICK_UPDATE_RATE = 10;
-        private const float _SMOOTHING_FACTOR =  0.012f;
+        private const float _SMOOTHING_FACTOR =  0.006f;
 
         public static void InterpolateSyncCollection(SortedDictionary<uint, Vector3> syncCollection,
             Transform transform, float smoothingFactor = 1f)
@@ -32,10 +32,10 @@ namespace Multiplayer.Scripts.Multiplayer.Util
                 Vector3 velocity = (nextValue - previousValue) / (nextTick - previousTick);
                 Vector3 extrapolatedValue = nextValue + velocity * deltaTime;
 
-                transform.position = Vector3.Lerp(transform.position, extrapolatedValue, _SMOOTHING_FACTOR * smoothingFactor);
-                // Debug.Log($"Extrapolated Value: {extrapolatedValue}, Velocity: {velocity}, DeltaTime: {deltaTime}");
-                // todo, was this right?
-                // syncCollection[nextTick] = transform.position;
+                var smoothFactor = Mathf.Clamp(_SMOOTHING_FACTOR * smoothingFactor, 0f, 1f);
+                transform.position = Vector3.Lerp(transform.position, extrapolatedValue, smoothFactor);
+                if (transform.position.y < 0.11f) transform.position = new Vector3(transform.position.x, 0.11f, transform.position.z);
+                syncCollection[currentTick] = transform.position;
             }
             else
             {
@@ -44,6 +44,8 @@ namespace Multiplayer.Scripts.Multiplayer.Util
 
                 Vector3 interpolatedPosition = Vector3.Lerp(previousValue, nextValue, interpolationFactor);
                 transform.position = interpolatedPosition;
+                if (transform.position.y < 0.11f) transform.position = new Vector3(transform.position.x, 0.11f, transform.position.z);
+                syncCollection[currentTick] = transform.position;
             }
 
             ClearOldSyncData(syncCollection);
