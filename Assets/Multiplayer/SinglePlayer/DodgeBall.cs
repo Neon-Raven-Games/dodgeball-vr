@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 
 public class DodgeBall : MonoBehaviour
@@ -13,14 +15,27 @@ public class DodgeBall : MonoBehaviour
     public float pauseTime = 0.5f;
     private Team _team;
     public BallState _ballState = BallState.Dead;
+    
+    public Action<int> ballNotLive;
+    internal int index;
+    public Action<int, Vector3, Vector3> throwTrajectory;
 
-
-    public void SetOwner()
+    public void Start()
+    {
+        GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
+    }
+    
+    public void HandleThrowTrajectory(Vector3 velocity)
+    {
+        throwTrajectory?.Invoke(index, transform.position, velocity);
+    }
+    public void SetOwner(Team team)
     {
         if (_ballState == BallState.Live) catchSound.Play();
         else pickupSound.Play();
 
         _ballState = BallState.Possessed;
+        _team = team;
     }
 
     public void SetLiveBall()
@@ -73,14 +88,9 @@ public class DodgeBall : MonoBehaviour
         skinnedMeshRenderer.SetBlendShapeWeight(index, endValue);
     }
 
-    // todo, make this enum
-    // 0 is other (discard?)
-    // 1 is ground
-    // 2 is walls
-    // 3 is another player
-    // 4 is the player
     private void OnCollisionEnter(Collision collision)
     {
+        
         var param = 0;
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
@@ -117,8 +127,10 @@ public class DodgeBall : MonoBehaviour
             //     }
             // }
 
+            // todo, find a way to gracefully exclude ai colliders from this check
             if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
+                return;
                 Debug.Log("Team One Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
@@ -127,6 +139,7 @@ public class DodgeBall : MonoBehaviour
             }
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
+                return;
                 Debug.Log("Team Two Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
@@ -136,19 +149,25 @@ public class DodgeBall : MonoBehaviour
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
                 Debug.Log("Team two score!");
+                collision.gameObject.GetComponentInParent<Actor>().SetOutOfPlay(true);
                 SetDeadBall();
                 HitSquash(collision);
+                GameManager.teamTwoScore++;
+                GameManager.UpdateScore();
                 // Score(Team.TeamTwo);
                 param = 3;
             }
             else if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
-                Debug.Log("Team Two Friendly Fire");
+                Debug.Log("Team One score!");
+                collision.gameObject.GetComponentInParent<Actor>().SetOutOfPlay(true);
                 SetDeadBall();
                 HitSquash(collision);
-                // Score(Team.TeamOne);
+                GameManager.teamOneScore++;
+                GameManager.UpdateScore();
                 param = 3;
             }
+            if (_ballState == BallState.Dead) ballNotLive?.Invoke(param);
         }
 
         if (param > 0) hitSound.Play();

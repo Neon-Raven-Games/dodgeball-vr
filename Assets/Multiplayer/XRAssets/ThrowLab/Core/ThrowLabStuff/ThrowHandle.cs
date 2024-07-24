@@ -103,6 +103,7 @@ namespace Unity.Template.VR.Multiplayer
         {
             if (_deviceConfigurations != null && _deviceConfigurations.Length != 0)
             {
+                Debug.Log("Migrating ThrowHandle data to ThrowConfigurationSet.");
                 _throwConfigurationSet.SetConfigs(_deviceConfigurations.ToArray());
                 _deviceConfigurations = new ThrowConfiguration[0];
             }

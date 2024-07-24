@@ -14,19 +14,22 @@ public class NetBallPossessionHandlerEditor : Editor
         {
             handler.Start();
             const BallType BALL_TYPE = BallType.None;
-            handler.Editor_SetBallType(BALL_TYPE);
+            // handler.Editor_SetBallType(BALL_TYPE);
+            handler.SetBallType(BALL_TYPE);
         }
         if (GUILayout.Button("Set Dodgeball"))
         {
             handler.Start();
             const BallType BALL_TYPE = BallType.Dodgeball;
-            handler.Editor_SetBallType(BALL_TYPE);
+            // handler.Editor_SetBallType(BALL_TYPE);
+            handler.SetBallType(BALL_TYPE);
         }
         if (GUILayout.Button("Set SpeedBall"))
         {
             handler.Start();
             const BallType BALL_TYPE = BallType.SpeedBall;
-            handler.Editor_SetBallType(BALL_TYPE);
+            // handler.Editor_SetBallType(BALL_TYPE);
+            handler.SetBallType(BALL_TYPE);
         }
     }
 }

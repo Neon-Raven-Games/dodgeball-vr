@@ -2,7 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class DevController : MonoBehaviour
+// todo, we need to account for the irl space of the player
+public class DevController : Actor
 {
     [SerializeField] private InputActionAsset actionAsset;
     [SerializeField] private GameObject hmd;
@@ -10,8 +11,6 @@ public class DevController : MonoBehaviour
     public CharacterController controller;
     public float speed = 5.0f;
     public float rotationSpeed = 100.0f;
-    public Team team;
-
     private InputAction _moveForwardAction;
     private InputAction _lookAction;
     private Vector2 _moveInput;
@@ -34,6 +33,7 @@ public class DevController : MonoBehaviour
     {
         _moveForwardAction.Enable();
         _lookAction.Enable();
+        PopulateTeamObjects();
     }
 
     private void OnDisable()
@@ -46,19 +46,20 @@ public class DevController : MonoBehaviour
     {
         HandleMovement();
         HandleRotation();
-
+        if (IsOutOfPlay()) HandleOutOfPlay();
         // MoveToCamera();
     }
-
+    
     private void FixedUpdate()
     {
         var gravity = Physics.gravity;
         controller.Move(gravity * Time.fixedDeltaTime);
     }
 
+    // todo, validate this working gewd :D
     private void HandleRotation()
     {
-        controller.transform.Rotate(0, _lookInput.x * rotationSpeed * Time.fixedDeltaTime, 0);
+        controller.transform.RotateAround(hmd.transform.position, Vector3.up, _lookInput.x * rotationSpeed * Time.fixedDeltaTime);
     }
 
     private void HandleMovement()

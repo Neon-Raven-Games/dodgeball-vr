@@ -17,11 +17,38 @@ public class GameManager : MonoBehaviour
     {
         _teamOneScoreText = teamOneScoreTextInstance;
         _teamTwoScoreText = teamTwoScoreTextInstance;
+        ResetScores();
     }
+
+    public static void AddScore(Team team)
+    {
+        if (team == Team.TeamOne) teamOneScore++;
+        else teamTwoScore++;
+        UpdateScore();
+    }
+
+    private static List<GameObject> _matchBalls = new();
+    private static List<Vector3> _matchBallsInitialPos = new();
+    public static void InitBallForGame(GameObject ball)
+    {
+        _matchBalls.Add(ball);
+        _matchBallsInitialPos.Add(ball.transform.position);
+    }
+    
+    public static void ResetMatchBalls()
+    {
+        for (var i = 0; i < _matchBalls.Count; i++)
+        {
+            _matchBalls[i].transform.position = _matchBallsInitialPos[i];
+            _matchBalls[i].GetComponent<Rigidbody>().velocity = Vector3.zero;
+            _matchBalls[i].GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        }
+    }
+    
     public static void UpdateScore()
     {
-        _teamOneScoreText.text = "Targets Hit: " + teamOneScore;
-        _teamTwoScoreText.text = "Targets Hit: " + teamTwoScore;
+        _teamOneScoreText.text = "Player:   " + teamOneScore;
+        _teamTwoScoreText.text = "Enemy:   " + teamTwoScore;
     }
     
     public void ResetScores()
