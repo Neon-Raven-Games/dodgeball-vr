@@ -1847,7 +1847,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3160313780840312623}
-  - component: {fileID: 2840223882622261043}
   - component: {fileID: 6967572612099817640}
   m_Layer: 0
   m_Name: AI Avatar3
@@ -1873,28 +1872,6 @@ Transform:
   - {fileID: 3956408298624461668}
   m_Father: {fileID: 3932534911446440410}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!95 &2840223882622261043
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 658213905340163891}
-  m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: aa7b4a864bab28a4099614f25375dfac, type: 2}
-  m_Controller: {fileID: 9100000, guid: 3b8d768c58272a04bb9d174edb30f658, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &6967572612099817640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7987,6 +7964,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3956408298624461668}
+  - component: {fileID: 4519930305421591141}
+  - component: {fileID: 3654604652532971092}
   m_Layer: 0
   m_Name: Character
   m_TagString: Untagged
@@ -8012,6 +7991,41 @@ Transform:
   - {fileID: 4739932203318370008}
   m_Father: {fileID: 3160313780840312623}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4519930305421591141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3349261666242330012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30dbbbc9c94967e478f52dfd7a5f2dda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dodgeballAI: {fileID: 7250637352051434652}
+--- !u!95 &3654604652532971092
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3349261666242330012}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 2296e366aca332c4b882bff40daafd4f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &3361209916521153583
 GameObject:
   m_ObjectHideFlags: 0
@@ -12570,7 +12584,7 @@ MonoBehaviour:
     possessionTimeWeight: 0.09
     testingThrowForce: 18
     aimRandomnessFactor: 0.01
-    upwardBias: 1.1
+    upwardBias: 0
   outOfBoundsUtilityArgs:
     outOfBoundsWaitTime: 3
   priorityHandler: {fileID: 0}
@@ -12579,6 +12593,8 @@ MonoBehaviour:
   difficultyFactor: 0.6
   leftBallIndex: {fileID: 4917961834074567372}
   rightBallIndex: {fileID: 7174119288340693579}
+  animator: {fileID: 3654604652532971092}
+  ballThrowRecovery: 0.5
 --- !u!114 &4311567497449965026
 MonoBehaviour:
   m_ObjectHideFlags: 0

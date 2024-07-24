@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Hands.SinglePlayer.EnemyAI;
 using Hands.SinglePlayer.EnemyAI.Priority;
 using Hands.SinglePlayer.EnemyAI.Utilities;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class ActorTeam
 {
@@ -148,27 +150,54 @@ public class DodgeballAI : Actor
         ball.SetOwner(team);
         ball.gameObject.SetActive(false);
         rightBallIndex.SetBallType(BallType.Dodgeball);
+        animator.SetInteger(_SThrowVariation, Random.Range(0, 2));
     }
 
-    public void ThrowBall(Vector3 velocity)
+    [SerializeField] internal Animator animator;
+
+    public void ThrowBall()
     {
-        if (_possessedBall == null)
+        if (_possessedBall == null || !hasBall)
         {
             Debug.LogError($"[{gameObject.name}] Tried to throw a ball without possession.");
             return;
         }
-
         hasBall = false;
-
-        _possessedBall.transform.position = rightBallIndex.BallPosition;
-        rightBallIndex.SetBallType(BallType.None);
+        
+        animator.ResetTrigger(_SThrow);
+        var enemyHeadPos = CurrentTarget.GetComponent<Actor>().head.position;
+        var velocity = _throwUtility.CalculateThrow(this, rightBallIndex.BallPosition, enemyHeadPos);
+        _possessedBall.transform.position = rightBallIndex.BallPosition + velocity * Time.deltaTime * 2;
+        
         ballPossessionTime = 0;
+        
         _possessedBall.gameObject.SetActive(true);
-
+        rightBallIndex.SetBallType(BallType.None);
+        
         var rb = _possessedBall.GetComponent<Rigidbody>();
         rb.velocity = velocity;
+        
+        
         _possessedBall.HandleThrowTrajectory(velocity);
         _possessedBall.SetLiveBall();
+        StartCoroutine(BallThrowRecovery());
+    }
+
+    [SerializeField] private float ballThrowRecovery = 0.5f;
+    private IEnumerator BallThrowRecovery()
+    {
+        yield return new WaitForSeconds(ballThrowRecovery);
+        _possessedBall = null;
+        throwAnimationPlaying = false;
+    }
+
+    private bool throwAnimationPlaying;
+    private void ThrowBallAnimation()
+    {
+        throwAnimationPlaying = true;
+        targetUtilityArgs.ik.solvers.lookAt.SetLookAtWeight(0f);
+        targetUtility.ResetLookWeight();
+        animator.SetTrigger(_SThrow);
     }
 
     internal void HandleBallTrajectory(int ballIndex, Vector3 position, Vector3 trajectory)
@@ -182,14 +211,21 @@ public class DodgeballAI : Actor
     }
 
     private float _lastTargetScore;
+    private static readonly int _SThrow = Animator.StringToHash("Throw");
+    private static readonly int _SThrowVariation = Animator.StringToHash("ThrowVariation");
+    private static readonly int _SXAxis = Animator.StringToHash("xAxis");
+    private static readonly int _SYAxis = Animator.StringToHash("yAxis");
 
     private void Update()
     {
+        
         if (hasBall) ballPossessionTime += Time.deltaTime;
         
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
+            animator.SetFloat(_SXAxis, 0);
+            animator.SetFloat(_SYAxis, 0);
             _outOfPlayUtility.Execute(this);
             _pickUpUtility.StopPickup(this);
             targetUtility.ResetLookWeight();
@@ -198,7 +234,7 @@ public class DodgeballAI : Actor
             currentState = AIState.Idle;
         }
 
-
+        if (throwAnimationPlaying) return;
         var targetScore = targetUtility.Roll(this);
         if (targetScore > _lastTargetScore) targetUtility.UpdateTarget(currentState);
         _lastTargetScore = targetScore;
@@ -282,7 +318,7 @@ public class DodgeballAI : Actor
                     _moveUtility.Roll(this);
                     _moveUtility.PossessionMove(this);
                 }
-                else ThrowBall(_throwUtility.CalculateThrow(this));
+                else ThrowBallAnimation();
 
                 break;
             case AIState.Move:

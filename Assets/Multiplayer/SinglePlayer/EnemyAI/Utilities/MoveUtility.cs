@@ -97,6 +97,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         }
 
         private float _nextMoveTime;
+        private static readonly int _SXAxis = Animator.StringToHash("xAxis");
+        private static readonly int _SYAxis = Animator.StringToHash("yAxis");
 
         public override float Execute(DodgeballAI ai)
         {
@@ -182,8 +184,13 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             targetPosition = ClampPositionToPlayArea(targetPosition, ai.playArea, ai.team);
             targetPosition.y = ai.transform.position.y;
+            // ai.animator.SetFloat("yAxis", tar);
+            var previousPosition = ai.transform.position;
             ai.transform.position =
                 Vector3.MoveTowards(ai.transform.position, targetPosition, args.moveSpeed * Time.deltaTime);
+            var animatorAxis = ai.transform.position - previousPosition;
+            ai.animator.SetFloat(_SYAxis, animatorAxis.z * 10);
+            ai.animator.SetFloat(_SXAxis, animatorAxis.x * 10);
         }
 
         private static Vector3 ClampPositionToPlayArea(Vector3 position, DodgeballPlayArea playArea, Team team)

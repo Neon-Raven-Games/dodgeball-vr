@@ -137,11 +137,11 @@ namespace Hands.SinglePlayer.EnemyAI
                 currentState != DodgeballAI.AIState.BackOff)
                 CheckForNearbyDodgeballs();
 
-            if (CurrentTarget != null)
-            {
-                // AI be lookin' 0_0
-                LookAtTarget(CurrentTarget.transform.position);
-            }
+            // if (CurrentTarget != null)
+            // {
+            //     // AI be lookin' 0_0
+            //     LookAtTarget(CurrentTarget.transform.position);
+            // }
         }
 
         private void CheckForNearbyDodgeballs()

@@ -61,13 +61,13 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             return throwing;
         }
         
-        public Vector3 CalculateThrow(DodgeballAI dodgeballAI)
+        public Vector3 CalculateThrow(DodgeballAI dodgeballAI, Vector3 source, Vector3 target)
         {
             // is there a more robust way to calculate randomness to throw trajectory?
             // perhaps weighted off of our difficulty factor, and a small chance to flop the throw
             // we can also add a chance to generate more interesting trajectories/predict the target actor's movement
             // at a high roll. We can store a vector on the ai for their last move direction and use that to try to predict?
-            var direction = dodgeballAI.CurrentTarget.transform.position - dodgeballAI.transform.position;
+            var direction = target - source;
             direction.y += args.upwardBias;
             direction.x += Random.Range(-args.aimRandomnessFactor, args.aimRandomnessFactor);
             direction.y += Random.Range(-args.aimRandomnessFactor, args.aimRandomnessFactor);
