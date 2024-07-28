@@ -13,6 +13,7 @@ public class DevController : Actor
     public float rotationSpeed = 100.0f;
     private InputAction _moveForwardAction;
     private InputAction _lookAction;
+    private InputAction _runAction;
     private Vector2 _moveInput;
     private Vector2 _lookInput;
 
@@ -21,12 +22,16 @@ public class DevController : Actor
     {
         _moveForwardAction = actionAsset.FindAction("XRI LeftHand Locomotion/Move", true);
         _lookAction = actionAsset.FindAction("XRI RightHand Locomotion/Turn", true);
+        _lookAction = actionAsset.FindAction("XRI LeftHand Locomotion/Run", true);
 
         _moveForwardAction.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
         _lookAction.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
 
         _moveForwardAction.canceled += _ => _moveInput = Vector2.zero;
         _lookAction.canceled += _ => _lookInput = Vector2.zero;
+        
+        _runAction.performed += ctx => speed = 8.5f;
+        _runAction.canceled += ctx => speed = 5.0f;
     }
 
     private void OnEnable()

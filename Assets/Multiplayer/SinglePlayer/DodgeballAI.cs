@@ -1,7 +1,5 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Hands.SinglePlayer.EnemyAI;
 using Hands.SinglePlayer.EnemyAI.Priority;
 using Hands.SinglePlayer.EnemyAI.Utilities;
