@@ -12,6 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - COLORRAMP_ON
   - DISTORTUSECOL_ON
   - FADE_ON
   - HSV_ON
@@ -109,8 +110,8 @@ Material:
     - _AlphaFadeAmount: 0
     - _AlphaFadePow: 1
     - _AlphaFadeSmooth: 0
-    - _AlphaStepMax: 0.075
-    - _AlphaStepMin: 0
+    - _AlphaStepMax: 0.6066457
+    - _AlphaStepMin: 0.5316456
     - _BlurIntensity: 4.5
     - _CamDistFadeStepMax: 100
     - _CamDistFadeStepMin: 0
@@ -137,7 +138,7 @@ Material:
     - _FadeAmount: -0.1
     - _FadeBurnGlow: 5
     - _FadeBurnWidth: 0.01
-    - _FadePower: 0.26
+    - _FadePower: 0.82
     - _FadeScrollXSpeed: 0.05
     - _FadeScrollYSpeed: -0.9
     - _FadeTransition: 0.41
@@ -255,3 +256,4 @@ Material:
     - _Shape3Color: {r: 1, g: 1, b: 1, a: 1}
     - _ShapeColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
