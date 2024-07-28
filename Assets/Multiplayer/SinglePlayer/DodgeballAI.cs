@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Hands.SinglePlayer.EnemyAI;
@@ -13,6 +14,15 @@ public class ActorTeam
     public Transform playArea;
     public string layerName;
     public Transform outOfBounds { get; set; }
+}
+
+[Serializable]
+public class GhostData
+{
+    public GameObject ghostLegs;
+    public GameObject ghostHair;
+    public GameObject humanLegs;
+    public GameObject humanHair;
 }
 
 public class DodgeballAI : Actor
@@ -49,6 +59,7 @@ public class DodgeballAI : Actor
     
     [SerializeField] private PriorityHandler priorityHandler;
 
+    [SerializeField] private GhostData ghostData;
     // ai properties
     public AIState currentState;
     private Vector3 _targetPosition;
@@ -225,6 +236,10 @@ public class DodgeballAI : Actor
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
+            ghostData.ghostLegs.SetActive(true);
+            ghostData.ghostHair.SetActive(true);
+            ghostData.humanLegs.SetActive(false);
+            ghostData.humanHair.SetActive(false);
             if (hasBall)
             {
                 ballPossessionTime = 0; 
@@ -249,6 +264,10 @@ public class DodgeballAI : Actor
             _pickUpUtility.StopPickup(this);
             targetUtility.ResetLookWeight();
             if (_outOfPlayUtility.Roll(this) == 0) return;
+            ghostData.ghostLegs.SetActive(false);
+            ghostData.ghostHair.SetActive(false);
+            ghostData.humanLegs.SetActive(true);
+            ghostData.humanHair.SetActive(true);
             outOfPlay = false;
             currentState = AIState.Idle;
         }

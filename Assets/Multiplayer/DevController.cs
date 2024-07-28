@@ -22,7 +22,7 @@ public class DevController : Actor
     {
         _moveForwardAction = actionAsset.FindAction("XRI LeftHand Locomotion/Move", true);
         _lookAction = actionAsset.FindAction("XRI RightHand Locomotion/Turn", true);
-        _lookAction = actionAsset.FindAction("XRI LeftHand Locomotion/Run", true);
+        _runAction = actionAsset.FindAction("XRI LeftHand Locomotion/Run", true);
 
         _moveForwardAction.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
         _lookAction.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
