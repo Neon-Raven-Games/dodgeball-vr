@@ -30,8 +30,6 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             var backoffPosition = ai.transform.position + direction * 5f;
             backoffPosition = ClampPositionToPlayArea(backoffPosition, ai.playArea, ai.team);
 
-            // todo, backoff not working as intended
-            if (ai.hasBall) Debug.Log($"{ai.gameObject.name} Backing Off To {backoffPosition}");
             MoveTowards(ai, backoffPosition);
 
             if (Time.time < backoffStartTime + backoffDuration) return true;
@@ -45,16 +43,16 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         internal bool PickupMove(DodgeballAI ai)
         {
             if (ai.targetUtility.CurrentTarget.layer != LayerMask.NameToLayer("Ball")) return false;
-
+            if (ai.hasBall) return false;
+            if (ai.targetUtility.CurrentTarget.GetComponent<DodgeBall>()._ballState == BallState.Possessed)
+                return false;
+            if (ai.targetUtility.CurrentTarget.transform.position.y > 1.6f) return false;
             if (!IsInPlayArea(ai.targetUtility.CurrentTarget.transform.position, ai.friendlyTeam.playArea, ai.team))
             {
-                var stillPursue = Random.value < 0.5f;
-                if (!stillPursue) return false;
+                return false;
             }
-            else
-            {
-                MoveTowards(ai, ai.targetUtility.CurrentTarget.transform.position);
-            }
+
+            MoveTowards(ai, ai.targetUtility.CurrentTarget.transform.position);
 
             if (Time.time < _pickupCheckTime) return true;
             foreach (var player in ai.opposingTeam.actors)
@@ -65,9 +63,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                     if (Vector3.Distance(dbai.transform.position, ai.CurrentTarget.transform.position) <
                         Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
                     {
-                        var stillPursue = Random.value < 0.5f;
-                        if (!stillPursue) return false;
-                        break;
+                        return false;
                     }
                 }
             }

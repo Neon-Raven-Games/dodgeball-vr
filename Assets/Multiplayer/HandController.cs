@@ -53,6 +53,7 @@ namespace Hands
         private void SetGrab(InputAction.CallbackContext e)
         {
             if (controller.IsOutOfPlay()) return;
+            if (_ball.layer != _ballLayer) return;
             if (_ball && !_grabbing)
             {
                 controller.hasBall = true;
@@ -82,6 +83,7 @@ namespace Hands
         {
             if (_grabbing)
             {
+                _ball.GetComponent<DodgeBall>().SetLiveBall();
                 _ball.GetComponent<ThrowHandle>().OnDetach();
                 controller.hasBall = false;
                 

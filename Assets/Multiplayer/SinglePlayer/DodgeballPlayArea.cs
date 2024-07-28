@@ -71,7 +71,9 @@ public class DodgeballPlayArea : MonoBehaviour
             {
                 if (actor)
                 {
-                    // can we draw a number on the actor?
+                    var str = playerNumber.ToString();
+                    var ai = actor.GetComponent<DodgeballAI>();
+                    if (ai) str += ": " + ai.currentState;
 #if UNITY_EDITOR
                     GUIStyle style = new GUIStyle();
                     style.fontStyle = FontStyle.Bold;
@@ -79,7 +81,7 @@ public class DodgeballPlayArea : MonoBehaviour
                     style.fontSize = 20;
                     var yOffset = actor.transform.position;
                     yOffset.y += 2;
-                    Handles.Label(yOffset, playerNumber.ToString(), style);
+                    Handles.Label(yOffset, str, style);
                     playerNumber++;
 #endif
                     Gizmos.DrawWireSphere(actor.transform.position, 0.5f);
@@ -121,6 +123,9 @@ public class DodgeballPlayArea : MonoBehaviour
             {
                 if (actor)
                 {
+                    var str = playerNumber.ToString();
+                    var ai = actor.GetComponent<DodgeballAI>();
+                    if (ai) str += ": " + ai.currentState;
 #if UNITY_EDITOR
                     GUIStyle style = new GUIStyle();
                     style.fontStyle = FontStyle.Bold;
@@ -128,7 +133,7 @@ public class DodgeballPlayArea : MonoBehaviour
                     style.fontSize = 20;
                     var yOffset = actor.transform.position;
                     yOffset.y += 2;
-                    Handles.Label(yOffset, playerNumber.ToString(), style);
+                    Handles.Label(yOffset, str, style);
                     playerNumber++;
 #endif
                     Gizmos.DrawWireSphere(actor.transform.position, 0.5f);

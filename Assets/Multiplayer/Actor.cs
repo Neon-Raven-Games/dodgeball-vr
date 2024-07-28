@@ -70,7 +70,7 @@ public class Actor : MonoBehaviour
     {
         var playAreaBounds = new Bounds(friendlyTeam.playArea.position,
             new Vector3(friendlyTeam.playArea.localScale.x, 5,
-                friendlyTeam.outOfBounds.localScale.z));
+                friendlyTeam.playArea.localScale.z));
         return playAreaBounds.Contains(position);
     }
 }

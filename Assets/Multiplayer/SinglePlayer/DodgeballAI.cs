@@ -159,7 +159,10 @@ public class DodgeballAI : Actor
     {
         if (_possessedBall == null || !hasBall)
         {
-            Debug.LogError($"[{gameObject.name}] Tried to throw a ball without possession.");
+            // got out mid throw, poor bastard
+            animator.SetTrigger(_SCancelThrow);
+            throwAnimationPlaying = false;
+            hasBall = false;
             return;
         }
         hasBall = false;
@@ -176,7 +179,6 @@ public class DodgeballAI : Actor
         
         var rb = _possessedBall.GetComponent<Rigidbody>();
         rb.velocity = velocity;
-        
         
         _possessedBall.HandleThrowTrajectory(velocity);
         _possessedBall.SetLiveBall();
@@ -215,6 +217,7 @@ public class DodgeballAI : Actor
     private static readonly int _SThrowVariation = Animator.StringToHash("ThrowVariation");
     private static readonly int _SXAxis = Animator.StringToHash("xAxis");
     private static readonly int _SYAxis = Animator.StringToHash("yAxis");
+    private static readonly int _SCancelThrow = Animator.StringToHash("CancelThrow");
 
     private void Update()
     {
@@ -224,6 +227,24 @@ public class DodgeballAI : Actor
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
+            if (hasBall)
+            {
+                ballPossessionTime = 0; 
+                
+                _possessedBall.transform.position = rightBallIndex.BallPosition;
+                rightBallIndex.SetBallType(BallType.None); 
+                _possessedBall.gameObject.SetActive(true);
+                
+                var rb = _possessedBall.GetComponent<Rigidbody>();
+                rb.velocity = transform.forward;
+
+                _possessedBall = null;
+                
+                targetUtilityArgs.ik.solvers.lookAt.SetLookAtWeight(0f);
+                targetUtility.ResetLookWeight();
+                hasBall = false;
+                throwAnimationPlaying = false;
+            }
             animator.SetFloat(_SXAxis, 0);
             animator.SetFloat(_SYAxis, 0);
             _outOfPlayUtility.Execute(this);
@@ -273,6 +294,7 @@ public class DodgeballAI : Actor
         }
         else
         {
+            if (currentState == AIState.PickUp) _pickUpUtility.StopPickup(this);
             currentState = AIState.Move;
         }
 
@@ -307,8 +329,8 @@ public class DodgeballAI : Actor
                 }
                 if (!_moveUtility.PickupMove(this))
                 {
-                    _pickUpUtility.StopPickup(this);
                     currentState = AIState.BackOff;
+                    _pickUpUtility.StopPickup(this);
                 }
                 break;
             case AIState.Throw:
