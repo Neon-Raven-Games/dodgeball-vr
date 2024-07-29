@@ -2,7 +2,6 @@ using FishNet.Object;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 
 namespace Hands
 {
@@ -59,15 +58,15 @@ namespace Hands
                 controller.hasBall = true;
                 _animator.SetInteger(_SState, 1);
 
-                // todo, make sure we set the controller team
-                _ball.GetComponent<DodgeBall>().SetOwner(controller.team);
-
+                var dodgeBall = _ball.GetComponent<DodgeBall>();
+                dodgeBall.SetOwner(controller.team);
+                dodgeBall.SetParticleActive(false);
                 var rb = _ball.GetComponent<Rigidbody>();
                 if (!rb.isKinematic) rb.velocity = Vector3.zero;
                 _grabbing = true;
                 var throwHandle = _ball.GetComponent<ThrowHandle>();
                 throwHandle.OnAttach(gameObject, gameObject);
-                
+
                 if (networked)
                 {
                     throwHandle.onFinalTrajectory += ThrowNetBallAfterTrajectory;
@@ -83,15 +82,17 @@ namespace Hands
         {
             if (_grabbing)
             {
-                _ball.GetComponent<DodgeBall>().SetLiveBall();
+                var dodgeBall = _ball.GetComponent<DodgeBall>();
+                dodgeBall.SetLiveBall();
+                dodgeBall.SetParticleActive(true);
                 _ball.GetComponent<ThrowHandle>().OnDetach();
                 controller.hasBall = false;
-                
+
                 // this is set after ownership on net
                 if (!networked) _ball = null;
             }
-            
-                // this is set after ownership on net
+
+            // this is set after ownership on net
             if (!networked) _grabbing = false;
             _animator.SetInteger(_SState, 2);
         }

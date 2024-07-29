@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class DodgeBall : MonoBehaviour
 {
+    [SerializeField] private GameObject hitParticle;
     [SerializeField] private AudioSource pickupSound;
     [SerializeField] private AudioSource hitSound;
     [SerializeField] private AudioSource travelSound;
@@ -23,6 +24,7 @@ public class DodgeBall : MonoBehaviour
     public void Start()
     {
         GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
+        hitParticle.transform.SetParent(null);
     }
     
     public void HandleThrowTrajectory(Vector3 velocity)
@@ -38,6 +40,10 @@ public class DodgeBall : MonoBehaviour
         _team = team;
     }
 
+    [SerializeField] private GameObject currentParticle;
+    public void SetParticleActive(bool active) =>
+        currentParticle.SetActive(active);
+    
     public void SetLiveBall()
     {
         throwSound.Play();
@@ -50,6 +56,8 @@ public class DodgeBall : MonoBehaviour
         var hitNormal = collision.GetContact(0).normal;
         var fromToRotation = Quaternion.FromToRotation(skinnedMeshRenderer.transform.up, hitNormal);
         skinnedMeshRenderer.transform.rotation = fromToRotation * skinnedMeshRenderer.transform.rotation;
+        hitParticle.transform.position = collision.GetContact(0).point;
+        hitParticle.SetActive(true);
         StartCoroutine(AnimateBlendShape());
     }
 
@@ -72,6 +80,7 @@ public class DodgeBall : MonoBehaviour
         yield return new WaitForSeconds(pauseTime);
         yield return StartCoroutine(AnimateBlendShapeValue(blendShapeIndex, 100, 0, transitionTime));
         skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 0);
+        hitParticle.SetActive(false);
     }
 
     IEnumerator AnimateBlendShapeValue(int index, float startValue, float endValue, float duration)

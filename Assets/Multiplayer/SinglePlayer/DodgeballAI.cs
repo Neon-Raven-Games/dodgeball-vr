@@ -23,6 +23,11 @@ public class GhostData
     public GameObject ghostHair;
     public GameObject humanLegs;
     public GameObject humanHair;
+
+    public Material ghostMaterial;
+    public Material humanMaterial;
+    public GameObject bodyWithMaterial;
+    public GameObject particleEffect;
 }
 
 public class DodgeballAI : Actor
@@ -56,10 +61,11 @@ public class DodgeballAI : Actor
     private CatchUtility _catchUtility;
     internal PickUpUtility _pickUpUtility;
     private ThrowUtility _throwUtility;
-    
+
     [SerializeField] private PriorityHandler priorityHandler;
 
     [SerializeField] private GhostData ghostData;
+
     // ai properties
     public AIState currentState;
     private Vector3 _targetPosition;
@@ -95,6 +101,7 @@ public class DodgeballAI : Actor
         SubscribeToBallEvents(true);
         PopulateUtilities();
     }
+
     private void SubscribeToBallEvents(bool sub)
     {
         if (sub)
@@ -126,7 +133,6 @@ public class DodgeballAI : Actor
         _throwUtility = new ThrowUtility(throwUtilityArgs);
         _outOfPlayUtility = new OutOfPlayUtility(outOfBoundsUtilityArgs);
     }
-
 
 
     private void OnDisable()
@@ -174,27 +180,29 @@ public class DodgeballAI : Actor
             hasBall = false;
             return;
         }
+
         hasBall = false;
-        
+
         animator.ResetTrigger(_SThrow);
         var enemyHeadPos = CurrentTarget.GetComponent<Actor>().head.position;
         var velocity = _throwUtility.CalculateThrow(this, rightBallIndex.BallPosition, enemyHeadPos);
         _possessedBall.transform.position = rightBallIndex.BallPosition + velocity * Time.deltaTime * 2;
-        
+
         ballPossessionTime = 0;
-        
+
         _possessedBall.gameObject.SetActive(true);
         rightBallIndex.SetBallType(BallType.None);
-        
+
         var rb = _possessedBall.GetComponent<Rigidbody>();
         rb.velocity = velocity;
-        
+
         _possessedBall.HandleThrowTrajectory(velocity);
         _possessedBall.SetLiveBall();
         StartCoroutine(BallThrowRecovery());
     }
 
     [SerializeField] private float ballThrowRecovery = 0.5f;
+
     private IEnumerator BallThrowRecovery()
     {
         yield return new WaitForSeconds(ballThrowRecovery);
@@ -203,6 +211,7 @@ public class DodgeballAI : Actor
     }
 
     private bool throwAnimationPlaying;
+
     private void ThrowBallAnimation()
     {
         throwAnimationPlaying = true;
@@ -228,36 +237,47 @@ public class DodgeballAI : Actor
     private static readonly int _SYAxis = Animator.StringToHash("yAxis");
     private static readonly int _SCancelThrow = Animator.StringToHash("CancelThrow");
 
+    private bool triggerOutOfPlay;
+    private static readonly int _SPlayGhost = Animator.StringToHash("PlayGhost");
+
     private void Update()
     {
-        
         if (hasBall) ballPossessionTime += Time.deltaTime;
-        
+
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
-            ghostData.ghostLegs.SetActive(true);
-            ghostData.ghostHair.SetActive(true);
-            ghostData.humanLegs.SetActive(false);
-            ghostData.humanHair.SetActive(false);
+            if (!triggerOutOfPlay)
+            {
+                ghostData.particleEffect.SetActive(true);
+                triggerOutOfPlay = true;
+                ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.ghostMaterial;
+                animator.SetTrigger(_SPlayGhost);
+                ghostData.ghostLegs.SetActive(true);
+                ghostData.ghostHair.SetActive(true);
+                ghostData.humanLegs.SetActive(false);
+                ghostData.humanHair.SetActive(false);
+            }
+
             if (hasBall)
             {
-                ballPossessionTime = 0; 
-                
+                ballPossessionTime = 0;
+
                 _possessedBall.transform.position = rightBallIndex.BallPosition;
-                rightBallIndex.SetBallType(BallType.None); 
+                rightBallIndex.SetBallType(BallType.None);
                 _possessedBall.gameObject.SetActive(true);
-                
+
                 var rb = _possessedBall.GetComponent<Rigidbody>();
                 rb.velocity = transform.forward;
 
                 _possessedBall = null;
-                
+
                 targetUtilityArgs.ik.solvers.lookAt.SetLookAtWeight(0f);
                 targetUtility.ResetLookWeight();
                 hasBall = false;
                 throwAnimationPlaying = false;
             }
+
             animator.SetFloat(_SXAxis, 0);
             animator.SetFloat(_SYAxis, 0);
             _outOfPlayUtility.Execute(this);
@@ -268,7 +288,10 @@ public class DodgeballAI : Actor
             ghostData.ghostHair.SetActive(false);
             ghostData.humanLegs.SetActive(true);
             ghostData.humanHair.SetActive(true);
+            animator.Play("Anticipating");
+            ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.humanMaterial;
             outOfPlay = false;
+            triggerOutOfPlay = false;
             currentState = AIState.Idle;
         }
 
@@ -276,7 +299,7 @@ public class DodgeballAI : Actor
         var targetScore = targetUtility.Roll(this);
         if (targetScore > _lastTargetScore) targetUtility.UpdateTarget(currentState);
         _lastTargetScore = targetScore;
-        
+
         if (currentState == AIState.BackOff)
         {
             if (!_moveUtility.BackOff(this)) currentState = AIState.Idle;
@@ -344,11 +367,13 @@ public class DodgeballAI : Actor
                     currentState = AIState.Possession;
                     _pickUpUtility.StopPickup(this);
                 }
+
                 if (!_moveUtility.PickupMove(this))
                 {
                     currentState = AIState.BackOff;
                     _pickUpUtility.StopPickup(this);
                 }
+
                 break;
             case AIState.Throw:
                 if (_throwUtility.Execute(this) == 0f)
