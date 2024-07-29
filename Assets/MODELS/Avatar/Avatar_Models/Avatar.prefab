@@ -6899,7 +6899,7 @@ PrefabInstance:
     - target: {fileID: -419791914413803011, guid: 0056bb53af45d4444ab6d53b42b23087, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: 321f5f965903c704e8e3342613089f36, type: 2}
+      objectReference: {fileID: 2100000, guid: 100957049df043547b80d8c15b35282f, type: 2}
     - target: {fileID: -419791914413803011, guid: 0056bb53af45d4444ab6d53b42b23087, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
@@ -7759,7 +7759,13 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: 
+  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
+    are already bound by a Humanoid avatar. These transforms can only be changed
+    by Humanoid clips.\n\tTransform 'Bind_Root'\n\tTransform 'Bind_LeftHand'\n\tTransform
+    'Bind_RightHand'\n\tTransform 'Bind_RightLeg'\n\tTransform 'Bind_LeftLeg'\n\tTransform
+    'Bind_Spine1'\n\tTransform 'Bind_Neck'\n\tTransform 'Bind_RightUpLeg'\n\tTransform
+    'Bind_Spine2'\n\tTransform 'Bind_Head'\n\tand more ...\n\tFrom animation clip
+    'Praying Ghost'"
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
