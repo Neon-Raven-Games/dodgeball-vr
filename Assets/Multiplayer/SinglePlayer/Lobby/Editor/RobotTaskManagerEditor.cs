@@ -1,13 +1,16 @@
-﻿#if UNITY_EDITOR
+﻿using TPUModelerEditor;
+using Unity.VisualScripting;
+
+#if UNITY_EDITOR
 namespace Hands.SinglePlayer.Lobby.Editor
 {
     using UnityEditor;
     using UnityEngine;
-    
+
     [CustomEditor(typeof(RobotTaskManager))]
     public class RobotTaskManagerEditor : Editor
     {
-          private const float _HANDLE_SIZE = 0.5f;
+        private const float _HANDLE_SIZE = 0.5f;
 
         private void OnEnable()
         {
@@ -29,7 +32,6 @@ namespace Hands.SinglePlayer.Lobby.Editor
 
         public override void OnInspectorGUI()
         {
-
             var taskManager = GetTaskManager();
             if (taskManager.waypoints == null)
             {
@@ -42,13 +44,12 @@ namespace Hands.SinglePlayer.Lobby.Editor
                     AddNodeAtCharacterPosition(taskManager);
                 }
             }
-            
+
             base.OnInspectorGUI(); // Draw the default inspector
         }
-        
+
         private void AddNodeAtCharacterPosition(RobotTaskManager taskManager)
         {
-            // Ensure there's a nodeCollection to parent the new node under
             if (taskManager.waypointParent == null)
             {
                 Debug.LogError("waypoint parent is not assigned on the robot task manager.");
@@ -57,27 +58,20 @@ namespace Hands.SinglePlayer.Lobby.Editor
 
             Undo.SetCurrentGroupName("Add Node");
 
-            // Create a new GameObject as the node
             GameObject newNode = new GameObject("Node " + taskManager.waypointParent.childCount);
-            newNode.transform.position = taskManager.transform.position; // Position it at the character's location
-            newNode.transform.parent = taskManager.waypointParent; // Set the new node's parent
+            newNode.transform.position = taskManager.transform.position;
+            newNode.transform.parent = taskManager.waypointParent;
 
-            // Register the undo operation
             Undo.RegisterCreatedObjectUndo(newNode, "Create Node");
 
-            // Refresh the stalkerTravelPoints list to include all children of nodeCollection
             UpdateWayPoints(taskManager);
-
-            // Mark the AIController as dirty so the editor knows to save the changes
             EditorUtility.SetDirty(taskManager);
         }
 
         private void UpdateWayPoints(RobotTaskManager taskManager)
         {
-            // Clear the existing list
             taskManager.waypoints.Clear();
 
-            // Populate the list with children of nodeCollection
             foreach (Transform child in taskManager.waypointParent)
             {
                 taskManager.waypoints.Add(child);
@@ -87,81 +81,84 @@ namespace Hands.SinglePlayer.Lobby.Editor
         private void OnSceneGUI()
         {
             var taskManager = GetTaskManager();
-            if (taskManager.waypoints is not {Count: > 1}) return;
-            
-            var currentEvent = SetProperties(out var labelStyle);
-            if (AddingNode(taskManager, currentEvent)) return;
-            DrawNodes(taskManager, labelStyle, currentEvent);
-        }
+            if (taskManager.waypoints is not { Count: > 1 }) return;
+            if (Selection.activeGameObject != taskManager.gameObject) return;
 
-        private static Event SetProperties(out GUIStyle labelStyle)
-        {
             var currentEvent = Event.current;
-            labelStyle = NumberLabelProperties(Color.magenta, 20);
-            return currentEvent;
+
+            HandleInputEvents(taskManager, currentEvent);
+            if (currentEvent.type == EventType.Repaint) DrawScene(taskManager);
         }
 
-        private static void DrawNodes(RobotTaskManager taskManager, GUIStyle labelStyle, Event currentEvent)
+        private void HandleInputEvents(RobotTaskManager taskManager, Event currentEvent)
+        {
+            if (AddingNode(taskManager, currentEvent)) return;
+
+            for (var i = 0; i < taskManager.waypoints.Count; i++)
+            {
+                if (taskManager.waypoints[i] == null) continue;
+                if (DeletingNode(taskManager, i, currentEvent)) break;
+            }
+
+            if (DrawTransformHandlesAndCheckChanges(taskManager))
+                UpdateWayPoints(taskManager);
+        }
+
+        private void DrawScene(RobotTaskManager taskManager)
+        {
+            DrawNodes(taskManager);
+        }
+
+        private static void DrawNodes(RobotTaskManager taskManager)
         {
             for (var i = 0; i < taskManager.waypoints.Count; i++)
             {
-                if (taskManager.waypoints[i] == null)
-                    continue;
-
-                // order of importance:draw handle, draw line, draw sphere, draw label
-                var newPoint = DrawTransformHandles(taskManager, i);
-                if (EditorGUI.EndChangeCheck()) UpdateNodePosition(taskManager, i, newPoint);
+                if (taskManager.waypoints[i] == null) continue;
 
                 DrawNodeConnectionLine(i, taskManager);
                 DrawSphere(taskManager, i);
-                DrawLabel(taskManager, i, labelStyle);
-                if (DeletingNode(taskManager, i, currentEvent)) break;
+                DrawLabel(taskManager, i);
             }
         }
 
         private bool AddingNode(RobotTaskManager taskManager, Event currentEvent)
         {
-            // can we register a ctrl + click and create a new node here?
-            if (currentEvent.type != EventType.MouseDown || currentEvent.button != 0) return false;
-            if (!Event.current.control) return false;
+            if (currentEvent.type != EventType.MouseDown || currentEvent.button != 0 || !currentEvent.control) return false;
+
             currentEvent.Use();
-            
-            // can we create the node at the mouse position?
             var ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
             if (!Physics.Raycast(ray, out var hit)) return false;
+
             var newNode = new GameObject("Node " + taskManager.waypointParent.childCount);
             newNode.transform.position = hit.point;
             newNode.transform.parent = taskManager.waypointParent;
+
             Undo.RegisterCreatedObjectUndo(newNode, "Create Node");
             UpdateWayPoints(taskManager);
             EditorUtility.SetDirty(taskManager);
-            
+
             return true;
         }
 
-        private static bool DeletingNode(RobotTaskManager taskManager, int i, Event currentEvent)
+        private bool DeletingNode(RobotTaskManager taskManager, int i, Event currentEvent)
         {
+            if (currentEvent.type != EventType.MouseDown || currentEvent.button != 1) return false;
+
             var pointPosition = taskManager.waypoints[i].position;
-            
             if (HandleUtility.DistanceToCircle(pointPosition, _HANDLE_SIZE) >= 1f) return false;
-            if (currentEvent.type != EventType.MouseDown || currentEvent.button != 1) return false; // Right-click
-            
+
             currentEvent.Use();
-            
-            var delete = DeleteDialogue(i);
-            if (!delete) return false;
-            
+            if (!DeleteDialogue(i)) return false;
+
             Undo.DestroyObjectImmediate(taskManager.waypoints[i].gameObject);
             taskManager.waypoints.RemoveAt(i);
             EditorUtility.SetDirty(taskManager);
-
             return true;
         }
 
         private static bool DeleteDialogue(int i)
         {
-            return EditorUtility.DisplayDialog("Delete Node?", $"Are you sure you want to delete node {i}?",
-                "Yes", "No");
+            return EditorUtility.DisplayDialog("Delete Node?", $"Are you sure you want to delete node {i}?", "Yes", "No");
         }
 
         private static void DrawSphere(RobotTaskManager taskManager, int i)
@@ -174,8 +171,7 @@ namespace Hands.SinglePlayer.Lobby.Editor
 
         private RobotTaskManager GetTaskManager()
         {
-            RobotTaskManager taskManager = (RobotTaskManager) target;
-            return taskManager;
+            return (RobotTaskManager)target;
         }
 
         private static void DrawNodeConnectionLine(int i, RobotTaskManager taskManager)
@@ -183,10 +179,31 @@ namespace Hands.SinglePlayer.Lobby.Editor
             Handles.color = Color.green;
             if (i < taskManager.waypoints.Count - 1)
             {
-                Handles.DrawLine(taskManager.waypoints[i].position,
-                    taskManager.waypoints[i + 1].position);
+                Handles.DrawLine(taskManager.waypoints[i].position, taskManager.waypoints[i + 1].position);
             }
+            // Uncomment to draw a line connecting the last node to the first node
             // Handles.DrawLine(taskManager.waypoints[^1].position, taskManager.waypoints[0].position);
+        }
+
+        private bool DrawTransformHandlesAndCheckChanges(RobotTaskManager taskManager)
+        {
+            EditorGUI.BeginChangeCheck();
+
+            for (var i = 0; i < taskManager.waypoints.Count; i++)
+            {
+                if (taskManager.waypoints[i] == null) continue;
+
+                var oldPoint = taskManager.waypoints[i].position;
+                var newPoint = Handles.DoPositionHandle(oldPoint, Quaternion.identity);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    UpdateNodePosition(taskManager, i, newPoint);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void UpdateNodePosition(RobotTaskManager taskManager, int i, Vector3 newPoint)
@@ -196,29 +213,20 @@ namespace Hands.SinglePlayer.Lobby.Editor
             EditorUtility.SetDirty(taskManager.waypoints[i]);
         }
 
-        private static Vector3 DrawTransformHandles(RobotTaskManager taskManager, int i)
-        {
-            EditorGUI.BeginChangeCheck();
-            var oldPoint = taskManager.waypoints[i].position + Vector3.forward * 0.5f;
-            var newPoint = Handles.DoPositionHandle(oldPoint, Quaternion.identity);
-            return newPoint;
-        }
-
         private static GUIStyle NumberLabelProperties(Color textColor, int size)
         {
-            var labelStyle = new GUIStyle
+            return new GUIStyle(GUI.skin.label)
             {
-                normal = {textColor = textColor},
+                normal = { textColor = textColor },
                 fontSize = size,
                 alignment = TextAnchor.UpperCenter
             };
-            return labelStyle;
         }
 
-        private static void DrawLabel(RobotTaskManager taskManager, int i, GUIStyle labelStyle)
+        private static void DrawLabel(RobotTaskManager taskManager, int i)
         {
             Vector3 labelPosition = taskManager.waypoints[i].position + Vector3.up * 0.5f;
-            Handles.Label(labelPosition, $"{i}", labelStyle);
+            Handles.Label(labelPosition, $"{i}", GUIStyles.uvToolbarIconStyle);
         }
     }
 }

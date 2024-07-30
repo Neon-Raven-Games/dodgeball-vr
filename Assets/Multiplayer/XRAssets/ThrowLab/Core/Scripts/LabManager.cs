@@ -75,42 +75,65 @@ namespace CloudFine.ThrowLab
 
         private void Awake()
         {
-            _deviceDetector.OnDeviceDetected += SetDevice;
+            if (_deviceDetector) _deviceDetector.OnDeviceDetected += SetDevice;
+        }
+        
+        public void SetTrackerLine(bool enable) =>
+            _trackerPrefab.ShowHideLine(enable);
+        
+        public void SetTrackerSamples(bool enable) =>
+            _trackerPrefab.ShowHideSamples(enable);
+
+        public ThrowHandle dodgeballPrefab;
+
+        public void Initialize()
+        {
+            _throwablePrefab = Instantiate(dodgeballPrefab);
+            _throwablePrefab.gameObject.SetActive(false);
+            _throwablePrefab.transform.position = _spawnPoint.position;
+            _throwablePrefab.gameObject.SetActive(true);
+            
+
+            _trackerPrefab = Instantiate(_trackerPrefab);
+            
+            _trackerPrefab.SetColor(colorSet[1]);
+            _trackerPrefab.TrackThrowable(_throwablePrefab);
+            _trackerPrefab.SetLineAppearance(_lineTextures[0], _lineColors[1]);
+            _trackerPrefab.ShowHideLine(false);
+            _trackerPrefab.ShowHideSamples(false);
+            _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[0]);
+            _throwablePrefab.SetConfigForDevice(Device.OCULUS_TOUCH, throwConfigurations[0]);
+            UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
         }
 
-        private void Start()
+        public void ResetBall()
         {
-            if (_throwablePrefabs.Count > 0)
-            {
-                SelectThrowable(0);
-            }
-            else
-            {
-                if (_throwableLabel)
-                {
-                    _throwableLabel.text = "(none)";
-                }
-            }
-
-            for (int i = 0; i < configEnabled.Length; i++)
-            {
-                SetConfigEnabled(i, configEnabled[i]);
-            }
+            UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
+            _throwablePrefab.gameObject.SetActive(false);
+            _throwablePrefab.transform.position = _spawnPoint.position;
+            _throwablePrefab.gameObject.SetActive(true);
+            _throwablePrefab.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        }
+ 
+        public void ChangeConfig(int index)
+        {
+            _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[index]);
+            UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
         }
 
         private void Update()
         {
-            if (_currentSpawn)
-            {
-                if (Vector3.Distance(_currentSpawn.transform.position, _spawnPoint.position) > .3f)
-                {
-                    SpawnTrackedThrowable();
-                }
-            }
-            else
-            {
-                SpawnTrackedThrowable();
-            }
+            // if (_currentSpawn)
+            // {
+            //     if (Vector3.Distance(_currentSpawn.transform.position, _spawnPoint.position) > .3f)
+            //     {
+            //         SpawnTrackedThrowable();
+            //     }
+            // }
+            // else
+            // {
+            //     SpawnTrackedThrowable();
+            // }
         }
 
 
@@ -122,6 +145,7 @@ namespace CloudFine.ThrowLab
 
         public void SpawnTrackedThrowable()
         {
+            return;
             if (_throwablePrefab)
             {
                 List<ThrowHandle> throwableSet = new List<ThrowHandle>();
@@ -162,14 +186,14 @@ namespace CloudFine.ThrowLab
                     if (_trackerPrefab)
                     {
                         ThrowTracker tracker = Instantiate(_trackerPrefab);
-                        
+
                         tracker.SetColor(colorSet[i]);
                         tracker.TrackThrowable(handle);
                         tracker.SetLineAppearance(_lineTextures[i], _lineColors[i]);
                         tracker.ShowHideLine(showLine[i]);
                         tracker.ShowHideSamples(showSamples[i]);
                         tracker.AttachUIToRoot(_trackerUIListRoot);
-                        
+
                         _trackers.Add(tracker);
                     }
                 }
@@ -196,13 +220,14 @@ namespace CloudFine.ThrowLab
 
         private void RespawnThrowable()
         {
+            return;
             if (_currentSpawn != null) Destroy(_currentSpawn.gameObject);
-
             SpawnTrackedThrowable();
         }
 
         public void SetCurrentConfigEnabled(bool enable)
         {
+            return;
             SetConfigEnabled(currentConfigIndex, enable);
             variantLineEnabledToggle.interactable = enable;
             variantSamplesEnabledToggle.interactable = enable;
@@ -212,6 +237,7 @@ namespace CloudFine.ThrowLab
 
         private void SetConfigEnabled(int i, bool enable)
         {
+            return;
             configEnabled[i] = enable;
             tabFills[i].enabled = enable;
 
@@ -235,7 +261,7 @@ namespace CloudFine.ThrowLab
 
         public void SaveCurrentConfig()
         {
-            configSet[currentConfigIndex].CopyTo(original);
+            _throwablePrefab.GetComponent<ThrowHandle>().GetConfigForDevice(Device.UNSPECIFIED).CopyTo(original);
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(original);
 #else
@@ -261,9 +287,9 @@ namespace CloudFine.ThrowLab
         public void CycleThrowableRight()
         {
             if (_throwableIndex < 0) return;
-            
+
             _throwableIndex++;
-            
+
             if (_throwableIndex >= _throwablePrefabs.Count) _throwableIndex = 0;
             SelectThrowable(_throwableIndex);
         }
@@ -271,17 +297,27 @@ namespace CloudFine.ThrowLab
         public void CycleThrowableLeft()
         {
             if (_throwableIndex < 0) return;
-            
+
             _throwableIndex--;
             if (_throwableIndex < 0) _throwableIndex = _throwablePrefabs.Count - 1;
 
             SelectThrowable(_throwableIndex);
         }
 
+        public List<ThrowConfiguration> throwConfigurations;
+
         private void SelectThrowable(int i)
         {
             if (i < 0 || i >= _throwablePrefabs.Count) return;
+            _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[i]);
+            _throwablePrefab.gameObject.SetActive(false);
+            _throwablePrefab.transform.position = _spawnPoint.position;
+            _throwablePrefab.gameObject.SetActive(true);
+            if (_trackerPrefab)
+            {
+            }
 
+            return;
             _throwableIndex = i;
             _throwablePrefab = _throwablePrefabs[i];
 
@@ -329,6 +365,10 @@ namespace CloudFine.ThrowLab
             SetCurrentSampleVisEnabled(showSamples[i]);
         }
 
+        public void UpdateUI(ThrowConfiguration config)
+        {
+            _configurationUI.LoadConfig(config, colorSet[0], true);
+        }
         public void ReloadCurrentConfig()
         {
             _configurationUI.LoadConfig(configSet[currentConfigIndex], colorSet[currentConfigIndex],

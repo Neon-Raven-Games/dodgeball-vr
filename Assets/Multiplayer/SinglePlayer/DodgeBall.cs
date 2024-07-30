@@ -6,23 +6,23 @@ using UnityEngine;
 public class DodgeBall : MonoBehaviour
 {
     [SerializeField] private GameObject hitParticle;
-    [SerializeField] private AudioSource pickupSound;
-    [SerializeField] private AudioSource hitSound;
-    [SerializeField] private AudioSource travelSound;
-    [SerializeField] private AudioSource throwSound;
-    [SerializeField] private AudioSource catchSound;
     public SkinnedMeshRenderer skinnedMeshRenderer;
     public float transitionTime = 1.0f; // Time in seconds to complete one half of the animation (0 to 100 or 100 to 0)
     public float pauseTime = 0.5f;
     private Team _team;
     public BallState _ballState = BallState.Dead;
-    
+    private Rigidbody _rb;
+    [SerializeField] private float maxVelocity = 10f;  // The velocity at which the volume should be maximum
+    [SerializeField] private float minVolume = 0.1f;   // Minimum volume
+    [SerializeField] private float maxVolume = 1f;  
+    // todo, we can bind to this if we want to in the throw lab for immediate return
     public Action<int> ballNotLive;
     internal int index;
     public Action<int, Vector3, Vector3> throwTrajectory;
 
     public void Start()
     {
+        _rb = GetComponent<Rigidbody>();
         GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
         hitParticle.transform.SetParent(null);
     }
@@ -33,9 +33,10 @@ public class DodgeBall : MonoBehaviour
     }
     public void SetOwner(Team team)
     {
-        if (_ballState == BallState.Live) catchSound.Play();
-        else pickupSound.Play();
+        // if (_ballState == BallState.Live) catchSound.Play();
+        // else pickupSound.Play();
 
+        PlaySound(SoundIndex.Pickup);
         _ballState = BallState.Possessed;
         _team = team;
     }
@@ -43,12 +44,25 @@ public class DodgeBall : MonoBehaviour
     [SerializeField] private GameObject currentParticle;
     public void SetParticleActive(bool active) =>
         currentParticle.SetActive(active);
-    
+
+    [SerializeField] private AudioSource audioSource;
     public void SetLiveBall()
     {
-        throwSound.Play();
-        travelSound.Play();
+        PlaySound(SoundIndex.Throw);
         _ballState = BallState.Live;
+    }
+
+    private void PlaySound(SoundIndex sound)
+    {
+        var volume = maxVolume;
+
+        if (sound == SoundIndex.Hit)
+        {
+            var normalizedVelocity = Mathf.Clamp01(_rb.velocity.magnitude / maxVelocity);
+            volume = Mathf.Lerp(minVolume, maxVolume, normalizedVelocity);
+        }
+        audioSource.volume = volume;
+        audioSource.PlayOneShot(ConfigurationManager.GetIndexedSound(sound));
     }
 
     public void HitSquash(Collision collision)
@@ -63,7 +77,6 @@ public class DodgeBall : MonoBehaviour
 
     private void SetDeadBall()
     {
-        travelSound.Stop();
         _ballState = BallState.Dead;
     }
 
@@ -179,6 +192,6 @@ public class DodgeBall : MonoBehaviour
             if (_ballState == BallState.Dead) ballNotLive?.Invoke(param);
         }
 
-        if (param > 0) hitSound.Play();
+        if (param > 0) PlaySound(SoundIndex.Hit);
     }
 }

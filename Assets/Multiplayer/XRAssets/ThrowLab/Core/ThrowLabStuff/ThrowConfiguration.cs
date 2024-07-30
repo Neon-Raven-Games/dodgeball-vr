@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Linq;
 using System.IO;
+using Unity.Plastic.Newtonsoft.Json;
 
 namespace Unity.Template.VR.Multiplayer
 {
@@ -197,6 +198,16 @@ namespace Unity.Template.VR.Multiplayer
             }
         }
 
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
+        
+        public void FromJson(string json)
+        {
+            var config = JsonUtility.FromJson<ThrowConfiguration>(json);
+            config.CopyTo(this);
+        }
         public void SaveToJSON()
         {
             if (!Directory.Exists(saveDirectory))
