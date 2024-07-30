@@ -16,6 +16,11 @@ public class Actor : MonoBehaviour
 
     protected void PopulateTeamObjects()
     {
+        if (!playArea)
+        {
+            Debug.LogWarning("Actor could not find dodgeball play area.");
+            return;
+        }
         if (team == Team.TeamOne)
         {
             friendlyTeam = new ActorTeam
