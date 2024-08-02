@@ -329,15 +329,15 @@ PrefabInstance:
       value: PlayerHand
       objectReference: {fileID: 0}
     - target: {fileID: 1196662678316530464, guid: 211d7c89e2b204b4ab8f6a7c6cdf5dd2, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 1f12a11e6c46ab644aa8b12b07d96f3a, type: 2}
-    - target: {fileID: 1196662678316530464, guid: 211d7c89e2b204b4ab8f6a7c6cdf5dd2, type: 3}
-      propertyPath: m_Materials.Array.data[1]
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: c8948610dac0ffb46be936d3d6731d3d, type: 2}
     - target: {fileID: 1196662678316530464, guid: 211d7c89e2b204b4ab8f6a7c6cdf5dd2, type: 3}
-      propertyPath: m_Materials.Array.data[2]
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: c8948610dac0ffb46be936d3d6731d3d, type: 2}
+    - target: {fileID: 1196662678316530464, guid: 211d7c89e2b204b4ab8f6a7c6cdf5dd2, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
       value: 
       objectReference: {fileID: 2100000, guid: 78b120de76b179d45930036f40480f2c, type: 2}
     - target: {fileID: 1477376680116902556, guid: 211d7c89e2b204b4ab8f6a7c6cdf5dd2, type: 3}
@@ -521,16 +521,17 @@ Animation:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4239624313993663507}
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Animation: {fileID: 0}
   m_Animations: []
   m_WrapMode: 0
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0
+  m_UpdateMode: 0
   m_CullingType: 0
 --- !u!95 &3470999686533474261
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -544,6 +545,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
