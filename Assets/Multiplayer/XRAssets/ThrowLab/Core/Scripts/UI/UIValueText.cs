@@ -1,23 +1,23 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using TMPro;
+using UnityEngine;
 
 namespace CloudFine.ThrowLab.UI
 {
-    [RequireComponent(typeof(Text))]
     public class UIValueText : MonoBehaviour
     {
-        private Text _text;
+        private TextMeshProUGUI _text;
         public string _preDecorator = "";
         public string _toStringPattern = "0.0";
         public string _postDecorator = "";
 
         private void Awake()
         {
-            _text = GetComponent<Text>();
+            _text = GetComponent<TextMeshProUGUI>();
         }
 
         public void SetValue(float value)
         {
+            if (!_text) Awake();
             _text.text = _preDecorator + value.ToString(_toStringPattern) + _postDecorator;
         }
     }

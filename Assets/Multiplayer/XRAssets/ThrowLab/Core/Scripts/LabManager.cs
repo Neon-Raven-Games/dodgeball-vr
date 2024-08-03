@@ -1,4 +1,5 @@
-﻿using CloudFine.ThrowLab.UI;
+﻿using System;
+using CloudFine.ThrowLab.UI;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Template.VR.Multiplayer;
@@ -86,28 +87,40 @@ namespace CloudFine.ThrowLab
 
         public ThrowHandle dodgeballPrefab;
 
+        public void RemoveBall()
+        {
+            if (_throwablePrefab) _throwablePrefab.gameObject.SetActive(false);
+        }
+
+        private bool _initialized;
         public void Initialize()
         {
-            _throwablePrefab = Instantiate(dodgeballPrefab);
+            if (!_initialized) _throwablePrefab = Instantiate(dodgeballPrefab);
             _throwablePrefab.gameObject.SetActive(false);
             _throwablePrefab.transform.position = _spawnPoint.position;
-            _throwablePrefab.gameObject.SetActive(true);
-            
 
-            _trackerPrefab = Instantiate(_trackerPrefab);
+            if(!_initialized) _trackerPrefab = Instantiate(_trackerPrefab);
+            _initialized = true;
             
             _trackerPrefab.SetColor(colorSet[1]);
             _trackerPrefab.TrackThrowable(_throwablePrefab);
             _trackerPrefab.SetLineAppearance(_lineTextures[0], _lineColors[1]);
             _trackerPrefab.ShowHideLine(false);
             _trackerPrefab.ShowHideSamples(false);
+            
             _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[0]);
             _throwablePrefab.SetConfigForDevice(Device.OCULUS_TOUCH, throwConfigurations[0]);
+            
             UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
         }
 
         public void ResetBall()
         {
+            if (!_throwablePrefab)
+            {
+                _initialized = false;
+                Initialize();
+            }
             UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
             _throwablePrefab.gameObject.SetActive(false);
             _throwablePrefab.transform.position = _spawnPoint.position;

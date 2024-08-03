@@ -12,9 +12,11 @@ public class DodgeBall : MonoBehaviour
     private Team _team;
     public BallState _ballState = BallState.Dead;
     private Rigidbody _rb;
-    [SerializeField] private float maxVelocity = 10f;  // The velocity at which the volume should be maximum
-    [SerializeField] private float minVolume = 0.1f;   // Minimum volume
-    [SerializeField] private float maxVolume = 1f;  
+    [SerializeField] private float maxVelocity = 10f; // The velocity at which the volume should be maximum
+    [SerializeField] private float minVolume = 0.1f; // Minimum volume
+
+    [SerializeField] private float maxVolume = 1f;
+
     // todo, we can bind to this if we want to in the throw lab for immediate return
     public Action<int> ballNotLive;
     internal int index;
@@ -26,26 +28,34 @@ public class DodgeBall : MonoBehaviour
         GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
         hitParticle.transform.SetParent(null);
     }
-    
+
+    private void OnEnable()
+    {
+        var config = ConfigurationManager.GetThrowConfiguration();
+        var handle = GetComponent<ThrowHandle>();
+        handle.SetConfigForDevice(Device.UNSPECIFIED, config);
+        handle.SetConfigForDevice(Device.OCULUS_TOUCH, config);
+    }
+
     public void HandleThrowTrajectory(Vector3 velocity)
     {
         throwTrajectory?.Invoke(index, transform.position, velocity);
     }
+
     public void SetOwner(Team team)
     {
-        // if (_ballState == BallState.Live) catchSound.Play();
-        // else pickupSound.Play();
-
         PlaySound(SoundIndex.Pickup);
         _ballState = BallState.Possessed;
         _team = team;
     }
 
     [SerializeField] private GameObject currentParticle;
+
     public void SetParticleActive(bool active) =>
         currentParticle.SetActive(active);
 
     [SerializeField] private AudioSource audioSource;
+
     public void SetLiveBall()
     {
         PlaySound(SoundIndex.Throw);
@@ -56,11 +66,12 @@ public class DodgeBall : MonoBehaviour
     {
         var volume = maxVolume;
 
-        if (sound == SoundIndex.Hit)
+        if (sound == SoundIndex.Hit || sound == SoundIndex.Throw)
         {
             var normalizedVelocity = Mathf.Clamp01(_rb.velocity.magnitude / maxVelocity);
             volume = Mathf.Lerp(minVolume, maxVolume, normalizedVelocity);
         }
+
         audioSource.volume = volume;
         audioSource.PlayOneShot(ConfigurationManager.GetIndexedSound(sound));
     }
@@ -112,7 +123,6 @@ public class DodgeBall : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        
         var param = 0;
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
@@ -152,26 +162,23 @@ public class DodgeBall : MonoBehaviour
             // todo, find a way to gracefully exclude ai colliders from this check
             if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
-                return;
-                Debug.Log("Team One Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
-                // FriendlyFire();
                 param = 3;
             }
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
-                return;
                 Debug.Log("Team Two Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
-                // FriendlyFire();
                 param = 3;
             }
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
                 Debug.Log("Team two score!");
-                collision.gameObject.GetComponentInParent<Actor>().SetOutOfPlay(true);
+                var parentActor = collision.gameObject.GetComponentInParent<Actor>();
+                if (!parentActor) collision.gameObject.GetComponent<Actor>();
+                if (parentActor) parentActor.SetOutOfPlay(true);
                 SetDeadBall();
                 HitSquash(collision);
                 GameManager.teamTwoScore++;
@@ -182,13 +189,16 @@ public class DodgeBall : MonoBehaviour
             else if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
                 Debug.Log("Team One score!");
-                collision.gameObject.GetComponentInParent<Actor>().SetOutOfPlay(true);
+                var parentActor = collision.gameObject.GetComponentInParent<Actor>();
+                if (!parentActor) collision.gameObject.GetComponent<Actor>();
+                if (parentActor) parentActor.SetOutOfPlay(true);
                 SetDeadBall();
                 HitSquash(collision);
                 GameManager.teamOneScore++;
                 GameManager.UpdateScore();
                 param = 3;
             }
+
             if (_ballState == BallState.Dead) ballNotLive?.Invoke(param);
         }
 

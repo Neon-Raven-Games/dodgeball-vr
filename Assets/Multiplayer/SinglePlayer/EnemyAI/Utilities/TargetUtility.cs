@@ -196,14 +196,18 @@ namespace Hands.SinglePlayer.EnemyAI
                 if (enemy != null)
                 {
                     var enemyActor = enemy.GetComponent<Actor>();
-
+                    if (!enemyActor)
+                    {
+                        // todo, this is a hack. We need to fix this in the future
+                        enemyActor = enemy.transform.GetChild(0).GetComponent<Actor>();
+                    }
                     if (enemyActor != null && !enemyActor.IsOutOfPlay())
                     {
-                        float score = CalculateTargetScore(enemy);
+                        float score = CalculateTargetScore(enemyActor.gameObject);
                         if (score > bestScore)
                         {
                             bestScore = score;
-                            bestTarget = enemy;
+                            bestTarget = enemyActor.gameObject;
                         }
                     }
                 }
@@ -248,6 +252,7 @@ namespace Hands.SinglePlayer.EnemyAI
                     else if (hit.collider.gameObject.GetComponent<DodgeBall>()._ballState == BallState.Dead)
                         score += GetPriority(PriorityType.FreeBall); // 0.5f
                     else score -= GetPriority(PriorityType.OutsidePlayArea); // 5f
+                    
                 }
             }
 
@@ -272,6 +277,11 @@ namespace Hands.SinglePlayer.EnemyAI
             // randomness and sticky targeting
             score += Random.Range(-0.1f, 0.1f);
             if (CurrentTarget == target) score += GetPriority(PriorityType.Targeted); // 0.9f;
+                // Debug.Log($"Target player: {target.gameObject.name}");
+            if (target.GetComponent<DevController>() != null)
+            {
+                score += GetPriority(PriorityType.Targeted);
+            }
 
             return score;
         }

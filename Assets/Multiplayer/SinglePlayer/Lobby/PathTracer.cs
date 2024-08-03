@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Hands.SinglePlayer.Lobby
 {
     public class PathTracer : MonoBehaviour
     {
-        [SerializeField] private float tracerSpeed;
+        [SerializeField] public float tracerSpeed;
         public List<Transform> _waypoints;
         private int _currentTravelPointIndex;
         public GameObject robot;
@@ -19,14 +18,17 @@ namespace Hands.SinglePlayer.Lobby
             _currentTravelPointIndex = 0;
         }
         
-        private void FixedUpdate()
+        private void Update()
         {
             if (!robot.activeSelf || _waypoints == null || _waypoints.Count == 0) return;
             var nextPoint = _waypoints[_currentTravelPointIndex];
             transform.position =
-                Vector3.MoveTowards(transform.position, nextPoint.position, tracerSpeed * Time.deltaTime);
+                Vector3.MoveTowards(transform.position, nextPoint.position, tracerSpeed * Time.fixedDeltaTime);
             if (Vector3.Distance(transform.position, nextPoint.position) < 0.1f)
             {
+                var task = _waypoints[_currentTravelPointIndex].GetComponent<TracerTask>();
+                if (task && task.enabled) task.Execute();
+                
                 _currentTravelPointIndex++;
                 if (_currentTravelPointIndex >= _waypoints.Count)
                 {

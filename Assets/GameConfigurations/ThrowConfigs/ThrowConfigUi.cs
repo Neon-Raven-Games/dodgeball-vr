@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using CloudFine.ThrowLab;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,28 +8,42 @@ public class ThrowConfigUi : MonoBehaviour
     [SerializeField] private LabManager labManager;
     [SerializeField] private GameObject togglePrefab;
     private readonly List<Toggle> _toggles = new();
+    [SerializeField] private bool active;
 
-    
+    public List<GameObject> labPages;
+    private int _labPageIndex = -1;
     public void ShareConfig()
     {
-        var config = ConfigurationManager.GetThrowConfiguration();
-        ConfigurationAPI.ShipUpvote(ConfigurationManager.throwConfigIndex.ToString(), config.ToJson());
+        ConfigurationAPI.ShipNewData();
     }
     
+    public void ThrowLabPageIndexed(int index)
+    {
+        if (index == _labPageIndex) return;
+        if (_labPageIndex != -1) labPages[_labPageIndex].SetActive(false);
+        labPages[index].SetActive(true);
+        _labPageIndex = index;
+    }
+
     private void Start()
     {
         var configs = ConfigurationManager.GetThrowConfigurations();
         labManager.throwConfigurations = configs;
+        if (!active)
+        {
+            labManager.Initialize();
+            return;
+        }
         var i = 0;
         foreach (var config in configs)
         {
             var toggleHelper = Instantiate(togglePrefab, transform).GetComponent<ToggleHelper>();
             var toggle = toggleHelper.toggle;
-            
+
             toggle.isOn = false;
             toggleHelper.SetText(config.name);
             toggleHelper.SetIndex(i++);
-            
+            ConfigurationAPI.GetItemThreaded("ThrowConfig", "Configurations", config.name, toggleHelper.InitializeFromDatabase);
             toggle.onValueChanged.AddListener((value) =>
             {
                 if (value)
@@ -49,13 +61,8 @@ public class ThrowConfigUi : MonoBehaviour
 
             _toggles.Add(toggle);
         }
-
+        
         labManager.Initialize();
-        _toggles[0].isOn = true;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
+        _toggles[ConfigurationManager.throwConfigIndex].isOn = true;
     }
 }

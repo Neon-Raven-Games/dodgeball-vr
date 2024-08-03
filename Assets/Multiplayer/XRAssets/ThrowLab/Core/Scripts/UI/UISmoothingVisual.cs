@@ -29,14 +29,13 @@ namespace CloudFine.ThrowLab.UI
 
         public void Refresh()
         {
+            if (dummyData == null) Awake();
             if (_func == null) return;
-
             weights = _func(dummyData);
             for (int i = 0; i < bars.Length; i++)
             {
                 bars[i].fillAmount = weights[i];
             }
-
         }
         
     }

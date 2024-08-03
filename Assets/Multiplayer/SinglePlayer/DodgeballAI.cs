@@ -184,7 +184,17 @@ public class DodgeballAI : Actor
         hasBall = false;
 
         animator.ResetTrigger(_SThrow);
-        var enemyHeadPos = CurrentTarget.GetComponent<Actor>().head.position;
+        var actor = CurrentTarget.GetComponent<Actor>();
+        Vector3 enemyHeadPos = Vector3.zero;
+        if (actor != null)
+        {
+            enemyHeadPos = actor.head.position;
+        }
+        else if (CurrentTarget.GetComponent<CharacterController>())
+        {
+            enemyHeadPos = CurrentTarget.transform.position;
+            enemyHeadPos.y += 1f;
+        }
         var velocity = _throwUtility.CalculateThrow(this, rightBallIndex.BallPosition, enemyHeadPos);
         _possessedBall.transform.position = rightBallIndex.BallPosition + velocity * Time.deltaTime * 2;
 

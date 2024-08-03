@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using CloudFine;
+﻿using UnityEngine;
 using System;
 
 namespace CloudFine.ThrowLab.UI
@@ -28,6 +25,7 @@ namespace CloudFine.ThrowLab.UI
         public void RefreshCurve()
         {
             if (curveFunction==null) return;
+            if (line == null) Awake();
 
             Vector3[] positions = new Vector3[numPositions + 1];
             line.positionCount = numPositions + 1;

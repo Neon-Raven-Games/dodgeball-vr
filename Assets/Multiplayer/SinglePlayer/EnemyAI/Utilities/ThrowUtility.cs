@@ -46,7 +46,11 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         // what is your take on the throwing utility?
         private bool ShouldThrow(DodgeballAI ai)
         {
-            if (!ai.CurrentTarget.GetComponent<Actor>()) return false;
+            if (!ai.CurrentTarget.GetComponent<Actor>())
+            {
+                Debug.Log($"Current target does not have an actor component{ai.CurrentTarget.name}");
+                return false;
+            }
             if (!ai.hasBall) return false;
             
             // not the most in love with this, but I think it's mostly because the movement utility is a bit

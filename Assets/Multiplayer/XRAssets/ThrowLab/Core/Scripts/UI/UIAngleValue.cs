@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace CloudFine.ThrowLab.UI
@@ -17,8 +15,8 @@ namespace CloudFine.ThrowLab.UI
         }
         public void SetRange(float range)
         {
+            if (!image) Awake();
             image.fillAmount = range / 180f;
-            image.transform.rotation = Quaternion.Euler(0, 0, range + 180);
         }
     }
 }

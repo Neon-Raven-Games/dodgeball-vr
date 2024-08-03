@@ -47,6 +47,7 @@ public class GameManager : MonoBehaviour
     
     public static void UpdateScore()
     {
+        if (!_teamOneScoreText || !_teamTwoScoreText) return;
         _teamOneScoreText.text = "Player:   " + teamOneScore;
         _teamTwoScoreText.text = "Enemy:   " + teamTwoScore;
     }

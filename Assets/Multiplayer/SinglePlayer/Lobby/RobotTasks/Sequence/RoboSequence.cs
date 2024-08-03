@@ -16,9 +16,6 @@ namespace Hands.SinglePlayer.Lobby.RobotTasks.Sequence
         private List<Transform> _waypoints;
         public List<Transform> GetWaypoints()
         {
-            if (_waypoints != null && _waypoints.Count > 0)
-                return _waypoints;
-            
             _waypoints = new List<Transform>();
             foreach (Transform child in waypointParent)
             {

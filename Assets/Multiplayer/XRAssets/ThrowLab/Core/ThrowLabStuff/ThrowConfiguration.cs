@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Linq;
 using System.IO;
-using Unity.Plastic.Newtonsoft.Json;
 
 namespace Unity.Template.VR.Multiplayer
 {
@@ -16,12 +15,18 @@ namespace Unity.Template.VR.Multiplayer
             CUSTOM_CURVE,
         }
 
+        /// <summary>
+        /// Period Measurement
+        /// </summary>
         public enum PeriodMeasurement
         {
             FRAMES,
             TIME
         }
 
+        /// <summary>
+        /// Sample Time
+        /// </summary>
         public enum SampleTime
         {
             SCALED,
@@ -29,6 +34,9 @@ namespace Unity.Template.VR.Multiplayer
             FIXED
         }
 
+        /// <summary>
+        /// Sample Point
+        /// </summary>
         public enum VelocitySource
         {
             DEVICE_CENTER_OF_MASS,

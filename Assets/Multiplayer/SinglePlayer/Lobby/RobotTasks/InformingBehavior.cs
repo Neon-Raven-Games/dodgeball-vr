@@ -32,16 +32,18 @@ namespace Hands.SinglePlayer.Lobby.RobotTasks
             if (!_isInforming) TaskManager.robotLeadingTarget.OnPathComplete -= SetInforming;
             _isInforming = false;
             _currentDialogueIndex = 0;
+            TaskManager.audioSource.Stop();
         }
 
         public override void Update()
         {
+            if (!_isInforming) TraverseWaypoints();
+            else Inform();
         }
 
         public override void FixedUpdate()
         {
-            if (!_isInforming) TraverseWaypoints();
-            else Inform();
+
         }
 
  private void Inform()
@@ -98,7 +100,7 @@ private int _currentDialogueIndex;
         {
             TaskManager.transform.position = Vector3.MoveTowards(TaskManager.transform.position,
                 TaskManager.robotLeadingTarget.transform.position,
-                TaskManager.speed * Time.deltaTime);
+                TaskManager.speed * Time.fixedDeltaTime);
             TaskManager.transform.LookAt(TaskManager.robotLeadingTarget.transform.position);
         }
     }

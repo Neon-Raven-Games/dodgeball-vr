@@ -113,7 +113,7 @@ namespace CloudFine.ThrowLab.UI
         private void Step(float amount)
         {
             value += amount;
-
+            
             if (wrap)
             {
                 if (value > maximum) value = minimum;

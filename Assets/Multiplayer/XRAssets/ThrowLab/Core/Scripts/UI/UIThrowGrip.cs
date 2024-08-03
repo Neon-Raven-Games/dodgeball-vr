@@ -117,6 +117,7 @@ namespace CloudFine.ThrowLab.UI
 
         protected void ShowHidePanel(bool show)
         {
+            if (!noHandsWarning) return;
             noHandsWarning.enabled = !show;
             grabEndSlider.interactable = show;
             grabBeginSlider.interactable = show;

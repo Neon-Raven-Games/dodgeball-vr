@@ -35,7 +35,6 @@ public class ConfigurationManager : MonoBehaviour
     }
     public static List<ThrowConfiguration> GetThrowConfigurations()
     {
-        Debug.Log("Getting throw configurations, count" + _instance.throwConfigurations.Count);
         return _instance.throwConfigurations;
     }
     
@@ -53,7 +52,20 @@ public class ConfigurationManager : MonoBehaviour
                 return null;
         }
     }
-    
+    public static AudioClip GetIndexedSound(SoundIndex sound, int i)
+    {
+        switch (sound)
+        {
+            case SoundIndex.Throw:
+                return _instance.throwSounds[i];
+            case SoundIndex.Hit:
+                return _instance.hitSounds[i];
+            case SoundIndex.Pickup:
+                return _instance.pickupSounds[i];
+            default:
+                return null;
+        }
+    } 
     public static AudioClip GetSound(SoundIndex index)
     {
         switch (index)
@@ -74,7 +86,6 @@ public class ConfigurationManager : MonoBehaviour
         if (_instance == null)
         {
             _instance = this;
-            Debug.Log("Setting instance");
             DontDestroyOnLoad(gameObject);
         }
         else

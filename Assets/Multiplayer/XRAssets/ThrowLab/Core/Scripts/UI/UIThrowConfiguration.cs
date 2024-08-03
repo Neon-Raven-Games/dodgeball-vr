@@ -1,51 +1,49 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using UnityEngine.UI;
-using System.Linq;
+using TMPro;
 using Unity.Template.VR.Multiplayer;
 
 namespace CloudFine.ThrowLab.UI
 {
     public class UIThrowConfiguration : MonoBehaviour
     {
+        public GameObject VSmoothRoot;
+        public GameObject PhysicsRoot;
+        public GameObject OtherRoot;
+        
         private ThrowConfiguration currentConfig;
         private Color currentColor;
-        public Text configLabel;
-        public GameObject configOptionsRoot;
-        public GameObject variantPanelRoot;
+        public TextMeshProUGUI configLabel;
 
-        [Header("Smoothing")]
-        public Toggle smoothingToggle;
-        public GameObject smoothingOptionsRoot;
-        public Dropdown smoothingAlgorithmDropdown;
-        public Dropdown smoothingPeriodDropdown;
-        public Dropdown smoothingTimeDropdown;
-        public UIStepper smoothingFramesStepper;
+        [Header("Smoothing")] public Toggle smoothingToggle;
+        public TMP_Dropdown smoothingAlgorithmDropdown;
+        public TMP_Dropdown smoothingPeriodDropdown;
+        public TMP_Dropdown smoothingTimeDropdown;
         public UIStepper smoothignSecondsStepper;
-        public Dropdown smoothingPointDropdown;
+        public TMP_Dropdown smoothingPointDropdown;
         public UISmoothingVisual smoothingUI;
 
-        [Header("Friction")]
-        public Toggle frictionToggle;
-        public GameObject frictionOptionsRoot;
+        [Header("Friction")] public Toggle frictionToggle;
+
         public Slider frictionFalloffSlider;
-        public Toggle frictionCustomCurveToggle;
+
+        // public Toggle frictionCustomCurveToggle;
         public UIStepper frictionSecondsStepper;
         public UICurveLine frictionCurveUI;
 
-        [Header("Assist")]
-        public Toggle assistToggle;
-        public GameObject assistOptionsRoot;
+        [Header("Assist")] public Toggle assistToggle;
         public Toggle assistCustomCurveToggle;
         public Slider assistGravitySlider;
         public Slider assistWeightSlider;
         public Slider assistRangeSlider;
         public UICurveLine assistCurveUI;
-        public Dropdown targetSelectionDropdown;
+        public TMP_Dropdown targetSelectionDropdown;
 
-        [Header("Scale")]
-        public Toggle scaleToggle;
-        public GameObject scaleOptionsRoot;
-        public Toggle scaleCustomCurveToggle;
+        [Header("Scale")] public Toggle scaleToggle;
+
+
+        // public Toggle scaleCustomCurveToggle;
         public Slider scaleRampSlider;
         public UIStepper scaleStepper;
         public UIStepper scaleThresholdStepper;
@@ -54,10 +52,12 @@ namespace CloudFine.ThrowLab.UI
         private void Awake()
         {
             smoothingAlgorithmDropdown.ClearOptions();
-            smoothingAlgorithmDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.EstimationAlgorithm)).ToList());
+            smoothingAlgorithmDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.EstimationAlgorithm))
+                .ToList());
 
             smoothingPeriodDropdown.ClearOptions();
-            smoothingPeriodDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.PeriodMeasurement)).ToList());
+            smoothingPeriodDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.PeriodMeasurement))
+                .ToList());
 
             smoothingTimeDropdown.ClearOptions();
             smoothingTimeDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.SampleTime)).ToList());
@@ -66,40 +66,93 @@ namespace CloudFine.ThrowLab.UI
             smoothingPointDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.VelocitySource)).ToList());
 
             targetSelectionDropdown.ClearOptions();
-            targetSelectionDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.AssistTargetMethod)).ToList());
+            targetSelectionDropdown.AddOptions(System.Enum.GetNames(typeof(ThrowConfiguration.AssistTargetMethod))
+                .ToList());
         }
 
-        public void LoadConfig(ThrowConfiguration config, Color color, bool enabled)
+        public void InitializeVelocitySmoothing(ThrowConfiguration config)
         {
-            //set values on ui
-            currentConfig = config;
-            configLabel.text = config.name;
-            currentColor = color;
-
-            //SMOOTHING
+            if (!VSmoothRoot.activeInHierarchy) return;
             if (smoothingAlgorithmDropdown)
             {
-                smoothingAlgorithmDropdown.value = (int)config.estimationFunction;
-                smoothingAlgorithmDropdown.onValueChanged.Invoke((int)config.estimationFunction);
+                smoothingAlgorithmDropdown.value = (int) config.estimationFunction;
+                smoothingAlgorithmDropdown.onValueChanged.Invoke((int) config.estimationFunction);
             }
 
             if (smoothingPeriodDropdown)
             {
-                smoothingPeriodDropdown.value = (int)config.samplePeriodMeasurement;
-                smoothingPeriodDropdown.onValueChanged.Invoke((int)config.samplePeriodMeasurement);
+                smoothingPeriodDropdown.value = (int) config.samplePeriodMeasurement;
+                SetPeriodMeasurement(smoothingPeriodDropdown.value);
+                smoothingPeriodDropdown.onValueChanged.Invoke((int) config.samplePeriodMeasurement);
             }
 
-            if (smoothingTimeDropdown) smoothingTimeDropdown.value = (int)config.sampleTime;
-            if (smoothingFramesStepper) smoothingFramesStepper.value = config.periodFrames;
-            if (smoothignSecondsStepper) smoothignSecondsStepper.value = config.periodSeconds;
-            if (smoothingPointDropdown) smoothingPointDropdown.value = (int)config.sampleSourceType;
+            if (smoothingPointDropdown) smoothingPointDropdown.value = (int) config.sampleSourceType;
 
-            if (smoothingUI)
+            smoothingUI.SetFunc(config.GetWeights);
+            smoothingUI.Refresh();
+            if (smoothingToggle)
             {
-                smoothingUI.SetFunc(config.GetWeights);
+                smoothingToggle.isOn = config.smoothingEnabled;
+                smoothingToggle.interactable = enabled;
+            }
+        }
+
+        public void InitializePhysics(ThrowConfiguration config)
+        {
+            if (!PhysicsRoot.activeInHierarchy) return;
+            if (scaleStepper)
+            {
+                scaleStepper.value = config.scaleMultiplier;
             }
 
-            //ASSIST
+            if (scaleThresholdStepper)
+            {
+                scaleThresholdStepper.value = config.scaleThreshold;
+            }
+
+            if (scaleRampSlider)
+            {
+                scaleRampSlider.value = config.scaleRampExponent;
+                scaleRampSlider.onValueChanged.Invoke(config.scaleRampExponent);
+            }
+
+            if (frictionFalloffSlider)
+            {
+                frictionFalloffSlider.value = config.frictionFalloffExponent;
+                frictionFalloffSlider.onValueChanged.Invoke(config.frictionFalloffExponent);
+            }
+
+            if (frictionSecondsStepper)
+            {
+                frictionSecondsStepper.value = config.frictionFalloffSeconds;
+            }
+
+            if (frictionCurveUI)
+            {
+                frictionCurveUI.SetCurveFunc(config.SampleFrictionCurve);
+            }
+
+            if (frictionToggle)
+            {
+                frictionToggle.isOn = config.frictionEnabled;
+                frictionToggle.interactable = enabled;
+            }
+
+            if (scaleToggle)
+            {
+                scaleToggle.isOn = config.scaleEnabled;
+                scaleToggle.interactable = enabled;
+            }
+            
+            if (scaleCurveUI)
+            {
+                scaleCurveUI.SetCurveFunc(config.SampleScalingCurve);
+            }
+        }
+
+        public void InitializeOther(ThrowConfiguration config)
+        {
+            if (!OtherRoot.activeInHierarchy) return;
             if (assistGravitySlider)
             {
                 assistGravitySlider.value = config.assistRampExponent;
@@ -117,93 +170,57 @@ namespace CloudFine.ThrowLab.UI
                 assistRangeSlider.value = config.assistRangeDegrees;
                 assistRangeSlider.onValueChanged.Invoke(config.assistRangeDegrees);
             }
-
             if (assistCurveUI)
             {
                 assistCurveUI.SetCurveFunc(config.SampleAssistCurve);
             }
+
             if (assistCustomCurveToggle)
             {
                 assistCustomCurveToggle.isOn = config.useAssistRampCustomCurve;
             }
+
             if (targetSelectionDropdown)
             {
-                targetSelectionDropdown.value = (int)config.assistTargetMethod;
-            }
-
-
-            //SCALE
-            if (scaleStepper)
-            {
-                scaleStepper.value = config.scaleMultiplier;
-            }
-            if (scaleThresholdStepper)
-            {
-                scaleThresholdStepper.value = config.scaleThreshold;
-            }
-            if (scaleRampSlider)
-            {
-                scaleRampSlider.value = config.scaleRampExponent;
-                scaleRampSlider.onValueChanged.Invoke(config.scaleRampExponent);
-            }
-
-
-            if (scaleCurveUI)
-            {
-                scaleCurveUI.SetCurveFunc(config.SampleScalingCurve);
-            }
-            if (scaleCustomCurveToggle)
-            {
-                scaleCustomCurveToggle.isOn = config.useScaleRampCustomCurve;
-            }
-
-            //FRICTION
-            if (frictionFalloffSlider)
-            {
-                frictionFalloffSlider.value = config.frictionFalloffExponent;
-                frictionFalloffSlider.onValueChanged.Invoke(config.frictionFalloffExponent);
-            }
-            if (frictionSecondsStepper)
-            {
-                frictionSecondsStepper.value = config.frictionFalloffSeconds;
-            }
-            if (frictionCurveUI)
-            {
-                frictionCurveUI.SetCurveFunc(config.SampleFrictionCurve);
-            }
-            if (frictionCustomCurveToggle)
-            {
-                frictionCustomCurveToggle.isOn = config.useFrictionFalloffCustomCurve;
-            }
-
-            if (smoothingToggle)
-            {
-                smoothingToggle.isOn = config.smoothingEnabled;
-                smoothingToggle.interactable = enabled;
+                targetSelectionDropdown.value = (int) config.assistTargetMethod;
             }
             if (assistToggle)
             {
                 assistToggle.isOn = config.assistEnabled;
                 assistToggle.interactable = enabled;
             }
-            if (frictionToggle)
-            {
-                frictionToggle.isOn = config.frictionEnabled;
-                frictionToggle.interactable = enabled;
-            }
-            if (scaleToggle)
-            {
-                scaleToggle.isOn = config.scaleEnabled;
-                scaleToggle.interactable = enabled;
-            }
+        }
+
+        public void LoadConfig(ThrowConfiguration config, Color color, bool enabled)
+        {
+            //set values on ui
+            currentConfig = config;
+            configLabel.text = config.name;
+            currentColor = color;
+            // if (scaleCustomCurveToggle)
+            // {
+            //     scaleCustomCurveToggle.isOn = config.useScaleRampCustomCurve;
+            // }
+
+            //FRICTION
+
+            // if (frictionCustomCurveToggle)
+            // {
+            //     frictionCustomCurveToggle.isOn = config.useFrictionFalloffCustomCurve;
+            // }
+
+            InitializeVelocitySmoothing(config);
+            InitializePhysics(config);
+            InitializeOther(config);
+
+
 
 
             SetAssistEnabled(config.assistEnabled, enabled);
             SetFrictionEnabled(config.frictionEnabled, enabled);
             SetSmoothingEnabled(config.smoothingEnabled, enabled);
             SetScalingEnabled(config.scaleEnabled, enabled);
-
-            SetChildrenColor(variantPanelRoot, color);
+            // SetChildrenColor(variantPanelRoot, color);
         }
 
 
@@ -215,7 +232,7 @@ namespace CloudFine.ThrowLab.UI
         public void SetAssistEnabled(bool enabled, bool configEnabled)
         {
             if (currentConfig) currentConfig.assistEnabled = enabled;
-            SetPanelEnabled(assistOptionsRoot, assistToggle.gameObject, enabled && configEnabled);
+            // SetPanelEnabled(assistOptionsRoot, assistToggle.gameObject, enabled && configEnabled);
             SetAssistCustomCurve(currentConfig.useAssistRampCustomCurve);
         }
 
@@ -227,7 +244,7 @@ namespace CloudFine.ThrowLab.UI
         public void SetFrictionEnabled(bool enabled, bool configEnabled)
         {
             if (currentConfig) currentConfig.frictionEnabled = enabled;
-            SetPanelEnabled(frictionOptionsRoot, frictionToggle.gameObject, enabled && configEnabled);
+            // SetPanelEnabled(frictionOptionsRoot, frictionToggle.gameObject, enabled && configEnabled);
             SetFrictionCustomCurve(currentConfig.useFrictionFalloffCustomCurve);
         }
 
@@ -239,7 +256,7 @@ namespace CloudFine.ThrowLab.UI
         public void SetSmoothingEnabled(bool enabled, bool configEnabled)
         {
             if (currentConfig) currentConfig.smoothingEnabled = enabled;
-            SetPanelEnabled(smoothingOptionsRoot, smoothingToggle.gameObject, enabled && configEnabled);
+            // SetPanelEnabled(smoothingOptionsRoot, smoothingToggle.gameObject, enabled && configEnabled);
         }
 
         public void SetScalingEnabled(bool enabled)
@@ -250,7 +267,7 @@ namespace CloudFine.ThrowLab.UI
         public void SetScalingEnabled(bool enabled, bool configEnabled)
         {
             if (currentConfig) currentConfig.scaleEnabled = enabled;
-            SetPanelEnabled(scaleOptionsRoot, scaleToggle.gameObject, enabled && configEnabled);
+            // SetPanelEnabled(scaleOptionsRoot, scaleToggle.gameObject, enabled && configEnabled);
             SetScalingCustomCurve(currentConfig.useScaleRampCustomCurve);
         }
 
@@ -260,10 +277,11 @@ namespace CloudFine.ThrowLab.UI
             {
                 select.interactable = enabled;
             }
+
             Color c = enabled ? currentColor : new Color(1, 1, 1, .25f);
 
             SetChildrenColor(panelRoot, c);
-            SetChildrenColor(toggle, currentColor);            
+            SetChildrenColor(toggle, currentColor);
         }
 
         private void SetChildrenColor(GameObject root, Color c)
@@ -280,40 +298,55 @@ namespace CloudFine.ThrowLab.UI
 
         public void SetEstimationAlgorithm(int value)
         {
-            if (currentConfig) currentConfig.estimationFunction = (ThrowConfiguration.EstimationAlgorithm)value;
+            if (currentConfig) currentConfig.estimationFunction = (ThrowConfiguration.EstimationAlgorithm) value;
         }
 
         public void SetPeriodMeasurement(int value)
         {
-            ThrowConfiguration.PeriodMeasurement period = (ThrowConfiguration.PeriodMeasurement)value;
+            ThrowConfiguration.PeriodMeasurement period = (ThrowConfiguration.PeriodMeasurement) value;
             if (currentConfig) currentConfig.samplePeriodMeasurement = period;
 
-            switch (period)
+            var stepper = smoothignSecondsStepper.GetComponent<UIStepper>();
+            if (period == ThrowConfiguration.PeriodMeasurement.TIME)
             {
-                case ThrowConfiguration.PeriodMeasurement.FRAMES:
-                    smoothignSecondsStepper.gameObject.SetActive(false);
-                    smoothingFramesStepper.gameObject.SetActive(true);
-                    smoothingTimeDropdown.gameObject.SetActive(false);
-                    break;
-                case ThrowConfiguration.PeriodMeasurement.TIME:
-                    smoothingFramesStepper.gameObject.SetActive(false);
-                    smoothignSecondsStepper.gameObject.SetActive(true);
-                    smoothingTimeDropdown.gameObject.SetActive(true);
-                    break;
+                stepper.step = 0.1f;
+                seconds = true;
+                smoothingTimeDropdown.gameObject.SetActive(true);
+                stepper.value = currentConfig.periodSeconds;
+                var valueText = stepper.GetComponentInChildren<UIValueText>();
+                valueText._toStringPattern = "0.0";
+                valueText._postDecorator = "s";
             }
-
+            else
+            {
+                seconds = false;
+                stepper.step = 1;
+                smoothingTimeDropdown.gameObject.SetActive(false);
+                stepper.value = currentConfig.periodFrames;
+                var valueText = stepper.GetComponentInChildren<UIValueText>();
+                valueText._toStringPattern = "0";
+                valueText._postDecorator = "";
+            }
         }
 
 
         //SMOOTHING
         public void SetSampleSource(int value)
         {
-            if(currentConfig) currentConfig.sampleSourceType = (ThrowConfiguration.VelocitySource)value;
+            if (currentConfig) currentConfig.sampleSourceType = (ThrowConfiguration.VelocitySource) value;
         }
 
+        private bool seconds;
+        public void SetSmoothingTime(float value)
+        {
+            if (!currentConfig) return;
+            if (seconds) currentConfig.periodSeconds = value;
+            else currentConfig.periodFrames = (int) value;
+        }
         public void SetSmoothingSampleTime(int value)
         {
-            if (currentConfig) currentConfig.sampleTime = (ThrowConfiguration.SampleTime)value;
+            if (currentConfig) currentConfig.sampleTime = (ThrowConfiguration.SampleTime) value;
+
         }
 
         public void SetSmoothingSeconds(float seconds)
@@ -323,10 +356,8 @@ namespace CloudFine.ThrowLab.UI
 
         public void SetSmoothingFrames(float frames)
         {
-            if (currentConfig) currentConfig.periodFrames = (int)frames;
+            if (currentConfig) currentConfig.periodFrames = (int) frames;
         }
-
-
 
 
         //ASSIST
@@ -340,7 +371,6 @@ namespace CloudFine.ThrowLab.UI
             if (currentConfig)
             {
                 currentConfig.assistRampExponent = gravity;
-                
             }
         }
 
@@ -358,7 +388,7 @@ namespace CloudFine.ThrowLab.UI
 
         public void SetTargetSelectionMethod(int value)
         {
-            if (currentConfig) currentConfig.assistTargetMethod = (ThrowConfiguration.AssistTargetMethod)value;
+            if (currentConfig) currentConfig.assistTargetMethod = (ThrowConfiguration.AssistTargetMethod) value;
         }
 
 

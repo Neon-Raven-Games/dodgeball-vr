@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: First
   m_EditorClassIdentifier: 
   smoothingEnabled: 1
-  estimationFunction: 2
+  estimationFunction: 1
   samplePeriodMeasurement: 1
   sampleTime: 1
   periodFrames: 5
-  periodSeconds: 0.2
+  periodSeconds: 0.70000005
   sampleSourceType: 0
   smoothingAverageCustomCurve:
     serializedVersion: 2
@@ -54,8 +54,8 @@ MonoBehaviour:
     m_RotationOrder: 4
   scaleEnabled: 1
   scaleMultiplier: 2.5
-  scaleThreshold: 6
-  scaleRampExponent: 2
+  scaleThreshold: 0.02
+  scaleRampExponent: 5
   useScaleRampCustomCurve: 0
   scaleRampCustomCurve:
     serializedVersion: 2

@@ -15,7 +15,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5168704714208692683
 Transform:
   m_ObjectHideFlags: 0
@@ -29,6 +29,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1679120846737718253}
   - {fileID: 3595883939838050781}
   - {fileID: 4937121173107339604}
   m_Father: {fileID: 4774998537050753069}
@@ -100,12 +101,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1848234234557470814}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
+  m_LocalRotation: {x: -0, y: -0, z: -0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0.554, y: 0.934, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4774998537050753069}
+  m_Father: {fileID: 5168704714208692683}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
 --- !u!33 &3221968762339034916
 MeshFilter:
@@ -294,7 +295,7 @@ Transform:
   m_GameObject: {fileID: 6699487626767300187}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0.5559, y: 0.9496, z: 0}
+  m_LocalPosition: {x: 0.554, y: 0.934, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5177,7 +5178,6 @@ Transform:
   - {fileID: 4984406648386671988}
   - {fileID: 2634326356895028422}
   - {fileID: 6025531166242311837}
-  - {fileID: 1679120846737718253}
   - {fileID: 5168704714208692683}
   - {fileID: 25761152544327634}
   - {fileID: 4212087739338768665}
@@ -7759,13 +7759,7 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
-    are already bound by a Humanoid avatar. These transforms can only be changed
-    by Humanoid clips.\n\tTransform 'Bind_Root'\n\tTransform 'Bind_LeftHand'\n\tTransform
-    'Bind_RightHand'\n\tTransform 'Bind_RightLeg'\n\tTransform 'Bind_LeftLeg'\n\tTransform
-    'Bind_Spine1'\n\tTransform 'Bind_Neck'\n\tTransform 'Bind_RightUpLeg'\n\tTransform
-    'Bind_Spine2'\n\tTransform 'Bind_Head'\n\tand more ...\n\tFrom animation clip
-    'Praying Ghost'"
+  m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0

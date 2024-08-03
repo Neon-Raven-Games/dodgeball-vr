@@ -63,12 +63,12 @@ public class Actor : MonoBehaviour
     }
 
     internal bool IsOutOfPlay() => outOfPlay;
-    internal void SetOutOfPlay(bool value) => outOfPlay = value;
+    internal virtual void SetOutOfPlay(bool value) => outOfPlay = value;
 
     protected void HandleOutOfPlay()
     {
         if (IsInPlayArea(transform.position)) outOfBoundsEndTime = Time.time + outOfBoundsWaitTime;
-        if (Time.time >= outOfBoundsEndTime) outOfPlay = false;
+        if (Time.time >= outOfBoundsEndTime) SetOutOfPlay(false);
     }
 
     public bool IsInPlayArea(Vector3 position)

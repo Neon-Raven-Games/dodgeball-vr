@@ -10,6 +10,7 @@ namespace Hands.SinglePlayer.Lobby.RobotTasks.Sequence
         private RoboSequence _currentSequence;
         
         public List<RoboSequence> sequences;
+        public int Count => _sequenceQueue.Count;
 
         private void Start()
         {
@@ -34,6 +35,11 @@ namespace Hands.SinglePlayer.Lobby.RobotTasks.Sequence
             if (_sequenceQueue.Count == 0) return defaultSequence;
             _currentSequence = _sequenceQueue.Dequeue();
             return _currentSequence;
+        }
+
+        public void ClearQueue()
+        {
+            _sequenceQueue.Clear();
         }
     }
 }

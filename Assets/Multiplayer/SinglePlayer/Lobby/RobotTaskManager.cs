@@ -28,21 +28,29 @@ public class RobotTaskManager : MonoBehaviour
     public GameObject robotInformingTarget;
 
     [SerializeField] private SequenceQueue sequenceQueue;
-    private RobotTasks currentTask;
+    public RobotTasks currentTask;
     private Dictionary<RobotTasks, Hands.SinglePlayer.Lobby.RobotTask> _tasks = new();
     private InformingBehavior _informingBehavior;
     private LeadingBehavior _leadingBehavior;
     private IdleLivelyBehavior _idleLivelyBehavior;
     private InteractiveBehavior _interactiveBehavior;
 
-    // fastmode = speed 3, tracer is 3.6
-// wander = speed 1, tracer is 1.2
     public float speed;
 
     public Action<RobotTasks> OnTaskComplete;
 
+    private float leadingTargetInitialPosition;
+    public bool initialized;
+
+    public void SetInteractiveRotationActive(bool active, TracerTask tracerTask)
+    {
+        _interactiveBehavior.SetRotationActive(active);
+    }
+    
     private void Start()
     {
+        leadingTargetInitialPosition = Vector3.Distance(robotLeadingTarget.transform.position, transform.position);
+        
         _informingBehavior = new InformingBehavior(this);
         _leadingBehavior = new LeadingBehavior(this);
         _idleLivelyBehavior = new IdleLivelyBehavior(this);
@@ -69,10 +77,12 @@ public class RobotTaskManager : MonoBehaviour
         _tasks[currentTask].ExitTask();
         currentTask = task;
         _tasks[currentTask].EnterTask(sequenceQueue.DequeueSequence());
+        if (currentTask == RobotTasks.Informing) initialized = true;
     }
 
     public void EndCurrentTask()
     {
+        robotLeadingTarget.transform.position = transform.position + Vector3.forward * leadingTargetInitialPosition;
         OnTaskComplete?.Invoke(sequenceQueue.NextTask());
     }
 

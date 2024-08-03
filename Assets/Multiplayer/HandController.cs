@@ -1,3 +1,4 @@
+using System;
 using FishNet.Object;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
@@ -10,6 +11,9 @@ namespace Hands
         [SerializeField] private Transform grabTransform;
         [SerializeField] private InputActionAsset actionAsset;
         [SerializeField] internal HandSide handSide;
+        [SerializeField] private float suckSnapDistance = 0.4f;
+        [SerializeField] private float suckSnapSpeed = 5f;
+        [SerializeField] private GameObject fxPrefab;
         private LayerMask _ballLayer;
         private GameObject _ball;
         private bool _grabbing;
@@ -25,13 +29,19 @@ namespace Hands
         {
             _gripAction.performed -= SetGrab;
             _gripAction.canceled -= SetGrabReleased;
-
             _gripAction = null;
         }
 
         public bool networked;
 
-        private void Start()
+        private void OnDisable()
+        {
+            _gripAction.performed -= SetGrab;
+            _gripAction.canceled -= SetGrabReleased;
+            SetGrabReleased(default);
+        }
+
+        private void Awake()
         {
             _animator = GetComponentInChildren<Animator>();
             _ballLayer = LayerMask.NameToLayer("Ball");
@@ -40,7 +50,10 @@ namespace Hands
                 actionAsset.FindAction(
                     handSide == HandSide.RIGHT ? "XRI RightHand Interaction/Select" : "XRI LeftHand Interaction/Select",
                     true);
+        }
 
+        private void OnEnable()
+        {
             _gripAction.performed += SetGrab;
             _gripAction.canceled += SetGrabReleased;
         }
@@ -52,7 +65,9 @@ namespace Hands
         private void SetGrab(InputAction.CallbackContext e)
         {
             if (controller.IsOutOfPlay()) return;
-            if (_ball.layer != _ballLayer) return;
+            
+            fxPrefab.SetActive(true);
+            if (_ball && _ball.layer != _ballLayer) return;
             if (_ball && !_grabbing)
             {
                 controller.hasBall = true;
@@ -80,6 +95,7 @@ namespace Hands
 
         private void SetGrabReleased(InputAction.CallbackContext e)
         {
+            fxPrefab.SetActive(false);
             if (_grabbing)
             {
                 var dodgeBall = _ball.GetComponent<DodgeBall>();
@@ -101,8 +117,13 @@ namespace Hands
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!_ball && !_grabbing && other.gameObject.layer == _ballLayer)
+            if (!_ball && 
+                (!_grabbing || fxPrefab.activeInHierarchy) && 
+                other.gameObject.layer == _ballLayer)
+            {
                 _ball = other.gameObject;
+            }
+            
         }
 
         private void OnTriggerExit(Collider other)
@@ -111,9 +132,28 @@ namespace Hands
                 _ball = null;
         }
 
+        private void Update()
+        {
+            
+            if (!_grabbing || !_ball || !fxPrefab.activeInHierarchy) return;
+            if (fxPrefab.activeInHierarchy &&
+                Vector3.Distance(_ball.transform.position, grabTransform.position) > suckSnapDistance)
+            {
+                _ball.transform.position = Vector3.Lerp(_ball.transform.position, grabTransform.position,
+                    Time.fixedDeltaTime * suckSnapSpeed);
+                _ball.transform.rotation = Quaternion.Lerp(_ball.transform.rotation, grabTransform.rotation,
+                    Time.fixedDeltaTime * suckSnapSpeed);
+            }
+            else
+            {
+                SetGrab(default);
+                fxPrefab.SetActive(false);
+            }
+        }
+
         private void LateUpdate()
         {
-            if (!_grabbing || !_ball) return;
+            if (!_ball || !_grabbing) return;
             _ball.transform.position = grabTransform.position;
             _ball.transform.rotation = grabTransform.rotation;
         }
