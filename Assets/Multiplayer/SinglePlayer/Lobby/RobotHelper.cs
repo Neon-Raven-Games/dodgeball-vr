@@ -13,6 +13,13 @@ public class RobotHelper : Actor
     [SerializeField] private Animator _anim;
 
     [SerializeField] private float textSpeed = 0.1f;
+    public float lerpSpeed = 10f;
+    public float amplitudeMultiplier = 100f; // Multiplier for the red channel value
+
+    [SerializeField] private Material eyeMaterial;
+    public Color minColor = Color.white; // Color when amplitude is at minimum
+    public Color maxColor = Color.red;
+    private float targetRedValue;
 
     // lmao
     private static readonly int _SHit = Animator.StringToHash("Hit");
@@ -20,6 +27,10 @@ public class RobotHelper : Actor
     private int hitAnimationCount = 4;
     [SerializeField] private List<RobotTextAnimation> textChanges;
     private int textIndex = 0;
+
+    private void Start()
+    {
+    }
 
     public void StartTyping(string text) => StartCoroutine(TypeWriterEffect(text));
 
@@ -53,8 +64,25 @@ public class RobotHelper : Actor
         if (!_changingText) StartCoroutine(TypeWriterEffect(ouchiesText[Random.Range(0, ouchiesText.Count)]));
     }
 
+    private float targetLerpValue;
     private void Update()
     {
+        if (audioSource.isPlaying)
+        {
+            var spectrumData = new float[256];
+            audioSource.GetSpectrumData(spectrumData, 0, FFTWindow.Rectangular);
+
+            // Use the average of the first few spectrum values to determine the amplitude
+            var amplitude = 0f;
+            for (var i = 0; i < 5; i++) amplitude += spectrumData[i];
+            amplitude /= 5f;
+            amplitude *= amplitudeMultiplier;
+            targetLerpValue = Mathf.Clamp(amplitude, 0f, 1f);
+
+            var targetColor = Color.Lerp(minColor, maxColor, targetLerpValue);
+            eyeMaterial.color = Color.Lerp(eyeMaterial.color, targetColor, Time.deltaTime * lerpSpeed);
+        }
+        
         if (textIndex >= textChanges.Count && !audioSource.isPlaying)
         {
             textIndex = -1;
