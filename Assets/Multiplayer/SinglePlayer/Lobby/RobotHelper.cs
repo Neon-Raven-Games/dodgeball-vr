@@ -28,10 +28,6 @@ public class RobotHelper : Actor
     [SerializeField] private List<RobotTextAnimation> textChanges;
     private int textIndex = 0;
 
-    private void Start()
-    {
-    }
-
     public void StartTyping(string text) => StartCoroutine(TypeWriterEffect(text));
 
     private IEnumerator TypeWriterEffect(string text)

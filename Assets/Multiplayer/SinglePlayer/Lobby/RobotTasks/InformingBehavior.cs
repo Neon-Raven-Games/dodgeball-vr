@@ -73,7 +73,8 @@ namespace Hands.SinglePlayer.Lobby.RobotTasks
 
     playerPosition.y += 0.5f;
     TaskManager.transform.LookAt(playerPosition);
-    if (!ConfigurationManager.botMuted && Vector3.Distance(Camera.main.transform.position, TaskManager.transform.position) < 5f)
+    TaskManager.audioSource.volume = ConfigurationManager.botMuted ? 0 : 1;
+    if (Vector3.Distance(Camera.main.transform.position, TaskManager.transform.position) < 5f)
     {
         PlayAudio();
     }
