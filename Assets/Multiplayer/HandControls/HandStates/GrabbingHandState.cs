@@ -20,9 +20,9 @@ public class GrabbingHandState : BaseHandState
         var ball = Ball.GetComponent<DodgeBall>();
         if (!ball) Debug.LogError("Dodgeball not found in grabbing hand state");
 
+        ball.Grab(handController.actor, handController.gameObject);
         ball.transform.position = grabTransform.position;
         ball.transform.rotation = grabTransform.rotation;
-        ball.Grab(handController.actor, handController.gameObject);
         triggerCollider.enabled = false;
         _working = true;
     }
