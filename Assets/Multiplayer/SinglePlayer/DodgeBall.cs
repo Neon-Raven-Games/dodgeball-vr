@@ -149,20 +149,17 @@ public class DodgeBall : MonoBehaviour
             if (!parentActor) collision.gameObject.GetComponent<Actor>();
             if (parentActor == ownerActor)
             {
-                Debug.Log($"Found actors equal: {parentActor.gameObject.name}, {ownerActor.gameObject.name}");
                 return;
             }
             
             if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
-                Debug.Log($"Team One Friendly Fire, is this our rig? {parentActor.gameObject.name}");
                 SetDeadBall();
                 HitSquash(collision);
                 param = 3;
             }
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
-                Debug.Log("Team Two Friendly Fire");
                 SetDeadBall();
                 HitSquash(collision);
                 param = 3;

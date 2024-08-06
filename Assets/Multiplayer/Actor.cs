@@ -71,36 +71,19 @@ public class Actor : MonoBehaviour
         if (Time.time >= outOfBoundsEndTime) SetOutOfPlay(false);
     }
 
-    public virtual bool IsInPlayArea(Vector3 position)
+    public bool IsInPlayArea(Vector3 position)
     {
         var playAreaBounds = new Bounds(friendlyTeam.playArea.position,
             new Vector3(friendlyTeam.playArea.localScale.x, 5,
                 friendlyTeam.playArea.localScale.z));
         return playAreaBounds.Contains(position);
     }
-    public bool ValidWaitingArea()
+
+    private bool ValidWaitingArea()
     { 
         var waitBounds = new Bounds(friendlyTeam.outOfBounds.position,
             new Vector3(friendlyTeam.outOfBounds.localScale.x, 5,
                 friendlyTeam.outOfBounds.localScale.z));
         return waitBounds.Contains(Camera.main.transform.position);
-    }
-
-    private bool _validWaitingArea;
-    
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.gameObject.CompareTag("OutOfBounds"))
-        {
-            Debug.Log("Setting valid waiting area true");
-            _validWaitingArea = true;
-        }
-    }
-    
-    private void OnTriggerExit(Collider other)
-    {
-            Debug.Log("Setting valid waiting area true");
-        if (other.gameObject.CompareTag("OutOfBounds")) _validWaitingArea = false;
     }
 }
