@@ -152,17 +152,11 @@ public class DevController : Actor
     }
 
     private GameObject pivot;
+    public Transform cameraOffset;
 
     private void HandleRotation()
     {
-        pivot.transform.position = hmd.position;
-
-        pivot.transform.position = hmd.position;
-        pivot.transform.Rotate(Vector3.up, _lookInput.x * rotationSpeed * Time.fixedDeltaTime);
-        Vector3 offset = controller.transform.position - hmd.position;
-
-        controller.transform.position = pivot.transform.position + pivot.transform.rotation * offset;
-        controller.transform.rotation = Quaternion.Euler(0, pivot.transform.rotation.eulerAngles.y, 0);
+        cameraOffset.RotateAround(hmd.position, Vector3.up, _lookInput.x * rotationSpeed * Time.fixedDeltaTime);
     }
 
     private void HandleMovement()
