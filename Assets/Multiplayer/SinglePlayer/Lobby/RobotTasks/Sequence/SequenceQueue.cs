@@ -14,6 +14,7 @@ namespace Hands.SinglePlayer.Lobby.RobotTasks.Sequence
 
         private void Start()
         {
+            if (ConfigurationManager.skipIntro) return;
             _currentSequence = defaultSequence;
             foreach (var seq in sequences) _sequenceQueue.Enqueue(seq);
         }

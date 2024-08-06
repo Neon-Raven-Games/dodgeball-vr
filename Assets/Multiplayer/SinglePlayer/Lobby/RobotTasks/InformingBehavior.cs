@@ -73,8 +73,10 @@ namespace Hands.SinglePlayer.Lobby.RobotTasks
 
     playerPosition.y += 0.5f;
     TaskManager.transform.LookAt(playerPosition);
-    if (Vector3.Distance(Camera.main.transform.position, TaskManager.transform.position) < 5f)
+    if (!ConfigurationManager.botMuted && Vector3.Distance(Camera.main.transform.position, TaskManager.transform.position) < 5f)
+    {
         PlayAudio();
+    }
 }
 
 private int _currentDialogueIndex;
@@ -91,7 +93,7 @@ private int _currentDialogueIndex;
             TaskManager.audioSource.clip = taskSequence.dialogueClips[_currentDialogueIndex];
             
             // todo, we need to clip the audio files
-            TaskManager.audioSource.time = 0.8f + _currentDialogueIndex;
+            TaskManager.audioSource.time = 0;
             TaskManager.audioSource.Play();
             _currentDialogueIndex++;
         }

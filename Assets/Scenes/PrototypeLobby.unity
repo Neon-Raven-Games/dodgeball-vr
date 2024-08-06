@@ -23243,12 +23243,22 @@ MonoBehaviour:
   minColor: {r: 1, g: 1, b: 1, a: 1}
   maxColor: {r: 1, g: 0.16862746, b: 0.16862746, a: 1}
   textChanges:
-  - playAtSeconds: 2
+  - playAtSeconds: 0
     text: Hi
-  - playAtSeconds: 10.5
+  - playAtSeconds: 7.5
     text: :-(
-  - playAtSeconds: 13
-    text: Help
+  - playAtSeconds: 16.25
+    text: zzZZzz
+  - playAtSeconds: 23.5
+    text: Or walls...
+  - playAtSeconds: 42
+    text: :^)
+  - playAtSeconds: 46
+    text: Dodgeball
+  - playAtSeconds: 60
+    text: x.x
+  - playAtSeconds: 70
+    text: Have fun!
   ouchiesText:
   - Ow!
   - '@&#!'
@@ -52142,8 +52152,7 @@ MonoBehaviour:
     waypointParent: {fileID: 415471411}
     target: {fileID: 1419572986}
     dialogueClips:
-    - {fileID: 8300000, guid: cfb03b976e958f8449fe5b3500778640, type: 3}
-    - {fileID: 8300000, guid: 5ca80782325416f4885a91a427c5f449, type: 3}
+    - {fileID: 8300000, guid: b394cc15999bbd9448d5ad8cd299ae09, type: 3}
     speed: 2
 --- !u!4 &1994139212
 Transform:
@@ -58223,10 +58232,6 @@ PrefabInstance:
     - target: {fileID: 6951955460464916565, guid: 8fb9abfdd5b0b0e4cbbee0922cb27a69, type: 3}
       propertyPath: m_Name
       value: ConfigManager
-      objectReference: {fileID: 0}
-    - target: {fileID: 7855352889061715747, guid: 8fb9abfdd5b0b0e4cbbee0922cb27a69, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

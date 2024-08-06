@@ -23,6 +23,38 @@ public class ConfigurationManager : MonoBehaviour
     public static int hitIndex;
     public static int pickupIndex;
     public static int throwConfigIndex;
+    public static bool botMuted;
+    public static bool skipIntro;
+
+    public void MuteBot(bool muted)
+    {
+        if (botMuted == muted) return;
+        botMuted = muted;
+        PlayerPrefs.SetInt("BotMuted", muted ? 1 : 0);
+    }
+    
+    public void SkipIntro(bool skip)
+    {
+        if (skipIntro == skip) return;
+        skipIntro = skip;
+        PlayerPrefs.SetInt("SkipIntro", skip ? 1 : 0);
+    }
+    private void Awake()
+    {
+        if (_instance == null)
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+        botMuted = PlayerPrefs.GetInt("BotMuted", 0) == 1;
+        skipIntro = PlayerPrefs.GetInt("SkipIntro", 0) == 1;
+    }
+    
     
     public static ThrowConfiguration GetThrowConfiguration()
     {
@@ -80,19 +112,7 @@ public class ConfigurationManager : MonoBehaviour
                 return null;
         }
     }
-    
-    private void Awake()
-    {
-        if (_instance == null)
-        {
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
+
     
     public static void SetSoundIndex(SoundIndex soundIndex, int index)
     {
