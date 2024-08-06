@@ -245,12 +245,15 @@ namespace Hands.SinglePlayer.EnemyAI
                 // ball unpossessed score
                 if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Ball"))
                 {
+                    var ball = hit.collider.gameObject.GetComponent<DodgeBall>();
                     if (!_ai.hasBall) score += GetPriority(PriorityType.PossessedBall); // 0.4f;
                     if (_ai.hasBall) score -= GetPriority(PriorityType.PossessedBall); // 0.8f;
                     if (IsInPlayArea(target.transform.position, _ai.friendlyTeam.playArea, _ai.team))
                         score += GetPriority(PriorityType.InsidePlayArea); // 0.2f
-                    else if (hit.collider.gameObject.GetComponent<DodgeBall>()._ballState == BallState.Dead)
+                    else if (ball._ballState == BallState.Dead)
                         score += GetPriority(PriorityType.FreeBall); // 0.5f
+                    else if (ball._ballState == BallState.Possessed && ball._team == _ai.team)
+                        score -= GetPriority(PriorityType.Targeted);
                     else score -= GetPriority(PriorityType.OutsidePlayArea); // 5f
                     
                 }
@@ -277,7 +280,6 @@ namespace Hands.SinglePlayer.EnemyAI
             // randomness and sticky targeting
             score += Random.Range(-0.1f, 0.1f);
             if (CurrentTarget == target) score += GetPriority(PriorityType.Targeted); // 0.9f;
-                // Debug.Log($"Target player: {target.gameObject.name}");
             if (target.GetComponent<DevController>() != null)
             {
                 score += GetPriority(PriorityType.Targeted);

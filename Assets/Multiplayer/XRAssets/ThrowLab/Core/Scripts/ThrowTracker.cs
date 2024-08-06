@@ -1,4 +1,5 @@
-﻿using CloudFine.ThrowLab.UI;
+﻿using System;
+using CloudFine.ThrowLab.UI;
 using System.Collections.Generic;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
@@ -18,11 +19,11 @@ namespace CloudFine.ThrowLab
         private Vector3 _releaseVelocity;
 
         private ThrowHandle _handle;
-        private Rigidbody _rigidbody;        
+        private Rigidbody _rigidbody;
 
         private Vector3 _groundHitPoint;
         private bool _tracking = false;
-        private List<Vector3> _positions = new List<Vector3>();
+        private List<Vector3> _positions = new();
         private const int _positionsCap = 500;
 
         private UIThrowTracker _ui;
@@ -55,9 +56,15 @@ namespace CloudFine.ThrowLab
             _particleRenderer = _sampleParticleSystem.GetComponent<ParticleSystemRenderer>();
         }
 
+        private bool isBeingDestroyed = false;
 
         private void Update()
         {
+            if (isBeingDestroyed)
+            {
+                return;
+            }
+            
             if (_tracking)
             {
                 if (_positions.Count < _positionsCap)
@@ -79,25 +86,45 @@ namespace CloudFine.ThrowLab
 
         private void OnDestroy()
         {
-            Cleanup();
         }
 
         public void TrackThrowable(ThrowHandle throwable)
         {
-            _handle = throwable;
+            if (_handle)
+            {
+                _handle.OnDestroyHandle -= OnHandleDestroyed;
+                _handle.onDetachFromHand -= OnDetach;
+                _handle.onPickUp -= OnAttach;
+                _handle.OnSampleRecorded -= VisualizeSmoothingSample;
+                _handle.onFinalTrajectory -= RecordFinalTrajectory;
+                _handle.onFrictionApplied -= VisualizeEstimatedVelocity;
+            }
 
-            _handle.onDetachFromHand+=(OnDetach);
-            _handle.onPickUp+=(OnAttach);
+            if (_rigidbody)
+            {
+                _rigidbody.gameObject.GetComponent<CollisionListener>().CollisionEnter -= OnCollisionEnter;
+            }
+            _handle = throwable;
+            if (!_handle) return;
+            
+            _handle.onDetachFromHand += OnDetach;
+            _handle.onPickUp += OnAttach;
             _handle.OnSampleRecorded += VisualizeSmoothingSample;
             _handle.onFrictionApplied += VisualizeEstimatedVelocity;
-            _handle.onFinalTrajectory+= (RecordFinalTrajectory);
+            _handle.onFinalTrajectory += RecordFinalTrajectory;
             _rigidbody = _handle.GetComponentInChildren<Rigidbody>();
-            CollisionListener listener = _rigidbody.gameObject.AddComponent<CollisionListener>();
-            listener.CollisionEnter += OnCollisionEnter;
+
+            if (_rigidbody != null)
+            {
+                CollisionListener listener = _rigidbody.gameObject.GetComponent<CollisionListener>();
+                if (!listener) listener = _rigidbody.gameObject.AddComponent<CollisionListener>();
+                listener.CollisionEnter += OnCollisionEnter;
+            }
+
             throwable.OnDestroyHandle += OnHandleDestroyed;
             CreateOutline(throwable.gameObject);
         }
-
+        
         public void SetLineAppearance(Texture lineTex, Color lineColor)
         {
             _trajectoryLine.material.mainTexture = lineTex;
@@ -109,7 +136,7 @@ namespace CloudFine.ThrowLab
         {
             _showLine = show;
             _trajectoryLine.enabled = _show && _showLine;
-
+            _tracking = (show || _showSamples);
         }
 
         public void ShowHideSamples(bool show)
@@ -118,9 +145,8 @@ namespace CloudFine.ThrowLab
             if (_particleRenderer)
             {
                 _particleRenderer.enabled = (show && _showSamples);
-
+                _tracking = (show || _showLine);
             }
-
         }
 
         public void SetColor(Color color)
@@ -136,7 +162,7 @@ namespace CloudFine.ThrowLab
             _ui.clearButton.onClick.AddListener(Cleanup);
             _ui.showHideButton.onClick.AddListener(ToggleVisible);
 
-            foreach(Graphic text in _ui.GetComponentsInChildren<Graphic>())
+            foreach (Graphic text in _ui.GetComponentsInChildren<Graphic>())
             {
                 if (text.GetComponent<UIColorMeTag>() != null)
                 {
@@ -144,20 +170,27 @@ namespace CloudFine.ThrowLab
                 }
             }
         }
-
-
         public void OnDetach()
         {
+            if (_rigidbody == null)
+            {
+                Debug.LogWarning("Rigidbody is null during OnDetach.");
+                return;
+            }
+
             _releaseVelocity = _rigidbody.velocity;
             _origin = _rigidbody.position;
-            if (_trajectoryLine)
+
+            if (_trajectoryLine != null)
             {
                 _trajectoryLine.useWorldSpace = true;
             }
+
             _positions.Clear();
             _positions.Add(_rigidbody.position);
             _tracking = true;
-            if (_ui)
+
+            if (_ui != null)
             {
                 _ui.gameObject.SetActive(true);
                 _ui.SetSpeed(_releaseVelocity.magnitude);
@@ -172,6 +205,7 @@ namespace CloudFine.ThrowLab
 
             ShowHideOutline(true);
         }
+
 
         public void EndTracking()
         {
@@ -204,6 +238,7 @@ namespace CloudFine.ThrowLab
                     visSamples = _handle.GetSampleWeights(out visWeights);
                     VisualizeVelocitySmoothingData(visSamples, visWeights);
                 }
+
                 RefreshParticles();
             }
         }
@@ -230,6 +265,7 @@ namespace CloudFine.ThrowLab
             {
                 particles.AddRange(_smoothingSampleSet); //add all particles that were present on release
             }
+
             particles.AddRange(_postReleaseSampleSet);
 
             if (_sampleParticleSystem)
@@ -266,11 +302,11 @@ namespace CloudFine.ThrowLab
             ParticleSystem.Particle[] particles = new ParticleSystem.Particle[samples.Count];
             Vector3 look = Vector3.zero;
 
-            
-            for(int i=0; i<particles.Length; i++)
+
+            for (int i = 0; i < particles.Length; i++)
             {
                 particles[i].position = samples[i].position;
-                
+
                 if (samples[i].velocity.magnitude < 0.1f)
                 {
                     particles[i].startSize3D = Vector3.zero;
@@ -286,6 +322,7 @@ namespace CloudFine.ThrowLab
                 color.a = .3f;
                 particles[i].startColor = color;
             }
+
             _smoothingSampleSet = particles;
         }
 
@@ -295,7 +332,6 @@ namespace CloudFine.ThrowLab
             _show = !_show;
             ShowHide(_show);
         }
-
 
 
         public void ShowHide(bool show)
@@ -316,54 +352,120 @@ namespace CloudFine.ThrowLab
             {
                 _collisionMarker.SetActive(show);
             }
-
         }
 
 
         void OnHandleDestroyed(ThrowHandle handle)
         {
-            Cleanup();
+            // Cleanup();
         }
 
         public void Cleanup()
         {
-            if (_handle)
+            return;
+            isBeingDestroyed = true;
+            // Destroy the collision marker
+            if (_collisionMarker != null)
             {
-                GameObject.Destroy(_handle.gameObject);
-            }
-            if (_ui)
-            {
-                GameObject.Destroy(_ui.gameObject);
+                DestroyImmediate(_collisionMarker);
+                _collisionMarker = null;
             }
 
-            if (this)
+            // Destroy outline renderers
+            if (_outlineRenderers != null)
             {
-                GameObject.Destroy(this.gameObject);
+                foreach (var renderer in _outlineRenderers)
+                {
+                    if (renderer != null)
+                    {
+                        DestroyImmediate(renderer.gameObject);
+                    }
+                }
+                _outlineRenderers.Clear();
             }
+
+            // Clear particle system references
+            if (_sampleParticleSystem != null)
+            {
+                _sampleParticleSystem.Clear();
+                _sampleParticleSystem.Stop();
+                _sampleParticleSystem = null;
+            }
+
+            _positions.Clear();
+            _postReleaseSampleSet.Clear();
+            _smoothingSampleSet = null;
+
+            if (_handle != null)
+            {
+                _handle.OnDestroyHandle -= OnHandleDestroyed;
+                _handle.onDetachFromHand -= OnDetach;
+                _handle.onPickUp -= OnAttach;
+                _handle.OnSampleRecorded -= VisualizeSmoothingSample;
+                _handle.onFinalTrajectory -= RecordFinalTrajectory;
+                _handle.onFrictionApplied -= VisualizeEstimatedVelocity;
+                _handle = null;
+            }
+
+            // Remove collision listener
+            if (_rigidbody != null)
+            {
+                var listener = _rigidbody.GetComponent<CollisionListener>();
+                if (listener != null)
+                {
+                    listener.CollisionEnter -= OnCollisionEnter;
+                    listener.CollisionExit -= OnCollisionEnter;
+                    DestroyImmediate(listener);
+                }
+                _rigidbody = null;
+            }
+
+            // Destroy the UI
+            if (_ui != null)
+            {
+                Destroy(_ui.gameObject);
+                _ui = null;
+            }
+
+            // Destroy the trajectory line
+            if (_trajectoryLine != null)
+            {
+                DestroyImmediate(_trajectoryLine.gameObject);
+                _trajectoryLine = null;
+            }
+
+            // Nullify remaining references
+            _particleRenderer = null;
+
+            // Log the cleanup completion
+            Debug.Log("Cleanup completed for: " + gameObject.name);
         }
 
         private void OnCollisionEnter(Collision collision)
         {
             if (_tracking)
             {
-                if (Time.time-_handle._timeOfRelease>.1f)
+                if (Time.time - _handle._timeOfRelease > .1f)
                 {
                     if (collision.contacts.Length > 0)
                     {
                         ContactPoint point = collision.contacts[0];
                         PlaceCollisionMarker(point.point, point.normal);
                     }
+
                     EndTracking();
                 }
             }
         }
 
         private GameObject _collisionMarker;
+
         private void PlaceCollisionMarker(Vector3 position, Vector3 normal)
         {
             if (_collisionMarker == null)
             {
-                _collisionMarker = GameObject.Instantiate(_collisionMarkerPrefab, position, Quaternion.LookRotation(normal), this.transform);
+                _collisionMarker = GameObject.Instantiate(_collisionMarkerPrefab, position,
+                    Quaternion.LookRotation(normal), this.transform);
                 MeshRenderer render = _collisionMarker.GetComponentInChildren<MeshRenderer>();
                 if (render)
                 {
@@ -374,20 +476,18 @@ namespace CloudFine.ThrowLab
                 }
             }
 
+
             _collisionMarker.transform.position = position;
             _collisionMarker.transform.rotation = Quaternion.LookRotation(normal);
             _collisionMarker.SetActive(_show);
-
-
-
-
         }
 
         private List<MeshRenderer> _outlineRenderers = new List<MeshRenderer>();
+
         private void CreateOutline(GameObject original)
         {
             _outlineRenderers = new List<MeshRenderer>();
-            foreach(MeshFilter renderer in original.GetComponentsInChildren<MeshFilter>())
+            foreach (MeshFilter renderer in original.GetComponentsInChildren<MeshFilter>())
             {
                 GameObject outlineObj = new GameObject("_Outline");
                 outlineObj.transform.SetParent(renderer.transform);
@@ -402,14 +502,12 @@ namespace CloudFine.ThrowLab
                 outline.material.color = _color;
                 outline.enabled = false;
                 _outlineRenderers.Add(outline);
-
             }
-
         }
 
         private void ShowHideOutline(bool show)
         {
-            foreach(MeshRenderer renderer in _outlineRenderers)
+            foreach (MeshRenderer renderer in _outlineRenderers)
             {
                 renderer.enabled = show;
             }

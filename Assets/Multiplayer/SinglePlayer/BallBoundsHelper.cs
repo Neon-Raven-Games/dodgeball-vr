@@ -1,4 +1,4 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -12,16 +12,33 @@ public class BallBoundsHelper : MonoBehaviour
     
     public static Dictionary<GameObject, bool> BallInPlay = new();
     [SerializeField] private DodgeballPlayArea dodgeballPlayArea;
+    public int ballCount;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start() => SetPlayBalls();
+
+    public void SetPlayBalls()
     {
+        dodgeballPlayArea.Initialize();
+        BallInPlay.Clear();
         foreach (var ball in dodgeballPlayArea.dodgeBalls)
+        {
+            ball.transform.position = ballRespawnPoints[Random.Range(0, ballRespawnPoints.Length)].transform.position;
             BallInPlay.Add(ball, true);
-        
+            ball.SetActive(true);
+        }
+        ballCount = dodgeballPlayArea.dodgeballCount;
+
         _ballLayer = LayerMask.NameToLayer("Ball");
     }
 
+    // todo, this is the ui button callback
+    public void SetNewNumberBalls(int dodgeballs)
+    {
+        dodgeballPlayArea.dodgeballCount = dodgeballs;
+        SetPlayBalls();
+    }
+    
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.layer != _ballLayer) return;

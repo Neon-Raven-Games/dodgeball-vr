@@ -9,21 +9,34 @@ public class PlayerMenuController : MonoBehaviour
     [SerializeField] private float animationDuration = 1f; // Duration of the animation
     [SerializeField] private GameObject pedestal;
     [SerializeField] private float heightOffset = 1.5f;
-
+    [SerializeField] private float menuYRotationOffset = 60f;
+    
     private void OnEnable()
     {
         if (!player) player = FindFirstObjectByType<CharacterController>().gameObject;
-        transform.rotation = player.transform.rotation;
+        transform.rotation = Quaternion.Euler(0, Camera.main.transform.rotation.eulerAngles.y + menuYRotationOffset, 0);
         ShowMenu();
     }
 
     private void ShowMenu()
     {
-        // Calculate the target position in front of the player
-        Vector3 targetPosition = player.transform.position + player.transform.forward * hologramDistance;
-        targetPosition.y = player.transform.position.y + heightOffset; // Align with player's height if necessary
+        Vector3 cameraPosition = Camera.main.transform.position;
+        Vector3 cameraForward = Camera.main.transform.forward;
+        
+        Quaternion rotationOffset = Quaternion.Euler(0, menuYRotationOffset, 0);
+        Vector3 rotatedForward = rotationOffset * cameraForward;
 
-        // Set the menu's initial state (scaled down and possibly transparent)
+        // can we raycast the ground layer, and offset the target by it's height, snapping it to the floor??
+        Vector3 targetPosition = cameraPosition + new Vector3(rotatedForward.x, 0, rotatedForward.z).normalized * hologramDistance;
+        
+        if (Physics.Raycast(targetPosition + Vector3.up * 10, Vector3.down, out var hit, Mathf.Infinity, LayerMask.GetMask("Ground")))
+        {
+            targetPosition.y = hit.point.y + heightOffset;
+        }
+        else
+        {
+            targetPosition.y = player.transform.position.y + heightOffset;
+        }
         transform.localScale = Vector3.zero;
         CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
@@ -33,22 +46,21 @@ public class PlayerMenuController : MonoBehaviour
 
         canvasGroup.alpha = 0;
 
-        // Move, scale up, and fade in the menu
+        // will this make the vr headset lag?
         transform.position = targetPosition;
         transform.DOMove(targetPosition, animationDuration).SetEase(Ease.OutBack);
         transform.DOScale(Vector3.one, animationDuration).SetEase(Ease.OutBack);
-        canvasGroup.DOFade(1, animationDuration).onComplete += () =>
-        {
-            var pedestalPos = pedestal.transform.position;
-            pedestalPos.y = player.transform.position.y;
-            pedestal.transform.position = pedestalPos;
-        };
+        canvasGroup.DOFade(1, animationDuration);
     }
 
     public void HideMenu()
     {
         CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
         transform.DOScale(Vector3.zero, animationDuration).SetEase(Ease.InBack);
-        canvasGroup.DOFade(0, animationDuration).OnComplete(() => { gameObject.SetActive(false); });
+        canvasGroup.DOFade(0, animationDuration).OnComplete(() =>
+        {
+            pedestal.SetActive(false);
+            gameObject.SetActive(false);
+        });
     }
 }

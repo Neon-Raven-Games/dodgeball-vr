@@ -213,14 +213,10 @@ namespace CloudFine.ThrowLab.UI
             InitializePhysics(config);
             InitializeOther(config);
 
-
-
-
             SetAssistEnabled(config.assistEnabled, enabled);
             SetFrictionEnabled(config.frictionEnabled, enabled);
             SetSmoothingEnabled(config.smoothingEnabled, enabled);
             SetScalingEnabled(config.scaleEnabled, enabled);
-            // SetChildrenColor(variantPanelRoot, color);
         }
 
 
@@ -271,19 +267,6 @@ namespace CloudFine.ThrowLab.UI
             SetScalingCustomCurve(currentConfig.useScaleRampCustomCurve);
         }
 
-        private void SetPanelEnabled(GameObject panelRoot, GameObject toggle, bool enabled)
-        {
-            foreach (Selectable select in panelRoot.GetComponentsInChildren<Selectable>())
-            {
-                select.interactable = enabled;
-            }
-
-            Color c = enabled ? currentColor : new Color(1, 1, 1, .25f);
-
-            SetChildrenColor(panelRoot, c);
-            SetChildrenColor(toggle, currentColor);
-        }
-
         private void SetChildrenColor(GameObject root, Color c)
         {
             foreach (Graphic select in root.GetComponentsInChildren<Graphic>(includeInactive: true))
@@ -330,7 +313,6 @@ namespace CloudFine.ThrowLab.UI
         }
 
 
-        //SMOOTHING
         public void SetSampleSource(int value)
         {
             if (currentConfig) currentConfig.sampleSourceType = (ThrowConfiguration.VelocitySource) value;

@@ -140,7 +140,7 @@ public static class ConfigurationAPI
     {
         var item = new VotableItem()
         {
-            Category = "ThrowConfig",
+            Category = "ThrowConfig" + DateTime.Now,
             Name = DateTime.Now + Guid,
             Data = ConfigurationManager.GetThrowConfiguration().ToJson(),
             UserStatus = VoteStatus.None,

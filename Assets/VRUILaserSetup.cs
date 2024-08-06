@@ -7,16 +7,16 @@ using UnityEngine.UI;
 public class VRUILaserSetup : MonoBehaviour
 {
     private Transform anchor;
-    [SerializeField] private InputActionAsset actionAsset;
-    [SerializeField] private HandSide handSide;
-    private Camera laserCamera; // Assign the new camera in the inspector
+    public Camera laserCamera; // Assign the new camera in the inspector
+    
     private GameObject lastHitObject;
     private InputAction pointerDown;
     private EventSystem eventSystem;
     private LineRenderer _lineRenderer;
+    
     [SerializeField] private GameObject crosshair;
 
-    private Vector3 hitPoint; // To store the hit point for visualization
+    private Vector3 hitPoint; 
 
     private void Awake()
     {
@@ -26,10 +26,13 @@ public class VRUILaserSetup : MonoBehaviour
         _lineRenderer.startWidth = 0.02f;
         _lineRenderer.SetPosition(0, anchor.transform.position);
         crosshair.SetActive(false);
-        pointerDown = actionAsset.FindAction(
-            handSide == HandSide.RIGHT ? "XRI RightHand Interaction/Activate" : "XRI LeftHand Interaction/Activate",
-            true);
-
+        var eSystem = FindAnyObjectByType<EventSystem>();
+        if (eSystem != null)
+        {
+            eventSystem = eSystem;
+            return;
+        }
+        
         var eventSystemObject = new GameObject("EventSystem");
         eventSystem = eventSystemObject.AddComponent<EventSystem>();
     }
@@ -37,43 +40,32 @@ public class VRUILaserSetup : MonoBehaviour
     private bool _click;
     private bool _pointerDown;
 
-    private void OnEnable()
-    {
-        pointerDown.performed += PointerDown;
-        pointerDown.canceled += PointerUp;
-        pointerDown.Enable();
-    }
-
     private void OnDisable()
     {
-        pointerDown.performed -= PointerDown;
-        pointerDown.canceled -= PointerUp;
-        pointerDown.Disable();
         _click = false;
         _pointerDown = false;
         slider = null;
     }
 
-
-    // can we make a editor inspector that calls this for testing outside vr headset??
-    public void PointerDown(InputAction.CallbackContext context)
-    {
-        _click = true;
-        _pointerDown = true;
-    }
-
-    public void PointerUp(InputAction.CallbackContext context)
+    public void OnUITriggerRelease()
     {
         _pointerDown = false;
         ExecuteEvents.ExecuteHierarchy(lastHitObject, new PointerEventData(eventSystem), ExecuteEvents.pointerUpHandler);
         eventSystem.SetSelectedGameObject(null);
         slider = null;
     }
+    
+    public void OnUITrigger()
+    {
+        _click = true;
+        _pointerDown = true;
+    }
 
+    [SerializeField] private float distance = 20;
     private void Update()
     {
         var raycastResults = new List<RaycastResult>();
-        var screenPosition = laserCamera.WorldToScreenPoint(anchor.position + anchor.forward * 15);
+        var screenPosition = laserCamera.WorldToScreenPoint(anchor.position + anchor.forward * distance);
 
         var pointerEventData = new PointerEventData(eventSystem) {position = screenPosition};
         eventSystem.RaycastAll(pointerEventData, raycastResults);
@@ -134,15 +126,15 @@ public class VRUILaserSetup : MonoBehaviour
                 lastHitObject = null;
             }
 
-            _lineRenderer.SetPosition(1, anchor.transform.position + anchor.forward * 15);
+            _lineRenderer.SetPosition(1, anchor.transform.position + anchor.forward * distance);
             crosshair.SetActive(false);
+            
         }
     }
 
     private Slider slider;
     private RectTransform sliderRectTransform;
 
-   
 
     private void OnDrawGizmos()
     {
@@ -151,4 +143,5 @@ public class VRUILaserSetup : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(hitPoint, 0.05f);
     }
+
 }

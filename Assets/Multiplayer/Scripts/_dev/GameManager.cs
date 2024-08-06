@@ -58,4 +58,12 @@ public class GameManager : MonoBehaviour
         teamTwoScore = 0;
         UpdateScore();
     }
+
+    public static void RemoveBallForGame(GameObject ball)
+    {
+        var index = _matchBalls.IndexOf(ball);
+        if (index == -1) return;
+        _matchBalls.RemoveAt(index);
+        _matchBallsInitialPos.RemoveAt(index);
+    }
 }

@@ -3,6 +3,8 @@ using UnityEditor;
 #endif
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class DodgeballPlayArea : MonoBehaviour
@@ -18,13 +20,41 @@ public class DodgeballPlayArea : MonoBehaviour
     public GameObject[] team1Actors;
     public GameObject[] team2Actors;
 
-    public GameObject[] dodgeBalls;
+    [SerializeField] public int dodgeballCount = 4;
+    public List<GameObject> dodgeBalls = new();
 
-    public void Start()
+
+    public void Initialize()
     {
-        foreach (var ball in dodgeBalls)
-            GameManager.InitBallForGame(ball);
+        foreach (var actor in team1Actors)
+        {
+            foreach (var ball in dodgeBalls)
+            {
+                var ai = actor.GetComponent<DodgeballAI>();
+                if (ai) ai.DeRegisterBall(ball.GetComponent<DodgeBall>());
+            }
+        }
+
+        foreach (var actor in team2Actors)
+        {
+            foreach (var ball in dodgeBalls)
+            {
+                var ai = actor.GetComponent<DodgeballAI>();
+                if (ai) ai.DeRegisterBall(ball.GetComponent<DodgeBall>());
+                ball.SetActive(false);
+            }
+        }
+
+        dodgeBalls.Clear();
+        for (var i = 0; i < dodgeballCount; i++)
+        {
+            var ball = BallPool.SetBall(Vector3.zero);
+            dodgeBalls.Add(ball);
+        }
+
+
     }
+
 
     private void OnDrawGizmos()
     {

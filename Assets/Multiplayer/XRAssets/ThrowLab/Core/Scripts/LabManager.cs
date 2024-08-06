@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace CloudFine.ThrowLab
@@ -41,7 +42,7 @@ namespace CloudFine.ThrowLab
 
         private int _throwableIndex = -1;
         private Device _device = Device.UNSPECIFIED;
-        private List<ThrowTracker> _trackers = new List<ThrowTracker>();
+        private List<ThrowTracker> _trackers = new();
 
         private Dictionary<ThrowConfiguration, ThrowConfiguration[]> _tempConfigVariants =
             new Dictionary<ThrowConfiguration, ThrowConfiguration[]>();
@@ -78,82 +79,71 @@ namespace CloudFine.ThrowLab
         {
             if (_deviceDetector) _deviceDetector.OnDeviceDetected += SetDevice;
         }
-        
-        public void SetTrackerLine(bool enable) =>
-            _trackerPrefab.ShowHideLine(enable);
-        
-        public void SetTrackerSamples(bool enable) =>
-            _trackerPrefab.ShowHideSamples(enable);
 
-        public ThrowHandle dodgeballPrefab;
-
-        public void RemoveBall()
+        private bool trackerLine;
+        public void SetTrackerLine(bool enable)
         {
-            if (_throwablePrefab) _throwablePrefab.gameObject.SetActive(false);
+            trackerLine = enable;
+        }
+
+        private bool trackerSamples;
+        public void SetTrackerSamples(bool enable)
+        {
+            trackerSamples = enable;
         }
 
         private bool _initialized;
+        private ThrowTracker tracker;
         public void Initialize()
         {
-            if (!_initialized) _throwablePrefab = Instantiate(dodgeballPrefab);
-            _throwablePrefab.gameObject.SetActive(false);
-            _throwablePrefab.transform.position = _spawnPoint.position;
-
-            if(!_initialized) _trackerPrefab = Instantiate(_trackerPrefab);
-            _initialized = true;
-            
-            _trackerPrefab.SetColor(colorSet[1]);
-            _trackerPrefab.TrackThrowable(_throwablePrefab);
-            _trackerPrefab.SetLineAppearance(_lineTextures[0], _lineColors[1]);
-            _trackerPrefab.ShowHideLine(false);
-            _trackerPrefab.ShowHideSamples(false);
-            
-            _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[0]);
-            _throwablePrefab.SetConfigForDevice(Device.OCULUS_TOUCH, throwConfigurations[0]);
-            
-            UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
+            SceneManager.sceneUnloaded += SceneUnloaded;
+            if (currentConfig) UpdateUI(currentConfig);
         }
 
-        public void ResetBall()
+        private void SceneUnloaded(Scene arg0)
         {
-            if (!_throwablePrefab)
+            foreach (var track in _trackers)
             {
-                _initialized = false;
-                Initialize();
+                track.EndTracking();
+                track.ShowHideLine(false);
+                track.ShowHideSamples(false);
+                track.TrackThrowable(null);
             }
-            UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
-            _throwablePrefab.gameObject.SetActive(false);
-            _throwablePrefab.transform.position = _spawnPoint.position;
-            _throwablePrefab.gameObject.SetActive(true);
-            _throwablePrefab.GetComponent<Rigidbody>().velocity = Vector3.zero;
         }
- 
+
+        private int trackerIndex;
+        public void ResetBall(ThrowHandle handle)
+        {
+            if (_trackers.Count == 0)
+            {
+                for (var i = 0; i < 3; i++)
+                {
+                    _trackers.Add(Instantiate(_trackerPrefab));
+                    DontDestroyOnLoad(_trackers[i]);
+                }
+            }
+            
+            tracker = _trackers[trackerIndex++];
+            if (trackerIndex > 2) trackerIndex = 0;
+            tracker.SetColor(colorSet[1]);
+            tracker.TrackThrowable(handle);
+            tracker.SetLineAppearance(_lineTextures[0], _lineColors[1]);
+            tracker.ShowHideLine(trackerLine);
+            tracker.ShowHideSamples(trackerSamples);
+        }
+
+        
+        private ThrowConfiguration currentConfig;
         public void ChangeConfig(int index)
         {
-            _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[index]);
-            UpdateUI(_throwablePrefab.GetConfigForDevice(Device.UNSPECIFIED));
+            currentConfig = throwConfigurations[index];
+            UpdateUI(currentConfig);  
         }
-
-        private void Update()
-        {
-            // if (_currentSpawn)
-            // {
-            //     if (Vector3.Distance(_currentSpawn.transform.position, _spawnPoint.position) > .3f)
-            //     {
-            //         SpawnTrackedThrowable();
-            //     }
-            // }
-            // else
-            // {
-            //     SpawnTrackedThrowable();
-            // }
-        }
-
 
         private void SetDevice(Device device)
         {
             _device = device;
-            SelectThrowable(_throwableIndex);
+            // SelectThrowable(_throwableIndex);
         }
 
         public void SpawnTrackedThrowable()
@@ -321,14 +311,11 @@ namespace CloudFine.ThrowLab
 
         private void SelectThrowable(int i)
         {
-            if (i < 0 || i >= _throwablePrefabs.Count) return;
-            _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[i]);
-            _throwablePrefab.gameObject.SetActive(false);
-            _throwablePrefab.transform.position = _spawnPoint.position;
-            _throwablePrefab.gameObject.SetActive(true);
-            if (_trackerPrefab)
-            {
-            }
+            // if (i < 0 || i >= _throwablePrefabs.Count) return;
+            // _throwablePrefab.SetConfigForDevice(Device.UNSPECIFIED, throwConfigurations[i]);
+            // _throwablePrefab.gameObject.SetActive(false);
+            // _throwablePrefab.transform.position = _spawnPoint.position;
+            // _throwablePrefab.gameObject.SetActive(true);
 
             return;
             _throwableIndex = i;

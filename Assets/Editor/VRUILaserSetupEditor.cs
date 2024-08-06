@@ -8,16 +8,16 @@ public class VRUILaserSetupEditor : Editor
     {
         DrawDefaultInspector();
 
-        VRUILaserSetup script = (VRUILaserSetup)target;
+        VRUILaserSetup script = (VRUILaserSetup) target;
 
         if (GUILayout.Button("Simulate Pointer Down"))
         {
-            script.PointerDown(default);
+            script.OnUITrigger();
         }
 
         if (GUILayout.Button("Simulate Pointer Up"))
         {
-            script.PointerUp(default);
+            script.OnUITriggerRelease();
         }
     }
 }

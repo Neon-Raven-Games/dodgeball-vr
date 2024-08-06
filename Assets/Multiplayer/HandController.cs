@@ -1,4 +1,3 @@
-using System;
 using FishNet.Object;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
@@ -25,24 +24,13 @@ namespace Hands
         // had to serialize it because the component for colliders needed to move, which is not parented
         [SerializeField] private DevController controller;
 
-        private void OnDestroy()
-        {
-            _gripAction.performed -= SetGrab;
-            _gripAction.canceled -= SetGrabReleased;
-            _gripAction = null;
-        }
 
         public bool networked;
 
-        private void OnDisable()
-        {
-            _gripAction.performed -= SetGrab;
-            _gripAction.canceled -= SetGrabReleased;
-            SetGrabReleased(default);
-        }
 
         private void Awake()
         {
+            return;
             _animator = GetComponentInChildren<Animator>();
             _ballLayer = LayerMask.NameToLayer("Ball");
 
@@ -74,7 +62,7 @@ namespace Hands
                 _animator.SetInteger(_SState, 1);
 
                 var dodgeBall = _ball.GetComponent<DodgeBall>();
-                dodgeBall.SetOwner(controller.team);
+                // dodgeBall.SetOwner(controller.team);
                 dodgeBall.SetParticleActive(false);
                 var rb = _ball.GetComponent<Rigidbody>();
                 if (!rb.isKinematic) rb.velocity = Vector3.zero;

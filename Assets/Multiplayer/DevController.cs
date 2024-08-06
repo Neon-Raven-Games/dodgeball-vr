@@ -1,20 +1,15 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using Hands;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using UnityEngine.Serialization;
-using UnityEngine.XR.Interaction.Toolkit;
-using Vignette = UnityEngine.Rendering.PostProcessing.Vignette;
 
 // todo, we need to account for the irl space of the player
 public class DevController : Actor
 {
     [SerializeField] private InputActionAsset actionAsset;
-    [SerializeField] private GameObject hmd;
+    [SerializeField] private Transform hmd;
     [SerializeField] private float analogThreshold = 0.2f;
     public CharacterController controller;
     public float speed = 5.0f;
@@ -23,45 +18,81 @@ public class DevController : Actor
     private InputAction _lookAction;
     private Vector2 _moveInput;
     private Vector2 _lookInput;
-    [FormerlySerializedAs("postProcessVolume")] [SerializeField] Volume volume;
+    [SerializeField] Volume volume;
 
     public Vector2 GetMoveInput() => _moveInput;
 
     private void Awake()
     {
         _moveForwardAction = actionAsset.FindAction("XRI LeftHand Locomotion/Move", true);
-        _lookAction = actionAsset.FindAction("XRI RightHand Locomotion/Turn", true);
+        _lookAction = actionAsset.FindAction("XRI RightHand Interaction/Rotate Anchor", true);
 
         _moveForwardAction.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
         _lookAction.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
 
         _moveForwardAction.canceled += _ => _moveInput = Vector2.zero;
         _lookAction.canceled += _ => _lookInput = Vector2.zero;
+        pivot = new GameObject("RotationPivot");
+        pivot.transform.position = hmd.position;
     }
+
+    private HandSide lastHandSideUi = HandSide.RIGHT;
+    [SerializeField] private HandStateController leftHandStateController;
+    [SerializeField] private HandStateController rightHandStateController;
 
     private void OnEnable()
     {
         _moveForwardAction.Enable();
         _lookAction.Enable();
         PopulateTeamObjects();
+
+        leftHandStateController.SetInPlay(true);
+        rightHandStateController.SetInPlay(true);
+        leftHandStateController.uITrigger += SetLastHandSideUi;
+        rightHandStateController.uITrigger += SetLastHandSideUi;
+    }
+
+    private void SetLastHandSideUi(HandSide obj)
+    {
+        if (lastHandSideUi != obj)
+        {
+            if (lastHandSideUi == HandSide.LEFT)
+            {
+                Debug.Log("Set last hand side ui to right");
+                leftHandStateController.ChangeState(HandState.Idle);
+                rightHandStateController.ChangeState(HandState.Laser);
+            }
+            else
+            {
+                Debug.Log("Set last hand side ui to left");
+                rightHandStateController.ChangeState(HandState.Idle);
+                leftHandStateController.ChangeState(HandState.Laser);
+            }
+        }
+
+        lastHandSideUi = obj;
     }
 
     private void OnDisable()
     {
+        leftHandStateController.uITrigger -= SetLastHandSideUi;
+        rightHandStateController.uITrigger -= SetLastHandSideUi;
         _moveForwardAction.Disable();
         _lookAction.Disable();
     }
 
     private void Update()
     {
-        HandleMovement();
         HandleRotation();
-        if (IsOutOfPlay())
-        {
-            HandleOutOfPlay();
-        }
-        // MoveToCamera();
+        HandleMovement();
+        SetHasBall();
+        if (IsOutOfPlay()) HandleOutOfPlay();
     }
+
+    private void SetHasBall() =>
+        hasBall = leftHandStateController.State == HandState.Grabbing
+                  || rightHandStateController.State == HandState.Grabbing;
+
 
     private Coroutine vignetteCoroutine;
     [SerializeField] private float vignetteIntensity = 0.3f;
@@ -69,20 +100,22 @@ public class DevController : Actor
 
     private IEnumerator LerpVignetteIntensity(float startIntensity, float endIntensity)
     {
-        volume.profile.TryGet<UnityEngine.Rendering.Universal.Vignette>(out var vignette);
+        volume.profile.TryGet<Vignette>(out var vignette);
         volume.profile.TryGet(out WhiteBalance whiteBalance);
         if (vignette == null || whiteBalance == null)
         {
-            Debug.LogError($"Vignette or WhiteBalance not found in post process volume.\nVignette:{vignette}, WhiteBalance:{whiteBalance}");
+            Debug.LogError(
+                $"Vignette or WhiteBalance not found in post process volume.\nVignette:{vignette}, WhiteBalance:{whiteBalance}");
             yield break;
         }
-        
+
         var elapsed = 0f;
         while (elapsed < vignetteEntryTime)
         {
             vignette.intensity.value = Mathf.Lerp(endIntensity, startIntensity, elapsed / vignetteEntryTime);
             elapsed += Time.deltaTime;
         }
+
         elapsed = 0f;
         outOfBoundsEndTime = Time.time + outOfBoundsWaitTime;
         while (elapsed < 1)
@@ -93,46 +126,43 @@ public class DevController : Actor
             yield return null;
         }
 
-        vignette.intensity.value = endIntensity;
+        vignette.intensity.value = 0;
     }
 
-    [SerializeField] private List<XRDirectInteractor> handComponentsToDisable;
-    [SerializeField] private List<HandController> handControllers;
     internal override void SetOutOfPlay(bool value)
     {
         base.SetOutOfPlay(value);
+        Debug.Log($"setting out of play, hand state in play: {!value}");
+        leftHandStateController.SetInPlay(!value);
+        rightHandStateController.SetInPlay(!value);
         if (!value)
         {
-            handComponentsToDisable.ForEach(x => x.enabled = true);
-            handControllers.ForEach(x => x.enabled = true);
-            
+            speed += 0.5f;
+
             if (vignetteCoroutine != null) StopCoroutine(vignetteCoroutine);
-            volume.profile.TryGet<UnityEngine.Rendering.Universal.Vignette>(out var vignette);
+            volume.profile.TryGet<Vignette>(out var vignette);
             vignette.intensity.value = 0f;
-            Debug.Log("Setting out of play");
-            // Disable hand controllers here
         }
         else
         {
-            handComponentsToDisable.ForEach(x => x.enabled = false);
-            handControllers.ForEach(x => x.enabled = false);
+            speed -= 0.5f;
             if (vignetteCoroutine != null) StopCoroutine(vignetteCoroutine);
-            vignetteCoroutine = StartCoroutine(LerpVignetteIntensity(vignetteIntensity, 0f));
-            // enable hand controllers here
+            vignetteCoroutine = StartCoroutine(LerpVignetteIntensity(vignetteIntensity, 0.2f));
         }
     }
 
-    private void FixedUpdate()
-    {
-        var gravity = Physics.gravity;
-        controller.Move(gravity * Time.fixedDeltaTime);
-    }
+    private GameObject pivot;
 
-    // todo, validate this working gewd :D
     private void HandleRotation()
     {
-        controller.transform.RotateAround(hmd.transform.position, Vector3.up,
-            _lookInput.x * rotationSpeed * Time.fixedDeltaTime);
+        pivot.transform.position = hmd.position;
+
+        pivot.transform.position = hmd.position;
+        pivot.transform.Rotate(Vector3.up, _lookInput.x * rotationSpeed * Time.fixedDeltaTime);
+        Vector3 offset = controller.transform.position - hmd.position;
+
+        controller.transform.position = pivot.transform.position + pivot.transform.rotation * offset;
+        controller.transform.rotation = Quaternion.Euler(0, pivot.transform.rotation.eulerAngles.y, 0);
     }
 
     private void HandleMovement()
@@ -142,7 +172,9 @@ public class DevController : Actor
         var movement = new Vector3(_moveInput.x, 0, _moveInput.y).normalized;
         movement *= speed * Time.fixedDeltaTime;
         movement = hmd.transform.TransformDirection(movement);
-        movement.y = 0;
+
+        var gravity = Physics.gravity;
+        movement.y = gravity.y * Time.fixedDeltaTime;
         controller.Move(movement);
     }
 }

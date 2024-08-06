@@ -87,7 +87,7 @@ namespace Unity.Template.VR.Multiplayer
             _velocitySensor = new GameObject().transform;
             _velocitySensor.name = "VelocitySensor";
 
-            _velocitySensor.SetParent(this.transform);
+            _velocitySensor.SetParent(transform);
             _velocitySensor.localPosition = Vector3.zero;
             _velocitySensor.localRotation = Quaternion.identity;
 
@@ -280,6 +280,7 @@ namespace Unity.Template.VR.Multiplayer
 
         public void OnAttach(GameObject hand, GameObject collisionRoot)
         {
+            if (!_velocitySensor) Awake();
             _attached = true;
             _applyingInfluence = true;
             HandSide side = HandSide.RIGHT;

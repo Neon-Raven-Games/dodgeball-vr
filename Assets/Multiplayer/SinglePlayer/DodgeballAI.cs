@@ -90,10 +90,21 @@ public class DodgeballAI : Actor
 
     #region initialization
 
+    public void DeRegisterBall(DodgeBall ball)
+    {
+        ball.GetComponent<DodgeBall>().throwTrajectory -= HandleBallTrajectory;
+        ball.GetComponent<DodgeBall>().ballNotLive -= RemoveBallTrajectory;
+        hasBall = false;
+        leftBallIndex.SetBallType(BallType.None);
+        rightBallIndex.SetBallType(BallType.None);
+    }
+
     private void Start()
     {
         targetUtility.ResetTargetSwitchProbability();
     }
+
+    private bool _isGhost;
 
     private void OnEnable()
     {
@@ -162,7 +173,7 @@ public class DodgeballAI : Actor
 
         hasBall = true;
         _possessedBall = ball;
-        ball.SetOwner(team);
+        ball.SetOwner(this);
         ball.gameObject.SetActive(false);
         rightBallIndex.SetBallType(BallType.Dodgeball);
         animator.SetInteger(_SThrowVariation, Random.Range(0, 2));
@@ -188,13 +199,14 @@ public class DodgeballAI : Actor
         Vector3 enemyHeadPos = Vector3.zero;
         if (actor != null)
         {
-            enemyHeadPos = actor.head.position;
+            if (actor.head) enemyHeadPos = actor.head.position;
+            else
+            {
+                enemyHeadPos = CurrentTarget.transform.position;
+                enemyHeadPos.y += 1f;
+            }
         }
-        else if (CurrentTarget.GetComponent<CharacterController>())
-        {
-            enemyHeadPos = CurrentTarget.transform.position;
-            enemyHeadPos.y += 1f;
-        }
+
         var velocity = _throwUtility.CalculateThrow(this, rightBallIndex.BallPosition, enemyHeadPos);
         _possessedBall.transform.position = rightBallIndex.BallPosition + velocity * Time.deltaTime * 2;
 
@@ -249,6 +261,20 @@ public class DodgeballAI : Actor
 
     private bool triggerOutOfPlay;
     private static readonly int _SPlayGhost = Animator.StringToHash("PlayGhost");
+    private static readonly int _SHitVariation = Animator.StringToHash("HitVariation");
+
+    internal override void SetOutOfPlay(bool value)
+    {
+        base.SetOutOfPlay(value);
+        // todo, hits sub state machine - 2
+        animator.SetInteger(_SHitVariation, Random.Range(0, 3));
+        animator.SetTrigger(_SPlayGhost);
+    }
+
+    public void EndKnockout()
+    {
+        triggerOutOfPlay = true;
+    }
 
     private void Update()
     {
@@ -257,12 +283,11 @@ public class DodgeballAI : Actor
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
-            if (!triggerOutOfPlay)
+            if (triggerOutOfPlay)
             {
                 ghostData.particleEffect.SetActive(true);
-                triggerOutOfPlay = true;
+                triggerOutOfPlay = false;
                 ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.ghostMaterial;
-                animator.SetTrigger(_SPlayGhost);
                 ghostData.ghostLegs.SetActive(true);
                 ghostData.ghostHair.SetActive(true);
                 ghostData.humanLegs.SetActive(false);
@@ -272,7 +297,6 @@ public class DodgeballAI : Actor
             if (hasBall)
             {
                 ballPossessionTime = 0;
-
                 _possessedBall.transform.position = rightBallIndex.BallPosition;
                 rightBallIndex.SetBallType(BallType.None);
                 _possessedBall.gameObject.SetActive(true);
@@ -290,10 +314,15 @@ public class DodgeballAI : Actor
 
             animator.SetFloat(_SXAxis, 0);
             animator.SetFloat(_SYAxis, 0);
-            _outOfPlayUtility.Execute(this);
             _pickUpUtility.StopPickup(this);
             targetUtility.ResetLookWeight();
+
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Praying Ghost")) triggerOutOfPlay = true;
+            else return;
+            _outOfPlayUtility.Execute(this);
+
             if (_outOfPlayUtility.Roll(this) == 0) return;
+
             ghostData.ghostLegs.SetActive(false);
             ghostData.ghostHair.SetActive(false);
             ghostData.humanLegs.SetActive(true);

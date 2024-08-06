@@ -22,7 +22,7 @@ public class RobotHelper : Actor
     private int textIndex = 0;
 
     public void StartTyping(string text) => StartCoroutine(TypeWriterEffect(text));
-    
+
     private IEnumerator TypeWriterEffect(string text)
     {
         // lets make the typewriter effect
@@ -42,16 +42,15 @@ public class RobotHelper : Actor
     private static readonly int _SHitNum = Animator.StringToHash("HitNum");
 
     [SerializeField] private List<string> ouchiesText;
+
     internal override void SetOutOfPlay(bool value)
     {
-        base.SetOutOfPlay(value);
-        if (value)
-        {
-            _anim.SetInteger(_SHitNum, Random.Range(0, hitAnimationCount));
-            _anim.SetTrigger(_SHit);
-            outOfPlay = false;
-            if (!_changingText) StartCoroutine(TypeWriterEffect(ouchiesText[Random.Range(0, ouchiesText.Count)]));
-        }
+        Debug.Log("Setting out of play");
+        base.SetOutOfPlay(false);
+        _anim.SetInteger(_SHitNum, Random.Range(0, hitAnimationCount));
+        _anim.SetTrigger(_SHit);
+        outOfPlay = false;
+        if (!_changingText) StartCoroutine(TypeWriterEffect(ouchiesText[Random.Range(0, ouchiesText.Count)]));
     }
 
     private void Update()
@@ -70,7 +69,6 @@ public class RobotHelper : Actor
                 StartCoroutine(TypeWriterEffect(textChanges[textIndex++].text));
             }
         }
-
     }
 }
 

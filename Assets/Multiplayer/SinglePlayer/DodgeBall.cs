@@ -9,7 +9,7 @@ public class DodgeBall : MonoBehaviour
     public SkinnedMeshRenderer skinnedMeshRenderer;
     public float transitionTime = 1.0f; // Time in seconds to complete one half of the animation (0 to 100 or 100 to 0)
     public float pauseTime = 0.5f;
-    private Team _team;
+    internal Team _team;
     public BallState _ballState = BallState.Dead;
     private Rigidbody _rb;
     [SerializeField] private float maxVelocity = 10f; // The velocity at which the volume should be maximum
@@ -17,24 +17,29 @@ public class DodgeBall : MonoBehaviour
 
     [SerializeField] private float maxVolume = 1f;
 
+    private ThrowHandle _throwHandle;
+
     // todo, we can bind to this if we want to in the throw lab for immediate return
     public Action<int> ballNotLive;
     internal int index;
     public Action<int, Vector3, Vector3> throwTrajectory;
+    private int ballLayer;
+    private Actor ownerActor;
 
     public void Start()
     {
-        _rb = GetComponent<Rigidbody>();
         GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
         hitParticle.transform.SetParent(null);
+        ballLayer = LayerMask.NameToLayer("Ball");
     }
 
     private void OnEnable()
     {
+        _rb = GetComponent<Rigidbody>();
         var config = ConfigurationManager.GetThrowConfiguration();
-        var handle = GetComponent<ThrowHandle>();
-        handle.SetConfigForDevice(Device.UNSPECIFIED, config);
-        handle.SetConfigForDevice(Device.OCULUS_TOUCH, config);
+        _throwHandle = GetComponent<ThrowHandle>();
+        _throwHandle.SetConfigForDevice(Device.UNSPECIFIED, config);
+        _throwHandle.SetConfigForDevice(Device.OCULUS_TOUCH, config);
     }
 
     public void HandleThrowTrajectory(Vector3 velocity)
@@ -42,11 +47,12 @@ public class DodgeBall : MonoBehaviour
         throwTrajectory?.Invoke(index, transform.position, velocity);
     }
 
-    public void SetOwner(Team team)
+    public void SetOwner(Actor actor)
     {
+        ownerActor = actor;
         PlaySound(SoundIndex.Pickup);
         _ballState = BallState.Possessed;
-        _team = team;
+        _team = actor.team;
     }
 
     [SerializeField] private GameObject currentParticle;
@@ -138,30 +144,17 @@ public class DodgeBall : MonoBehaviour
 
         if (_ballState == BallState.Live)
         {
-            // todo, pass the velocity parameter on any hit
-            // Debug.Log("Velocity: " + GetComponent<Rigidbody>().velocity.magnitude);
-
-
-            // todo, we need to make a networked script to hold data for the player 
-            // if (collision.gameObject.TryGetComponent(out DevController controller))
-            // {
-            //     if (controller != _owner && controller.team != _team)
-            //     {
-            //         HitSquash(collision);
-            //         SetDeadBall();
-            //         
-            //         param = 4;
-            //         // controller.Die();
-            //         // _owner.Score();
-            //         
-            //         // HitOppositeTeam(controller);
-            //         Debug.Log($"Hit Player! {_owner.team} hit {controller.team}!");
-            //     }
-            // }
-
-            // todo, find a way to gracefully exclude ai colliders from this check
+            var parentActor = collision.gameObject.GetComponentInParent<Actor>();
+            if (!parentActor) collision.gameObject.GetComponent<Actor>();
+            if (parentActor == ownerActor)
+            {
+                Debug.Log($"Found actors equal: {parentActor.gameObject.name}, {ownerActor.gameObject.name}");
+                return;
+            }
+            
             if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
+                Debug.Log($"Team One Friendly Fire, is this our rig? {parentActor.gameObject.name}");
                 SetDeadBall();
                 HitSquash(collision);
                 param = 3;
@@ -175,25 +168,18 @@ public class DodgeBall : MonoBehaviour
             }
             else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
-                Debug.Log("Team two score!");
-                var parentActor = collision.gameObject.GetComponentInParent<Actor>();
-                if (!parentActor) collision.gameObject.GetComponent<Actor>();
-                if (parentActor) parentActor.SetOutOfPlay(true);
                 SetDeadBall();
                 HitSquash(collision);
+                parentActor.SetOutOfPlay(true);
                 GameManager.teamTwoScore++;
                 GameManager.UpdateScore();
-                // Score(Team.TeamTwo);
                 param = 3;
             }
             else if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
-                Debug.Log("Team One score!");
-                var parentActor = collision.gameObject.GetComponentInParent<Actor>();
-                if (!parentActor) collision.gameObject.GetComponent<Actor>();
-                if (parentActor) parentActor.SetOutOfPlay(true);
                 SetDeadBall();
                 HitSquash(collision);
+                parentActor.SetOutOfPlay(true);
                 GameManager.teamOneScore++;
                 GameManager.UpdateScore();
                 param = 3;
@@ -202,6 +188,25 @@ public class DodgeBall : MonoBehaviour
             if (_ballState == BallState.Dead) ballNotLive?.Invoke(param);
         }
 
-        if (param > 0) PlaySound(SoundIndex.Hit);
+        // todo, find out what this is hitting on the player
+        if (param > 0)
+        {
+            PlaySound(SoundIndex.Hit);
+        }
+    }
+
+    public void Throw()
+    {
+        _throwHandle.OnDetach();
+        SetLiveBall();
+        SetParticleActive(true);
+    }
+
+    public void Grab(Actor actor, GameObject hand)
+    {
+        SetOwner(actor);
+        SetParticleActive(false);
+        if (!_rb.isKinematic) _rb.velocity = Vector3.zero;
+        if (hand) _throwHandle.OnAttach(hand, hand);
     }
 }

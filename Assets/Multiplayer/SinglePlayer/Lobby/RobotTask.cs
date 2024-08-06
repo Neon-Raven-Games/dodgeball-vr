@@ -5,7 +5,6 @@ namespace Hands.SinglePlayer.Lobby
     public abstract class RobotTask
     {
         protected RobotTaskManager TaskManager { get; }
-        protected DevController Player => TaskManager.Player;
         protected RoboSequence taskSequence;
 
         protected RobotTask(RobotTaskManager taskManager)

@@ -25,6 +25,10 @@ public class ToggleHelper : MonoBehaviour
     {
         upvoteButton.onClick.AddListener(ShipUpDoot);
         downvoteButton.onClick.AddListener(ShipDownVote);
+        var rect = GetComponent<RectTransform>();
+        var rectPos = rect.localPosition;
+        rectPos.z = 0;
+        rect.localPosition = rectPos;
     }
 
     public void SetText(string text) =>
@@ -77,17 +81,23 @@ public class ToggleHelper : MonoBehaviour
     // can we make an editor button for the up/downvote functions for testing?
     public void ShipUpDoot()
     {
-        if (_userStatus == VoteStatus.UpVote) upvotes--;
         if (_userStatus == VoteStatus.DownVote)
         {
             downvotes--;
+            upvotes++;
+            _userStatus = VoteStatus.UpVote;
+        }
+        else if (_userStatus == VoteStatus.UpVote)
+        {
+            upvotes--;
             _userStatus = VoteStatus.None;
         }
-        else
+        else if (_userStatus == VoteStatus.None)
         {
-            downvotes++;
-            _userStatus = VoteStatus.DownVote;
+            upvotes++;
+            _userStatus = VoteStatus.UpVote;
         }
+        
         _updateCount = true;
         var type = isSound ? "Sound" : "ThrowConfig";
         var id = isSound ? soundIndex.ToString() : "Configurations";
@@ -101,13 +111,18 @@ public class ToggleHelper : MonoBehaviour
 
     public void ShipDownVote()
     {
-        if (_userStatus == VoteStatus.UpVote) upvotes--;
-        if (_userStatus == VoteStatus.DownVote)
+        if (_userStatus == VoteStatus.UpVote)
+        {
+            upvotes--;
+            downvotes++;
+            _userStatus = VoteStatus.DownVote;
+        }
+        else if (_userStatus == VoteStatus.DownVote)
         {
             downvotes--;
             _userStatus = VoteStatus.None;
         }
-        else
+        else if (_userStatus == VoteStatus.None)
         {
             downvotes++;
             _userStatus = VoteStatus.DownVote;
