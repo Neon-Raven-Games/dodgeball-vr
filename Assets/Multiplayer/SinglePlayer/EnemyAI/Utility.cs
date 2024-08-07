@@ -166,6 +166,11 @@ namespace Hands.SinglePlayer.EnemyAI
         public float testingThrowForce;
         public float aimRandomnessFactor;
         public float upwardBias = 0.5f;
+        public float difficultyThrowForceMultiplier = 1;
+        public float maxThrowDistance = 40;
+        public float throwForceRandomness;
+        public float minThrowForce;
+        public float maxThrowForce = 40;
     }
 
     [Serializable]

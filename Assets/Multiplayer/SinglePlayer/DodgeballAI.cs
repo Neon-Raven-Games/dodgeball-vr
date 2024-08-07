@@ -265,8 +265,9 @@ public class DodgeballAI : Actor
 
     internal override void SetOutOfPlay(bool value)
     {
-        if (outOfPlay) return;
+        if (outOfPlay == value) return;
         base.SetOutOfPlay(value);
+        if (hasBall) _possessedBall._ballState = BallState.Dead;
         // todo, hits sub state machine - 2
         animator.SetInteger(_SHitVariation, Random.Range(0, 3));
         animator.SetTrigger(_SPlayGhost);

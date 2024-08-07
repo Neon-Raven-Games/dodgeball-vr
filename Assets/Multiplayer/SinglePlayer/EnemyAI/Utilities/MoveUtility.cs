@@ -8,7 +8,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private float changeTargetCooldown;
         private float lastTargetChangeTime;
         private Vector3 noiseOffset;
-        private float backoffDuration = 1f;
+        private float backoffDuration = .8f;
         private float backoffStartTime;
 
         public MoveUtility(MoveUtilityArgs args) : base(args)
@@ -25,6 +25,13 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public bool BackOff(DodgeballAI ai)
         {
+            // Check if the AI is already at the edge of its play area
+            if (IsAtEdgeOfPlayArea(ai))
+            {
+                backoffStartTime = 0; // Reset backoff start time
+                return false; // Exit backoff state
+            }
+
             if (backoffStartTime == 0) backoffStartTime = Time.time;
             var direction = (ai.transform.position - ai.opposingTeam.playArea.transform.position).normalized;
             var backoffPosition = ai.transform.position + direction * 5f;
@@ -36,6 +43,24 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             backoffStartTime = 0;
             return false;
         }
+
+        private bool IsAtEdgeOfPlayArea(DodgeballAI ai)
+        {
+            var playAreaBounds = new Bounds(ai.friendlyTeam.playArea.position,
+                new Vector3(ai.friendlyTeam.playArea.localScale.x, 1, ai.friendlyTeam.playArea.localScale.z));
+
+            var position = ai.transform.position;
+            position.y = playAreaBounds.center.y; 
+
+            var threshold = 0.5f;
+            var isAtEdgeX = Mathf.Abs(position.x - playAreaBounds.min.x) < threshold ||
+                            Mathf.Abs(position.x - playAreaBounds.max.x) < threshold;
+            var isAtEdgeZ = Mathf.Abs(position.z - playAreaBounds.min.z) < threshold ||
+                            Mathf.Abs(position.z - playAreaBounds.max.z) < threshold;
+
+            return isAtEdgeX || isAtEdgeZ;
+        }
+
 
         private float _pickupCheckStep = 1f;
         private float _pickupCheckTime;
@@ -85,6 +110,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 return false;
             }
 
+            ai.animator.SetFloat(_SYAxis, 0);
+            ai.animator.SetFloat(_SXAxis, 0);
             // implement better possession moving logic in possession utility
             FlockMove(ai);
 
@@ -111,7 +138,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             if (Time.time >= _nextMoveTime)
             {
                 ScheduleNextMove();
-                return 5f; // High priority when it's time to move
+                return 1f; // High priority when it's time to move
             }
 
             return 0.1f;
@@ -173,6 +200,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                         Vector3.one * 0.5f;
             currentTargetPosition += noise * args.randomnessFactor;
             currentTargetPosition = ClampPositionToPlayArea(currentTargetPosition, ai.playArea, ai.team);
+
+            // Smoothly move towards the target position with a slight slowdown as the AI gets closer
             MoveTowards(ai, currentTargetPosition);
         }
 
@@ -180,14 +209,28 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             targetPosition = ClampPositionToPlayArea(targetPosition, ai.playArea, ai.team);
             targetPosition.y = ai.transform.position.y;
-            // ai.animator.SetFloat("yAxis", tar);
+
+            // Calculate the distance to the target
+            float distanceToTarget = Vector3.Distance(ai.transform.position, targetPosition);
+
+            // Predictive stopping logic
+            float stopDistance = 0.4f; // You can adjust this value as needed
+            float speed = args.moveSpeed;
+
+            // Smoothly reduce speed as AI approaches the target
+            if (distanceToTarget < stopDistance)
+            {
+                speed *= Mathf.Clamp01(distanceToTarget / stopDistance);
+            }
+
             var previousPosition = ai.transform.position;
-            ai.transform.position =
-                Vector3.MoveTowards(ai.transform.position, targetPosition, args.moveSpeed * Time.deltaTime);
+            ai.transform.position = Vector3.MoveTowards(ai.transform.position, targetPosition, speed * Time.deltaTime);
+
             var animatorAxis = ai.transform.position - previousPosition;
             ai.animator.SetFloat(_SYAxis, animatorAxis.z * 10);
             ai.animator.SetFloat(_SXAxis, animatorAxis.x * 10);
         }
+
 
         private static Vector3 ClampPositionToPlayArea(Vector3 position, DodgeballPlayArea playArea, Team team)
         {

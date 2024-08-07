@@ -48,7 +48,6 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             if (!ai.CurrentTarget.GetComponent<Actor>())
             {
-                Debug.Log($"Current target does not have an actor component{ai.CurrentTarget.name}");
                 return false;
             }
             if (!ai.hasBall) return false;
@@ -67,29 +66,37 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         
         public Vector3 CalculateThrow(DodgeballAI dodgeballAI, Vector3 source, Vector3 target)
         {
-            // is there a more robust way to calculate randomness to throw trajectory?
-            // perhaps weighted off of our difficulty factor, and a small chance to flop the throw
-            // we can also add a chance to generate more interesting trajectories/predict the target actor's movement
-            // at a high roll. We can store a vector on the ai for their last move direction and use that to try to predict?
             var direction = target - source;
+            // can we dynamically adjust the y throw trajectory based on the difficulty score?
+            // hard difficulty throws too low at even high difficulty scores
             direction.y += args.upwardBias;
             direction.x += Random.Range(-args.aimRandomnessFactor, args.aimRandomnessFactor);
             direction.y += Random.Range(-args.aimRandomnessFactor, args.aimRandomnessFactor);
             direction.z += Random.Range(-args.aimRandomnessFactor, args.aimRandomnessFactor);
             
-            var throwForce = direction.normalized * CalculateThrowForce(dodgeballAI);
+            var throwForce = direction.normalized * CalculateThrowForce(dodgeballAI, direction.magnitude);
             return throwForce;
         }
 
-        private float CalculateThrowForce(DodgeballAI dodgeballAI)
+        private float CalculateThrowForce(DodgeballAI dodgeballAI, float distance)
         {
-            // this is testing purposes only
-            // can we develop a more robust way to calculate throw force?
-            // perhaps using the difficulty score and some randomness for
-            // a low chance to flop the throw, and a chance to generate
-            // more interesting trajectories
-            return args.testingThrowForce;
+            // Calculate the base throw force
+            float baseForce = args.testingThrowForce;
 
+            // Adjust throw force based on difficulty and distance
+            float difficultyAdjustment = dodgeballAI.difficultyFactor * args.difficultyThrowForceMultiplier;
+            float distanceAdjustment = Mathf.Clamp(distance / args.maxThrowDistance, 0.5f, 1.0f);
+
+            // Introduce randomness for variability
+            float randomness = Random.Range(-args.throwForceRandomness, args.throwForceRandomness);
+
+            // Combine adjustments and add randomness
+            float throwForce = baseForce + difficultyAdjustment + (distanceAdjustment * baseForce) + randomness;
+
+            // Ensure throw force is within acceptable bounds
+            throwForce = Mathf.Clamp(throwForce, args.minThrowForce, args.maxThrowForce);
+
+            return throwForce;
         }
     }
 }

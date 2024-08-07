@@ -1130,21 +1130,21 @@ MonoBehaviour:
   targetUtility:
     priorities:
     - priority: 8
-      score: 0.64000005
+      score: 0.5126627
     - priority: 6
-      score: 0.095353566
+      score: 0.31187892
     - priority: 1
-      score: 0.53820115
+      score: 0.75472647
     - priority: 2
-      score: 0.09231843
+      score: 0.33652526
     - priority: 9
-      score: 0.38498673
+      score: 0.6015119
     - priority: 10
-      score: 0.29538417
+      score: 0.17432728
     - priority: 13
-      score: 1.483345
+      score: 1.1683669
     - priority: 0
-      score: 1.4704111
+      score: 1.1400001
     maxValue: 5
     currentValue: 0
     recative: 1
@@ -4845,9 +4845,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2022361624966614210}
     - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: distanceWeight
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
       propertyPath: priorityHandler
       value: 
       objectReference: {fileID: 8471924228321804517}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: throwUtilityArgs.minThrowForce
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: throwUtilityArgs.throwForceRandomness
+      value: 0.4
+      objectReference: {fileID: 0}
     - target: {fileID: 7265881187435904300, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
       propertyPath: m_Layer
       value: 7
@@ -8600,9 +8612,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2022361624966614210}
     - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: distanceWeight
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
       propertyPath: priorityHandler
       value: 
       objectReference: {fileID: 8471924228321804517}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: throwUtilityArgs.minThrowForce
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: throwUtilityArgs.throwForceRandomness
+      value: 0.4
+      objectReference: {fileID: 0}
     - target: {fileID: 7265881187435904300, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
       propertyPath: m_Layer
       value: 7
@@ -13484,6 +13508,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: distanceWeight
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
       propertyPath: priorityHandler
       value: 
       objectReference: {fileID: 8471924228321804517}
@@ -13497,6 +13525,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
       propertyPath: targetSwitchThreshold
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: throwUtilityArgs.minThrowForce
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7250637352051434652, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}
+      propertyPath: throwUtilityArgs.throwForceRandomness
       value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 7265881187435904300, guid: 2d2369a8099f1824aa515c924aedb242, type: 3}

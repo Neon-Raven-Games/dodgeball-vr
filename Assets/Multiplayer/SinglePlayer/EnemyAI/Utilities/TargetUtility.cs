@@ -22,15 +22,7 @@ namespace Hands.SinglePlayer.EnemyAI
         public BipedIK ik;
     }
 
-// priority types for target utility:
-    // EnemyPossession
-    // LineOfSight
-    // PossessedBall
-    // Enemy
-    // InsidePlayArea
-    // OutsidePlayArea
-    // Targeted
-    // Freeball
+    // Priority types for target utility
     public class TargetUtility : Utility<TargetUtilityArgs>
     {
         public GameObject CurrentTarget { get; private set; }
@@ -75,15 +67,27 @@ namespace Hands.SinglePlayer.EnemyAI
         }
 
         private float _pickupCheckTime;
-        private float _pickupCheckStep = 1f;
+        private float _pickupCheckStep = 0.4f;
 
         public override float Roll(DodgeballAI ai)
         {
             LookAtTarget(CurrentTarget.transform.position);
+
             if (CurrentTarget.activeInHierarchy && CurrentTarget.layer == LayerMask.NameToLayer("Ball"))
             {
-                if (_lastBestTarget && Time.time < _pickupCheckTime) return 1f;
-                if (CurrentTarget.GetComponent<DodgeBall>()._ballState == BallState.Dead) return 1f;
+                var ball = CurrentTarget.GetComponent<DodgeBall>();
+                if (ball)
+                {
+                    if (!IsInPlayArea(CurrentTarget.GetComponent<DodgeBall>().transform.position,
+                            _ai.friendlyTeam.playArea, _ai.team))
+                    {
+                        ai._pickUpUtility.StopPickup(ai);
+                        _lastBestTarget = FindBestTarget();
+                        return CalculateTargetScore(_lastBestTarget);
+                    }
+
+                    if (CurrentTarget.GetComponent<DodgeBall>()._ballState == BallState.Dead) return 1f;
+                }
             }
 
             if (!CurrentTarget.activeInHierarchy)
@@ -91,6 +95,7 @@ namespace Hands.SinglePlayer.EnemyAI
                 ai._pickUpUtility.StopPickup(ai);
                 _lastBestTarget = FindBestTarget();
             }
+
             if (_lastBestTarget && Time.time < _pickupCheckTime) return CalculateTargetScore(_lastBestTarget);
             IncrementPickupStepCheck();
             _lastBestTarget = FindBestTarget();
@@ -115,7 +120,6 @@ namespace Hands.SinglePlayer.EnemyAI
             if (currentState == DodgeballAI.AIState.OutOfPlay) return;
             var timeSinceLastSwitch = Time.time - _lastTargetChangeTime;
 
-            // Use an exponential decay function for target switch probability
             _targetSwitchProbability = _minSwitchProbability + (_maxSwitchProbability - _minSwitchProbability) *
                 (1 - Mathf.Exp(-_switchProbabilityIncreaseRate * timeSinceLastSwitch));
 
@@ -125,7 +129,6 @@ namespace Hands.SinglePlayer.EnemyAI
                 CurrentTarget = _lastBestTarget;
             }
 
-            // Adjust the switching logic to be less frequent
             if (Random.value < _targetSwitchProbability && Time.time >= _lastTargetChangeTime + _minimumSwitchTime)
             {
                 SwitchTarget();
@@ -136,12 +139,6 @@ namespace Hands.SinglePlayer.EnemyAI
                 currentState != DodgeballAI.AIState.Throw &&
                 currentState != DodgeballAI.AIState.BackOff)
                 CheckForNearbyDodgeballs();
-
-            // if (CurrentTarget != null)
-            // {
-            //     // AI be lookin' 0_0
-            //     LookAtTarget(CurrentTarget.transform.position);
-            // }
         }
 
         private void CheckForNearbyDodgeballs()
@@ -162,15 +159,14 @@ namespace Hands.SinglePlayer.EnemyAI
 
         private bool CanNotOverride(float distanceToBall)
         {
-            var overrideProbability = (1 - (distanceToBall / _dodgeballProximityThreshold)) * _difficultyWeight;
-            if (Random.value >= overrideProbability) return true;
-            return false;
+            var overrideProbability = (1 - (distanceToBall / args.dodgeballProximityThreshold)) * _difficultyWeight;
+            return Random.value >= overrideProbability;
         }
 
         private bool BallProximity(GameObject ball, out float distanceToBall)
         {
             distanceToBall = Vector3.Distance(_ai.transform.position, ball.transform.position);
-            return distanceToBall >= _dodgeballProximityThreshold &&
+            return distanceToBall >= args.dodgeballProximityThreshold &&
                    IsInPlayArea(ball.transform.position, _ai.friendlyTeam.playArea, _ai.team);
         }
 
@@ -198,9 +194,9 @@ namespace Hands.SinglePlayer.EnemyAI
                     var enemyActor = enemy.GetComponent<Actor>();
                     if (!enemyActor)
                     {
-                        // todo, this is a hack. We need to fix this in the future
                         enemyActor = enemy.transform.GetChild(0).GetComponent<Actor>();
                     }
+
                     if (enemyActor != null && !enemyActor.IsOutOfPlay())
                     {
                         float score = CalculateTargetScore(enemyActor.gameObject);
@@ -213,26 +209,33 @@ namespace Hands.SinglePlayer.EnemyAI
                 }
             }
 
+            if (_ai.hasBall) return bestTarget;
+            foreach (var ball in _playArea.dodgeBalls)
+            {
+                if (ball.activeInHierarchy && ball.GetComponent<DodgeBall>()._ballState == BallState.Dead &&
+                    IsInPlayArea(ball.transform.position, _ai.friendlyTeam.playArea, _ai.team))
+                {
+                    float score = CalculateTargetScore(ball);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestTarget = ball;
+                    }
+                }
+            }
+
             return bestTarget;
         }
 
-
-        // also todo, we need to have more sticky targetting. All the balls are confusing
-        // our ai
         private float CalculateTargetScore(GameObject target)
         {
             var score = 0f;
 
-            if (!target) return -500f;
-            if (!target.activeInHierarchy) return -500f;
+            if (!target || !target.activeInHierarchy) return -500f;
 
-            // todo, this needs to change pre venue
             var maxDistance = 18f;
-
-            // this distance score is not the best. They keep switching between balls
             var distance = Vector3.Distance(_ai.transform.position, target.transform.position);
             score -= distance / maxDistance;
-
 
             var headPos = _ai.transform.position;
             headPos.y += 1;
@@ -240,51 +243,39 @@ namespace Hands.SinglePlayer.EnemyAI
 
             if (Physics.Raycast(headPos, direction, out var hit))
             {
-                // line of sight score
-                if (hit.collider.gameObject == target) score += GetPriority(PriorityType.LineOfSight); //0.15f;
-                // ball unpossessed score
+                if (hit.collider.gameObject == target) score += GetPriority(PriorityType.LineOfSight);
                 if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Ball"))
                 {
                     var ball = hit.collider.gameObject.GetComponent<DodgeBall>();
-                    if (!_ai.hasBall) score += GetPriority(PriorityType.PossessedBall); // 0.4f;
-                    if (_ai.hasBall) score -= GetPriority(PriorityType.PossessedBall); // 0.8f;
+                    if (!_ai.hasBall) score += GetPriority(PriorityType.PossessedBall);
+                    if (_ai.hasBall) score -= GetPriority(PriorityType.PossessedBall);
                     if (IsInPlayArea(target.transform.position, _ai.friendlyTeam.playArea, _ai.team))
-                        score += GetPriority(PriorityType.InsidePlayArea); // 0.2f
-                    else if (ball._ballState == BallState.Dead)
-                        score += GetPriority(PriorityType.FreeBall); // 0.5f
-                    else if (ball._ballState == BallState.Possessed && ball._team == _ai.team)
-                        score -= GetPriority(PriorityType.Targeted);
-                    else score -= GetPriority(PriorityType.OutsidePlayArea); // 5f
-                    
+                    {
+                        score += GetPriority(PriorityType.InsidePlayArea);
+                        if (ball._ballState == BallState.Dead)
+                            score += GetPriority(PriorityType.FreeBall);
+                        else if (ball._ballState == BallState.Possessed)
+                            score -= GetPriority(PriorityType.Targeted);
+                        else score -= GetPriority(PriorityType.OutsidePlayArea);
+                    }
+                    else score -= GetPriority(PriorityType.OutsidePlayArea);
                 }
             }
 
             if (CurrentTarget != target && CurrentTarget.GetComponent<DodgeBall>() != null &&
                 target.GetComponent<DodgeBall>() != null)
-                score -= GetPriority(PriorityType.Targeted); // 0.5f;
+                score -= GetPriority(PriorityType.Targeted);
 
-            // enemy target score
             if (target.layer == LayerMask.NameToLayer(_enemyTeam.layerName))
             {
-                // higher priority if has possession
-                if (_ai.hasBall) score += GetPriority(PriorityType.PossessedBall); // 1.5f;
-
-                // generally higher in priority
-                score += GetPriority(PriorityType.Enemy); // 0.5f;
+                if (_ai.hasBall) score += GetPriority(PriorityType.PossessedBall);
+                score += GetPriority(PriorityType.Enemy);
                 var enemyAi = hit.collider.GetComponent<Actor>();
-
-                // higher priority if enemy has possession
-                if (enemyAi && enemyAi.hasBall) score += GetPriority(PriorityType.EnemyPossession); // 0.9f;
+                if (enemyAi && enemyAi.hasBall) score += GetPriority(PriorityType.EnemyPossession);
             }
 
-            // randomness and sticky targeting
             score += Random.Range(-0.1f, 0.1f);
-            if (CurrentTarget == target) score += GetPriority(PriorityType.Targeted); // 0.9f;
-            if (target.GetComponent<DevController>() != null)
-            {
-                score += GetPriority(PriorityType.Targeted);
-            }
-
+            if (CurrentTarget == target) score += GetPriority(PriorityType.Targeted);
             return score;
         }
 
@@ -296,14 +287,22 @@ namespace Hands.SinglePlayer.EnemyAI
         private void LookAtTarget(Vector3 targetPosition)
         {
             Vector3 direction = targetPosition - _ai.transform.position;
-            Vector3 flatDirection = direction;
-            flatDirection.y = 0;
+            Vector3 flatDirection = new Vector3(direction.x, 0, direction.z).normalized;
 
+            // Calculate the angle to the target
             float angleToTarget = Vector3.Angle(_ai.transform.forward, flatDirection);
 
-            if (angleToTarget > args.fovAngle / 2) lookWeightTarget = 0.5f; 
-            else lookWeightTarget = 1f;
-            
+            // Determine look weight based on FOV
+            if (angleToTarget > args.fovAngle / 2)
+            {
+                lookWeightTarget = 0.5f; // Lower weight if outside FOV
+            }
+            else
+            {
+                lookWeightTarget = 1f; // Full weight if inside FOV
+            }
+
+            // Smoothly interpolate the head look weight
             _headLookWeight = Mathf.Lerp(_headLookWeight, lookWeightTarget, Time.deltaTime * args.headTurnSpeed);
 
             if (_debug)
@@ -315,14 +314,15 @@ namespace Hands.SinglePlayer.EnemyAI
                 Debug.DrawRay(headPos, debugDirection, debugColor);
             }
 
+            // Set the look target for the IK solver
             var actor = CurrentTarget.GetComponent<Actor>();
             args.ik.solvers.lookAt.target = actor ? actor.head : CurrentTarget.transform;
-
             args.ik.solvers.lookAt.SetLookAtWeight(_headLookWeight);
 
+            // Rotate the body if the head look weight is high enough
             if (_headLookWeight >= 0.5f)
             {
-                Quaternion bodyTargetRotation = Quaternion.LookRotation(flatDirection, Vector3.up);
+                Quaternion bodyTargetRotation = Quaternion.LookRotation(flatDirection);
                 _ai.transform.rotation = Quaternion.Slerp(_ai.transform.rotation, bodyTargetRotation,
                     Time.deltaTime * args.bodyTurnSpeed);
             }

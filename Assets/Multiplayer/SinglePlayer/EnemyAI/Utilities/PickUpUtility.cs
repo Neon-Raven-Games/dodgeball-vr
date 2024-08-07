@@ -11,18 +11,21 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
-            // check if the distance is less than the threshold
-            // if it is, call the AI.PickUpBall(DodgeBall ball) method
-            // return the utility value
+            // Check conditions for picking up the ball
             if (ai.CurrentTarget == null || ai.CurrentTarget.layer != LayerMask.NameToLayer("Ball") ||
                 ai.hasBall || ai.IsOutOfPlay())
                 return 0;
+                
+            if (IsTeammateCloserToBall(ai))
+                return 0;
+
             if (Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position) <
                 args.pickupDistanceThreshold)
             {
                 ai.PickUpBall(ai.CurrentTarget.GetComponent<DodgeBall>());
                 return 1f;
             }
+
             ApproachBallToPickUp(ai.CurrentTarget.GetComponent<DodgeBall>(), ai);
             return CalculatePickUpUtility(ai);
         }
@@ -34,6 +37,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             pickup = false;
             ai.StartCoroutine(LerpBackToIdle(ai));
         }
+        
         private IEnumerator LerpBackToIdle(DodgeballAI ai)
         {
             while (args.ik.solvers.rightHand.GetIKPositionWeight() > 0f)
@@ -42,19 +46,18 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 var pos = ai.transform.position;
                 pos.y = newY;
                 ai.transform.position = pos;
-                
-                // why is this not lerping to idle?
+
                 var spineSolver = args.ik.solvers.spine.GetIKPositionWeight();
                 args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(spineSolver, 0, Time.deltaTime * 3));
-                
+
                 var rightHandSolver = args.ik.solvers.rightHand.GetIKPositionWeight();
                 args.ik.solvers.rightHand.SetIKPositionWeight(Mathf.Lerp(rightHandSolver, 0, Time.deltaTime * 3));
-                
+
                 var spinePosWeight = args.ik.solvers.spine.GetIKPositionWeight();
                 args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(spinePosWeight, 0, Time.deltaTime * 3);
                 yield return null;
             }
-            
+
             args.ik.solvers.spine.SetIKPositionWeight(0);
             args.ik.solvers.rightHand.SetIKPositionWeight(0);
             args.ik.solvers.rightHand.maintainRotationWeight = 0;
@@ -84,35 +87,56 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             if (ai.CurrentTarget == null || ai.CurrentTarget.layer != LayerMask.NameToLayer("Ball") ||
                 ai.hasBall || ai.IsOutOfPlay())
+            {
                 return 0;
+            }
 
             GameObject nearestBall = FindNearestBallInPlayArea(ai.playArea, ai);
-            if (nearestBall == null || !nearestBall.activeInHierarchy) return 0;
+            if (nearestBall == null || !nearestBall.activeInHierarchy)
+            {
+                return 0;
+            }
 
             var ball = nearestBall.GetComponent<DodgeBall>();
 
-            if (ball._ballState != BallState.Dead)
-                return 0f;
             if (!IsInPlayArea(nearestBall.transform.position, ai.friendlyTeam.playArea, ai.team))
+            {
                 return 0f;
+            }
 
             float utility = 0;
-            // Calculate utility based on the distance to the nearest ball
+            if (ball._ballState != BallState.Dead)
+            {
+                // todo, check trajectory for catch should handle this
+                return 0f;
+            }
+            utility += 5f;
+
             var distance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
             utility += (1.0f / distance) * ai.distanceWeight;
 
-            // Add a random component based on the difficulty factor
             utility += Random.value * ai.difficultyFactor;
 
-            // Influence utility if another teammate is also targeting the ball
-            if (IsTeammateTargetingBall(nearestBall, ai.playArea, ai))
-            {
-                utility *= (1.0f -
-                            (ai.difficultyFactor /
-                             2.0f)); // Lower the utility if another teammate is targeting the ball
-            }
-
             return utility;
+        }
+
+        private bool IsTeammateCloserToBall(DodgeballAI ai)
+        {
+            foreach (var teammate in ai.friendlyTeam.actors)
+            {
+                if (teammate == ai.gameObject) continue;
+
+                var teammateAI = teammate.GetComponent<DodgeballAI>();
+                if (teammateAI == null) continue;
+
+                if (teammateAI.CurrentTarget == ai.CurrentTarget &&
+                    Vector3.Distance(teammate.transform.position, ai.CurrentTarget.transform.position) <
+                    Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
