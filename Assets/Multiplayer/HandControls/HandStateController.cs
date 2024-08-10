@@ -61,6 +61,7 @@ public class HandStateController : MonoBehaviour
     {
         inPlay = play;
         if (!inPlay && State == HandState.Grabbing) ChangeState(HandState.Throwing);
+        if (!inPlay) fxPrefab.SetActive(false);
     }
     #region States
 
@@ -171,8 +172,11 @@ public class HandStateController : MonoBehaviour
         _currentHandState.OnGrab();
     }
 
-    private void GripCancelledAction(InputAction.CallbackContext obj) =>
+    private void GripCancelledAction(InputAction.CallbackContext obj)
+    {
+        if (!inPlay) return;
         _currentHandState.OnGrabRelease();
+    }
 
     // make sure the menu state does not go out of sync with the actual menu
     private void MenuPerformAction(InputAction.CallbackContext obj)

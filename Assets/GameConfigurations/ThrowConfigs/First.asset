@@ -55,7 +55,7 @@ MonoBehaviour:
   scaleEnabled: 1
   scaleMultiplier: 2.5
   scaleThreshold: 0.02
-  scaleRampExponent: 5
+  scaleRampExponent: 1
   useScaleRampCustomCurve: 0
   scaleRampCustomCurve:
     serializedVersion: 2
@@ -113,7 +113,7 @@ MonoBehaviour:
   assistTargetMethod: 0
   frictionEnabled: 0
   frictionFalloffSeconds: 0.02
-  frictionFalloffExponent: 2
+  frictionFalloffExponent: 1
   useFrictionFalloffCustomCurve: 0
   frictionFalloffCustomCurve:
     serializedVersion: 2

@@ -136,6 +136,9 @@ namespace Hands.SinglePlayer.EnemyAI
         public float moveIntervalMin = 2f;
         public float moveIntervalMax = 5f;
         public float centerAffinity = 2.5f;
+        public float blendSpeed = 20;
+        public float blendMultiplier = 1;
+        public float predictiveStopDistance = 0.3f;
     }
 
     [Serializable]
@@ -156,6 +159,7 @@ namespace Hands.SinglePlayer.EnemyAI
     {
         public float pickupDistanceThreshold;
         public BipedIK ik;
+        public float lerpBackSpeed = 3f;
     }
 
     [Serializable]

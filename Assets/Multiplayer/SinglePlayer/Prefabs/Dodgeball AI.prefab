@@ -12731,11 +12731,11 @@ MonoBehaviour:
     difficultyWeight: 0.5
     dodgeballProximityThreshold: 5
     headTurnSpeed: 5
-    bodyTurnSpeed: 5
+    bodyTurnSpeed: 3
     fovAngle: 160
     ik: {fileID: 6967572612099817640}
   moveUtilityArgs:
-    moveSpeed: 1.85
+    moveSpeed: 2
     randomnessFactor: 0.06
     separationDistance: 10.95
     alignmentWeight: -0.39
@@ -12744,6 +12744,9 @@ MonoBehaviour:
     moveIntervalMin: 2
     moveIntervalMax: 5
     centerAffinity: 2.1
+    blendSpeed: 2
+    blendMultiplier: 0.5
+    predictiveStopDistance: 0.3
   catchUtilityArgs:
     FOVThreshold: 0.5
     catchRegisterDistance: 5
@@ -12757,6 +12760,11 @@ MonoBehaviour:
     testingThrowForce: 18
     aimRandomnessFactor: 0.01
     upwardBias: 0
+    difficultyThrowForceMultiplier: 1
+    maxThrowDistance: 40
+    throwForceRandomness: 0
+    minThrowForce: 0
+    maxThrowForce: 40
   outOfBoundsUtilityArgs:
     outOfBoundsWaitTime: 3
   priorityHandler: {fileID: 0}

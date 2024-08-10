@@ -63,6 +63,7 @@ namespace Hands.SinglePlayer.EnemyAI
 
         public override float Execute(DodgeballAI ai)
         {
+            LookAtTarget(CurrentTarget.transform.position);
             return 1f;
         }
 
@@ -295,7 +296,7 @@ namespace Hands.SinglePlayer.EnemyAI
             // Determine look weight based on FOV
             if (angleToTarget > args.fovAngle / 2)
             {
-                lookWeightTarget = 0.5f; // Lower weight if outside FOV
+                lookWeightTarget = 0.85f; // Lower weight if outside FOV
             }
             else
             {
@@ -325,6 +326,12 @@ namespace Hands.SinglePlayer.EnemyAI
                 Quaternion bodyTargetRotation = Quaternion.LookRotation(flatDirection);
                 _ai.transform.rotation = Quaternion.Slerp(_ai.transform.rotation, bodyTargetRotation,
                     Time.deltaTime * args.bodyTurnSpeed);
+            }
+            else
+            {
+                var headTargetRotation = Quaternion.LookRotation(flatDirection);
+                _ai.transform.rotation = Quaternion.Slerp(_ai.transform.rotation, headTargetRotation,
+                    Time.deltaTime * args.bodyTurnSpeed / 2);
             }
         }
 

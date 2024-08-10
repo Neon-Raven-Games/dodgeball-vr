@@ -19,6 +19,8 @@ public class DevController : Actor
     private Vector2 _moveInput;
     private Vector2 _lookInput;
     [SerializeField] Volume volume;
+    [SerializeField] private AudioSource whistleSound;
+    [SerializeField] private GameObject outOfBoundsArea;
 
     public Vector2 GetMoveInput() => _moveInput;
 
@@ -132,7 +134,8 @@ public class DevController : Actor
     internal override void SetOutOfPlay(bool value)
     {
         base.SetOutOfPlay(value);
-        Debug.Log($"setting out of play, hand state in play: {!value}");
+        outOfBoundsArea.SetActive(value);
+        if (!value) whistleSound.Play();
         leftHandStateController.SetInPlay(!value);
         rightHandStateController.SetInPlay(!value);
         if (!value)

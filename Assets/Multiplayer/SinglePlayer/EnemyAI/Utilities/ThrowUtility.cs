@@ -17,6 +17,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         internal float CalculateThrowUtility(DodgeballAI ai)
         {
+            ai.targetUtility.Roll(ai);
             if (!ai.hasBall) return 0;
 
             float utility = 0;

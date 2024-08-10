@@ -140,7 +140,7 @@ public class DodgeballAI : Actor
         _moveUtility = new MoveUtility(moveUtilityArgs);
         _dodgeUtility = new DodgeUtility(dodgeUtilityArgs);
         _catchUtility = new CatchUtility(catchUtilityArgs);
-        _pickUpUtility = new PickUpUtility(pickUpUtilityArgs);
+        _pickUpUtility = new PickUpUtility(pickUpUtilityArgs, this);
         _throwUtility = new ThrowUtility(throwUtilityArgs);
         _outOfPlayUtility = new OutOfPlayUtility(outOfBoundsUtilityArgs);
     }
@@ -195,6 +195,8 @@ public class DodgeballAI : Actor
         hasBall = false;
 
         animator.ResetTrigger(_SThrow);
+        
+        // todo, we can set the head better, null error message giving us gc alloc in editor
         var actor = CurrentTarget.GetComponent<Actor>();
         Vector3 enemyHeadPos = Vector3.zero;
         if (actor != null)
@@ -275,6 +277,7 @@ public class DodgeballAI : Actor
 
     private void Update()
     {
+        _pickUpUtility.Update();
         if (hasBall) ballPossessionTime += Time.deltaTime;
 
         // Override all other behaviors
@@ -282,7 +285,7 @@ public class DodgeballAI : Actor
         {
             if (triggerOutOfPlay)
             {
-                ghostData.particleEffect.SetActive(true);
+                // ghostData.particleEffect.SetActive(true);
                 triggerOutOfPlay = false;
                 ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.ghostMaterial;
                 ghostData.ghostLegs.SetActive(true);
@@ -331,8 +334,9 @@ public class DodgeballAI : Actor
             currentState = AIState.Idle;
         }
 
-        if (throwAnimationPlaying) return;
+        if (throwAnimationPlaying) targetUtility.Execute(this);
         var targetScore = targetUtility.Roll(this);
+        if (throwAnimationPlaying) return;
         if (targetScore > _lastTargetScore) targetUtility.UpdateTarget(currentState);
         _lastTargetScore = targetScore;
 

@@ -5,8 +5,10 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
     public class PickUpUtility : Utility<PickUpUtilityArgs>
     {
-        public PickUpUtility(PickUpUtilityArgs args) : base(args)
+        private DodgeballAI _ai;
+        public PickUpUtility(PickUpUtilityArgs args, DodgeballAI ai) : base(args)
         {
+            _ai = ai;
         }
 
         public override float Execute(DodgeballAI ai)
@@ -15,9 +17,17 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             if (ai.CurrentTarget == null || ai.CurrentTarget.layer != LayerMask.NameToLayer("Ball") ||
                 ai.hasBall || ai.IsOutOfPlay())
                 return 0;
-                
+
             if (IsTeammateCloserToBall(ai))
-                return 0;
+            {
+                var pickupSuccess = Random.Range(0, 1f);
+                if (pickupSuccess < 0.1f)
+                {
+                    ApproachBallToPickUp(ai.CurrentTarget.GetComponent<DodgeBall>(), ai);
+                    return 0;
+                }
+                
+            }
 
             if (Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position) <
                 args.pickupDistanceThreshold)
@@ -31,11 +41,38 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         }
 
         private bool pickup;
+        private bool isLerpingBackToIdle;
+
+        internal void Update()
+        {
+            if (isLerpingBackToIdle) LerpBackToIdleUpdate(_ai);
+        }
+        private void LerpBackToIdleUpdate(DodgeballAI ai)
+        {
+            var newY = Mathf.Lerp(ai.transform.position.y, 0.11f, Time.deltaTime * args.lerpBackSpeed);
+            var pos = ai.transform.position;
+            pos.y = newY;
+            ai.transform.position = pos;
+
+            args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(args.ik.solvers.spine.GetIKPositionWeight(), 0, Time.deltaTime * args.lerpBackSpeed));
+            args.ik.solvers.rightHand.SetIKPositionWeight(Mathf.Lerp(args.ik.solvers.rightHand.GetIKPositionWeight(), 0, Time.deltaTime * args.lerpBackSpeed));
+            args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(args.ik.solvers.spine.GetIKPositionWeight(), 0, Time.deltaTime * args.lerpBackSpeed);
+    
+          if (args.ik.solvers.rightHand.GetIKPositionWeight() <= 0 || args.ik.solvers.spine.GetIKPositionWeight() <= 0 || args.ik.solvers.rightHand.maintainRotationWeight <= 0)
+            {
+                args.ik.solvers.spine.SetIKPositionWeight(0);
+                args.ik.solvers.rightHand.SetIKPositionWeight(0);
+                args.ik.solvers.rightHand.maintainRotationWeight = 0;
+                isLerpingBackToIdle = false; 
+            }
+        }
         public void StopPickup(DodgeballAI ai)
         {
             if (!pickup && args.ik.solvers.rightHand.GetIKPositionWeight() == 0) return;
             pickup = false;
-            ai.StartCoroutine(LerpBackToIdle(ai));
+            // ai.StartCoroutine(LerpBackToIdle(ai));
+            isLerpingBackToIdle = true;
+            // Debug.Log("Stop Pickup");
         }
         
         private IEnumerator LerpBackToIdle(DodgeballAI ai)

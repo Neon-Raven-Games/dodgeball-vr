@@ -102,16 +102,13 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         internal bool PossessionMove(DodgeballAI ai)
         {
             var targetAI = ai.targetUtility.CurrentTarget.GetComponent<Actor>();
-            if (targetAI == null)
+            if (!targetAI && !ai.CurrentTarget.GetComponentInParent<Actor>())
             {
                 // we need to refresh the target for a better one
                 ai.targetUtility.PossessedBall(ai);
                 PickupMove(ai);
-                return false;
             }
 
-            ai.animator.SetFloat(_SYAxis, 0);
-            ai.animator.SetFloat(_SXAxis, 0);
             // implement better possession moving logic in possession utility
             FlockMove(ai);
 
@@ -205,30 +202,33 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             MoveTowards(ai, currentTargetPosition);
         }
 
+        private Vector2 _animBlendTreeAxis;
         private void MoveTowards(DodgeballAI ai, Vector3 targetPosition)
         {
             targetPosition = ClampPositionToPlayArea(targetPosition, ai.playArea, ai.team);
             targetPosition.y = ai.transform.position.y;
 
-            // Calculate the distance to the target
             float distanceToTarget = Vector3.Distance(ai.transform.position, targetPosition);
-
-            // Predictive stopping logic
-            float stopDistance = 0.4f; // You can adjust this value as needed
+            float stopDistance = args.predictiveStopDistance;
             float speed = args.moveSpeed;
 
-            // Smoothly reduce speed as AI approaches the target
             if (distanceToTarget < stopDistance)
             {
-                speed *= Mathf.Clamp01(distanceToTarget / stopDistance);
+                speed *= Mathf.SmoothStep(0f, 1f, distanceToTarget / stopDistance);
             }
-
+            
             var previousPosition = ai.transform.position;
             ai.transform.position = Vector3.MoveTowards(ai.transform.position, targetPosition, speed * Time.deltaTime);
 
-            var animatorAxis = ai.transform.position - previousPosition;
-            ai.animator.SetFloat(_SYAxis, animatorAxis.z * 10);
-            ai.animator.SetFloat(_SXAxis, animatorAxis.x * 10);
+            var movementDirection = ai.transform.InverseTransformDirection(ai.transform.position - previousPosition).normalized;
+            movementDirection *= speed * args.blendMultiplier;
+
+            _animBlendTreeAxis.x = Mathf.Lerp(_animBlendTreeAxis.x, movementDirection.x, args.blendSpeed * Time.deltaTime);
+            ai.animator.SetFloat(_SXAxis, Mathf.Clamp(_animBlendTreeAxis.x, -1f, 1f));
+
+            _animBlendTreeAxis.y = Mathf.Lerp(_animBlendTreeAxis.y, movementDirection.z, args.blendSpeed * Time.deltaTime);
+            ai.animator.SetFloat(_SYAxis, Mathf.Clamp(_animBlendTreeAxis.y, -1f, 1f));
+
         }
 
 
