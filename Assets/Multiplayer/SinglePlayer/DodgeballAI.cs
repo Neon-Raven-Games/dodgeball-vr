@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
 using Hands.SinglePlayer.EnemyAI.Priority;
 using Hands.SinglePlayer.EnemyAI.Utilities;
@@ -137,12 +138,25 @@ public class DodgeballAI : Actor
     private void PopulateUtilities()
     {
         targetUtility = new TargetUtility(targetUtilityArgs, this, priorityHandler.targetUtility);
+        targetUtility.Initialize(friendlyTeam.playArea, team);
+        
         _moveUtility = new MoveUtility(moveUtilityArgs);
+        _moveUtility.Initialize(friendlyTeam.playArea, team);
+        
         _dodgeUtility = new DodgeUtility(dodgeUtilityArgs);
+        _dodgeUtility.Initialize(friendlyTeam.playArea, team);
+        
         _catchUtility = new CatchUtility(catchUtilityArgs);
+        _catchUtility.Initialize(friendlyTeam.playArea, team);
+        
         _pickUpUtility = new PickUpUtility(pickUpUtilityArgs, this);
+        _pickUpUtility.Initialize(friendlyTeam.playArea, team);
+        
         _throwUtility = new ThrowUtility(throwUtilityArgs);
+        _throwUtility.Initialize(friendlyTeam.playArea, team);
+        
         _outOfPlayUtility = new OutOfPlayUtility(outOfBoundsUtilityArgs);
+        _outOfPlayUtility.Initialize(friendlyTeam.playArea, team);
     }
 
 
@@ -222,14 +236,15 @@ public class DodgeballAI : Actor
 
         _possessedBall.HandleThrowTrajectory(velocity);
         _possessedBall.SetLiveBall();
-        StartCoroutine(BallThrowRecovery());
+        BallThrowRecovery().Forget();
     }
 
     [SerializeField] private float ballThrowRecovery = 0.5f;
 
-    private IEnumerator BallThrowRecovery()
+    private async UniTaskVoid BallThrowRecovery()
     {
-        yield return new WaitForSeconds(ballThrowRecovery);
+        await UniTask.Delay(TimeSpan.FromSeconds(ballThrowRecovery));
+        await UniTask.SwitchToMainThread();
         _possessedBall = null;
         throwAnimationPlaying = false;
     }

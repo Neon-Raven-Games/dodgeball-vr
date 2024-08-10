@@ -8,6 +8,8 @@ namespace Hands.SinglePlayer.EnemyAI
     {
         protected T args;
 
+        private Bounds playAreaBounds;
+        private RaycastHit hit;
         protected Utility(T args)
         {
             this.args = args;
@@ -18,17 +20,26 @@ namespace Hands.SinglePlayer.EnemyAI
         public abstract float Roll(DodgeballAI ai);
 
         // this will be overridden on the implementation if animation data present
-        protected virtual void UpdateAnimation()
+        public virtual void Initialize(Transform playArea, Team team)
         {
+            if (team == Team.TeamOne)
+            {
+                playAreaBounds = new Bounds(playArea.position,
+                    new Vector3(playArea.localScale.x, 5, playArea.localScale.z));
+            }
+            else
+            {
+                playAreaBounds = new Bounds(playArea.position,
+                    new Vector3(playArea.localScale.x, 5, playArea.localScale.z));
+            }
         }
 
-        protected static bool IsTeammateInLineOfSight(Vector3 hitPoint, DodgeballAI ai)
+        protected bool IsTeammateInLineOfSight(Vector3 hitPoint, DodgeballAI ai)
         {
             foreach (var teammate in ai.friendlyTeam.actors)
             {
                 if (teammate != ai.gameObject)
                 {
-                    RaycastHit hit;
                     if (Physics.Raycast(ai.transform.position, hitPoint - ai.transform.position, out hit))
                     {
                         if (hit.transform == teammate.transform)
@@ -60,43 +71,21 @@ namespace Hands.SinglePlayer.EnemyAI
 
             return false;
         }
+        protected bool IsInPlayArea(Vector3 position) =>
+            playAreaBounds.Contains(position);
 
-        protected static bool IsInPlayArea(Vector3 position, Transform playArea, Team team)
+        protected GameObject FindNearestBallInPlayArea(DodgeballPlayArea playArea, DodgeballAI ai, out float distance)
         {
-            Bounds playAreaBounds;
-
-            if (team == Team.TeamOne)
-            {
-                playAreaBounds = new Bounds(playArea.position,
-                    new Vector3(playArea.localScale.x, 5, playArea.localScale.z));
-            }
-            else
-            {
-                playAreaBounds = new Bounds(playArea.position,
-                    new Vector3(playArea.localScale.x, 5, playArea.localScale.z));
-            }
-
-            return playAreaBounds.Contains(position);
-        }
-
-        private bool IsBallInPlayArea(GameObject ball)
-        {
-            //IsInPlayArea
-            // check if the ball is within the play area bounds (if it's not, we need to move it back in some how :o)
-            return true;
-        }
-
-        protected GameObject FindNearestBallInPlayArea(DodgeballPlayArea playArea, DodgeballAI ai)
-        {
+            distance = 200;
             // find the nearest ball within the play area
             GameObject nearestBall = null;
             float nearestDistance = float.MaxValue;
 
             foreach (var ball in playArea.dodgeBalls)
             {
-                if (IsBallInPlayArea(ball))
+                if (IsInPlayArea(ball.transform.position))
                 {
-                    float distance = Vector3.Distance(ai.transform.position, ball.transform.position);
+                    distance = Vector3.Distance(ai.transform.position, ball.transform.position);
                     if (distance < nearestDistance)
                     {
                         nearestDistance = distance;
@@ -114,7 +103,7 @@ namespace Hands.SinglePlayer.EnemyAI
                 return false;
 
             if (!Physics.Raycast(ai.transform.position, ai.CurrentTarget.transform.position - ai.transform.position,
-                    out var hit)) return false;
+                    out hit)) return false;
 
             return hit.transform == ai.CurrentTarget.transform;
         }

@@ -26,6 +26,8 @@ namespace Hands.SinglePlayer.EnemyAI
     public class TargetUtility : Utility<TargetUtilityArgs>
     {
         public GameObject CurrentTarget { get; private set; }
+        public Actor ActorTarget { get; private set; }
+        public DodgeBall BallTarget { get; private set; }
         private GameObject _lastBestTarget;
 
         private readonly float _minSwitchProbability;
@@ -52,6 +54,9 @@ namespace Hands.SinglePlayer.EnemyAI
             _playArea = ai.playArea;
             _enemyTeam = ai.opposingTeam;
             CurrentTarget = _enemyTeam.actors[Random.Range(0, _enemyTeam.actors.Count)];
+            _lastBestTarget = CurrentTarget;
+            ActorTarget = CurrentTarget.GetComponent<Actor>();
+
             _minSwitchProbability = arg.minSwitchProbability;
             _maxSwitchProbability = arg.maxSwitchProbability;
             _switchProbabilityIncreaseRate = arg.switchProbabilityIncreaseRate;
@@ -76,20 +81,24 @@ namespace Hands.SinglePlayer.EnemyAI
 
             if (CurrentTarget.activeInHierarchy && CurrentTarget.layer == LayerMask.NameToLayer("Ball"))
             {
-                var ball = CurrentTarget.GetComponent<DodgeBall>();
-                if (ball)
+                if (!BallTarget) BallTarget = CurrentTarget.GetComponent<DodgeBall>();
+                if (BallTarget)
                 {
-                    if (!IsInPlayArea(CurrentTarget.GetComponent<DodgeBall>().transform.position,
-                            _ai.friendlyTeam.playArea, _ai.team))
+                    if (!IsInPlayArea(BallTarget.transform.position))
                     {
                         ai._pickUpUtility.StopPickup(ai);
                         _lastBestTarget = FindBestTarget();
                         return CalculateTargetScore(_lastBestTarget);
                     }
 
-                    if (CurrentTarget.GetComponent<DodgeBall>()._ballState == BallState.Dead) return 1f;
+                    if (BallTarget._ballState == BallState.Dead) return 1f;
                 }
             }
+            else
+            {
+                BallTarget = null;
+            }
+
 
             if (!CurrentTarget.activeInHierarchy)
             {
@@ -136,6 +145,7 @@ namespace Hands.SinglePlayer.EnemyAI
                 ResetTargetSwitchProbability();
             }
 
+
             if (currentState != DodgeballAI.AIState.Possession &&
                 currentState != DodgeballAI.AIState.Throw &&
                 currentState != DodgeballAI.AIState.BackOff)
@@ -149,7 +159,7 @@ namespace Hands.SinglePlayer.EnemyAI
                 if (!ball.activeInHierarchy) continue;
                 if (BallProximity(ball, out var distanceToBall)) continue;
                 if (CanNotOverride(distanceToBall)) continue;
-                if (!IsInPlayArea(ball.transform.position, _ai.friendlyTeam.playArea, _ai.team)) continue;
+                if (!IsInPlayArea(ball.transform.position)) continue;
                 var ballstate = ball.GetComponent<DodgeBall>()._ballState;
                 if (ballstate != BallState.Dead) continue;
                 CurrentTarget = ball;
@@ -168,7 +178,7 @@ namespace Hands.SinglePlayer.EnemyAI
         {
             distanceToBall = Vector3.Distance(_ai.transform.position, ball.transform.position);
             return distanceToBall >= args.dodgeballProximityThreshold &&
-                   IsInPlayArea(ball.transform.position, _ai.friendlyTeam.playArea, _ai.team);
+                   IsInPlayArea(ball.transform.position);
         }
 
         public void ResetTargetSwitchProbability()
@@ -214,7 +224,7 @@ namespace Hands.SinglePlayer.EnemyAI
             foreach (var ball in _playArea.dodgeBalls)
             {
                 if (ball.activeInHierarchy && ball.GetComponent<DodgeBall>()._ballState == BallState.Dead &&
-                    IsInPlayArea(ball.transform.position, _ai.friendlyTeam.playArea, _ai.team))
+                    IsInPlayArea(ball.transform.position))
                 {
                     float score = CalculateTargetScore(ball);
                     if (score > bestScore)
@@ -250,7 +260,7 @@ namespace Hands.SinglePlayer.EnemyAI
                     var ball = hit.collider.gameObject.GetComponent<DodgeBall>();
                     if (!_ai.hasBall) score += GetPriority(PriorityType.PossessedBall);
                     if (_ai.hasBall) score -= GetPriority(PriorityType.PossessedBall);
-                    if (IsInPlayArea(target.transform.position, _ai.friendlyTeam.playArea, _ai.team))
+                    if (IsInPlayArea(target.transform.position))
                     {
                         score += GetPriority(PriorityType.InsidePlayArea);
                         if (ball._ballState == BallState.Dead)
@@ -263,8 +273,7 @@ namespace Hands.SinglePlayer.EnemyAI
                 }
             }
 
-            if (CurrentTarget != target && CurrentTarget.GetComponent<DodgeBall>() != null &&
-                target.GetComponent<DodgeBall>() != null)
+            if (CurrentTarget != target &&  BallTarget && target.GetComponent<DodgeBall>())
                 score -= GetPriority(PriorityType.Targeted);
 
             if (target.layer == LayerMask.NameToLayer(_enemyTeam.layerName))

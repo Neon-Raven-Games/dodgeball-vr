@@ -10,29 +10,18 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             _ai = ai;
         }
+        private float ballDistance;
 
         public override float Execute(DodgeballAI ai)
         {
             // Check conditions for picking up the ball
-            if (ai.CurrentTarget == null || ai.CurrentTarget.layer != LayerMask.NameToLayer("Ball") ||
-                ai.hasBall || ai.IsOutOfPlay())
+            if (!ai.CurrentTarget|| !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
                 return 0;
-
-            if (IsTeammateCloserToBall(ai))
-            {
-                var pickupSuccess = Random.Range(0, 1f);
-                if (pickupSuccess < 0.1f)
-                {
-                    ApproachBallToPickUp(ai.CurrentTarget.GetComponent<DodgeBall>(), ai);
-                    return 0;
-                }
                 
-            }
-
-            if (Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position) <
-                args.pickupDistanceThreshold)
+            ballDistance = Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position);
+            if (ballDistance < args.pickupDistanceThreshold)
             {
-                ai.PickUpBall(ai.CurrentTarget.GetComponent<DodgeBall>());
+                ai.PickUpBall(ai.targetUtility.BallTarget);
                 return 1f;
             }
 
@@ -103,8 +92,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private void ApproachBallToPickUp(DodgeBall dodgeBall, DodgeballAI ai)
         {
             pickup = true;
-            var distance = Vector3.Distance(ai.transform.position, dodgeBall.transform.position);
-            var lerpFactor = Mathf.Clamp01((distance / args.pickupDistanceThreshold) - 1);
+            var lerpFactor = Mathf.Clamp01((ballDistance / args.pickupDistanceThreshold) - 1);
 
             var position = ai.transform.position;
             position.y = Mathf.Lerp(-0.27f, 0.11f, lerpFactor);
@@ -128,7 +116,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 return 0;
             }
 
-            GameObject nearestBall = FindNearestBallInPlayArea(ai.playArea, ai);
+            GameObject nearestBall = FindNearestBallInPlayArea(ai.playArea, ai, out ballDistance);
             if (nearestBall == null || !nearestBall.activeInHierarchy)
             {
                 return 0;
@@ -136,7 +124,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
             var ball = nearestBall.GetComponent<DodgeBall>();
 
-            if (!IsInPlayArea(nearestBall.transform.position, ai.friendlyTeam.playArea, ai.team))
+            if (!IsInPlayArea(nearestBall.transform.position))
             {
                 return 0f;
             }
@@ -149,11 +137,10 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             }
             utility += 5f;
 
-            var distance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
-            utility += (1.0f / distance) * ai.distanceWeight;
+            // var distance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
+            utility += (1.0f / ballDistance) * ai.distanceWeight;
 
             utility += Random.value * ai.difficultyFactor;
-
             return utility;
         }
 

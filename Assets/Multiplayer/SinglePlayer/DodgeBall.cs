@@ -66,6 +66,7 @@ public class DodgeBall : MonoBehaviour
     {
         PlaySound(SoundIndex.Throw);
         _ballState = BallState.Live;
+        ownerActor = null;
     }
 
     private void PlaySound(SoundIndex sound)
@@ -200,8 +201,17 @@ public class DodgeBall : MonoBehaviour
         SetParticleActive(true);
     }
 
+    private GameObject attachedHand;
     public void Grab(Actor actor, GameObject hand)
     {
+        if (ownerActor == actor && hand != attachedHand && _throwHandle._attached)
+        {
+            // reset for the next hand
+            _throwHandle.OnDetach();
+            _rb.velocity = Vector3.zero;
+        }
+        
+        attachedHand = hand;
         SetOwner(actor);
         SetParticleActive(false);
         if (!_rb.isKinematic) _rb.velocity = Vector3.zero;

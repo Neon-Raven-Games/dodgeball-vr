@@ -17,12 +17,16 @@ public class GrabbingHandState : BaseHandState
     public override void OnStateEnter()
     {
         base.OnStateEnter();
+        
         var ball = Ball.GetComponent<DodgeBall>();
         if (!ball) Debug.LogError("Dodgeball not found in grabbing hand state");
 
-        ball.Grab(handController.actor, handController.gameObject);
+        // it's either the rigidbody velocity being annoying or the collider,
+        // but the throw is breaking
         ball.transform.position = grabTransform.position;
         ball.transform.rotation = grabTransform.rotation;
+        ball.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        ball.Grab(handController.actor, handController.gameObject);
         triggerCollider.enabled = false;
         _working = true;
     }
@@ -30,6 +34,7 @@ public class GrabbingHandState : BaseHandState
     public override void OnStateExit()
     {
         _working = false;
+        if (!handController.actor.IsOutOfPlay()) triggerCollider.enabled = true;
     }
 
     private bool _working;

@@ -72,7 +72,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             if (ai.targetUtility.CurrentTarget.GetComponent<DodgeBall>()._ballState == BallState.Possessed)
                 return false;
             if (ai.targetUtility.CurrentTarget.transform.position.y > 1.6f) return false;
-            if (!IsInPlayArea(ai.targetUtility.CurrentTarget.transform.position, ai.friendlyTeam.playArea, ai.team))
+            if (!IsInPlayArea(ai.targetUtility.CurrentTarget.transform.position))
             {
                 return false;
             }
@@ -80,18 +80,19 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             MoveTowards(ai, ai.targetUtility.CurrentTarget.transform.position);
 
             if (Time.time < _pickupCheckTime) return true;
-            foreach (var player in ai.opposingTeam.actors)
-            {
-                var dbai = player.GetComponent<DodgeballAI>();
-                if (dbai != null && dbai.CurrentTarget != null && dbai.CurrentTarget == ai.CurrentTarget)
-                {
-                    if (Vector3.Distance(dbai.transform.position, ai.CurrentTarget.transform.position) <
-                        Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
-                    {
-                        return false;
-                    }
-                }
-            }
+            // DodgeballAI currentAi;
+            // foreach (var player in ai.opposingTeam.actors)
+            // {
+            //     currentAi = player.GetComponent<DodgeballAI>();
+            //     if (currentAi != null && currentAi.CurrentTarget && currentAi.CurrentTarget == ai.CurrentTarget)
+            //     {
+            //         if (Vector3.Distance(currentAi.transform.position, ai.CurrentTarget.transform.position) <
+            //             Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
+            //         {
+            //             return false;
+            //         }
+            //     }
+            // }
 
             _pickupCheckStep = Random.Range(0.5f, 1.5f);
             _pickupCheckTime = Time.time + _pickupCheckStep;
@@ -141,6 +142,13 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             return 0.1f;
         }
 
+        private Vector3 separation = Vector3.zero;
+        private Vector3 alignment = Vector3.zero;
+        private Vector3 cohesion = Vector3.zero;
+        private Vector3 centerAttraction = Vector3.zero;
+        private int neighborCount = 0;
+        private Vector3 noise = Vector3.zero;
+        private float distance;
         private void FlockMove(DodgeballAI ai)
         {
             if (Time.time > lastTargetChangeTime + changeTargetCooldown)
@@ -152,18 +160,16 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 currentTargetPosition = ai.transform.position + randomDirection * args.moveSpeed;
                 currentTargetPosition = ClampPositionToPlayArea(currentTargetPosition, ai.playArea, ai.team);
             }
-
-            var separation = Vector3.zero;
-            var alignment = Vector3.zero;
-            var cohesion = Vector3.zero;
-            var centerAttraction = Vector3.zero;
-            var neighborCount = 0;
-
+            separation = Vector3.zero;
+            alignment = Vector3.zero;
+            cohesion = Vector3.zero;
+            centerAttraction = Vector3.zero;
+            neighborCount = 0;
             foreach (var teammate in ai.friendlyTeam.actors)
             {
                 if (teammate == ai.gameObject) continue;
 
-                var distance = Vector3.Distance(ai.transform.position, teammate.transform.position);
+                distance = Vector3.Distance(ai.transform.position, teammate.transform.position);
                 if (distance < 0.1f) continue; // Prevent division by zero or extremely close neighbors
                 if (distance < args.separationDistance)
                 {
@@ -193,7 +199,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
             // Add smooth random movement to avoid stagnation
             noiseOffset += new Vector3(Time.deltaTime, 0, Time.deltaTime);
-            var noise = new Vector3(Mathf.PerlinNoise(noiseOffset.x, 0), 0, Mathf.PerlinNoise(0, noiseOffset.z)) -
+            noise = new Vector3(Mathf.PerlinNoise(noiseOffset.x, 0), 0, Mathf.PerlinNoise(0, noiseOffset.z)) -
                         Vector3.one * 0.5f;
             currentTargetPosition += noise * args.randomnessFactor;
             currentTargetPosition = ClampPositionToPlayArea(currentTargetPosition, ai.playArea, ai.team);

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 // todo, we need to account for the irl space of the player
 public class DevController : Actor
@@ -23,6 +24,12 @@ public class DevController : Actor
     [SerializeField] private GameObject outOfBoundsArea;
 
     public Vector2 GetMoveInput() => _moveInput;
+
+    private void Start()
+    {
+        ConfigurationManager.throwConfigIndex = 
+            SceneManager.GetActiveScene().buildIndex != 0 ? 1 : 0;
+    }
 
     private void Awake()
     {

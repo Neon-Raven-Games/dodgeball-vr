@@ -8,10 +8,9 @@ public class IdleHandState : BaseHandState
     {
     }
 
-    private int teamOneLayer = LayerMask.NameToLayer("TeamOne");
     public override void OnStateEnter()
     {
-        Physics.IgnoreLayerCollision(teamOneLayer, ballLayer, false);
+        // triggerCollider.enabled = true;
         base.OnStateEnter();
     }
 

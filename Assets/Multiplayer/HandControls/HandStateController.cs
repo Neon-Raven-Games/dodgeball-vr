@@ -59,6 +59,8 @@ public class HandStateController : MonoBehaviour
 
     public void SetInPlay(bool play)
     {
+        grabTriggerCollider.enabled = play;
+        
         inPlay = play;
         if (!inPlay && State == HandState.Grabbing) ChangeState(HandState.Throwing);
         if (!inPlay) fxPrefab.SetActive(false);
