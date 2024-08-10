@@ -2,9 +2,9 @@
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
-    public class ThrowUtility : Utility<ThrowUtilityArgs>
+    public class ThrowUtility : Utility<ThrowUtilityArgs>, IUtility
     {
-        public ThrowUtility(ThrowUtilityArgs args) : base(args)
+        public ThrowUtility(ThrowUtilityArgs args) : base(args, DodgeballAI.AIState.Throw)
         {
         }
         

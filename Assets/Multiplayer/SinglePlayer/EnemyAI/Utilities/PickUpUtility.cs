@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
-    public class PickUpUtility : Utility<PickUpUtilityArgs>
+    public class PickUpUtility : Utility<PickUpUtilityArgs>, IUtility
     {
         private DodgeballAI _ai;
-        public PickUpUtility(PickUpUtilityArgs args, DodgeballAI ai) : base(args)
+        public PickUpUtility(PickUpUtilityArgs args, DodgeballAI ai) : base(args, DodgeballAI.AIState.PickUp)
         {
             _ai = ai;
         }
@@ -18,7 +18,9 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             if (!ai.CurrentTarget|| !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
                 return 0;
                 
-            ballDistance = Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position);
+            var flatBall = ai.targetUtility.BallTarget.transform.position;
+            flatBall.y = ai.transform.position.y;
+            ballDistance = Vector3.Distance(ai.transform.position, flatBall);
             if (ballDistance < args.pickupDistanceThreshold)
             {
                 ai.PickUpBall(ai.targetUtility.BallTarget);

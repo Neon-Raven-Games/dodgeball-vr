@@ -23,7 +23,7 @@ namespace Hands.SinglePlayer.EnemyAI
     }
 
     // Priority types for target utility
-    public class TargetUtility : Utility<TargetUtilityArgs>
+    public class TargetUtility : Utility<TargetUtilityArgs>, IUtility
     {
         public GameObject CurrentTarget { get; private set; }
         public Actor ActorTarget { get; private set; }
@@ -47,7 +47,7 @@ namespace Hands.SinglePlayer.EnemyAI
         private float GetPriority(PriorityType type) =>
             _priorityData.GetPriorityValue(type);
 
-        public TargetUtility(TargetUtilityArgs arg, DodgeballAI ai, PriorityData data) : base(arg)
+        public TargetUtility(TargetUtilityArgs arg, DodgeballAI ai, PriorityData data) : base(arg, DodgeballAI.AIState.Idle)
         {
             _priorityData = data;
             _ai = ai;

@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
 using Hands.SinglePlayer.EnemyAI.Priority;
 using Hands.SinglePlayer.EnemyAI.Utilities;
+using Multiplayer.SinglePlayer.EnemyAI.Utilities;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -137,26 +138,34 @@ public class DodgeballAI : Actor
 
     private void PopulateUtilities()
     {
+        _utilityHandler = new UtilityHandler();
         targetUtility = new TargetUtility(targetUtilityArgs, this, priorityHandler.targetUtility);
         targetUtility.Initialize(friendlyTeam.playArea, team);
+        // _utilityHandler.AddUtility(targetUtility);
         
         _moveUtility = new MoveUtility(moveUtilityArgs);
         _moveUtility.Initialize(friendlyTeam.playArea, team);
+        _utilityHandler.AddUtility(_moveUtility);
         
         _dodgeUtility = new DodgeUtility(dodgeUtilityArgs);
         _dodgeUtility.Initialize(friendlyTeam.playArea, team);
+        _utilityHandler.AddUtility(_dodgeUtility);
         
         _catchUtility = new CatchUtility(catchUtilityArgs);
         _catchUtility.Initialize(friendlyTeam.playArea, team);
+        _utilityHandler.AddUtility(_catchUtility);
         
         _pickUpUtility = new PickUpUtility(pickUpUtilityArgs, this);
         _pickUpUtility.Initialize(friendlyTeam.playArea, team);
+        _utilityHandler.AddUtility(_pickUpUtility);
         
         _throwUtility = new ThrowUtility(throwUtilityArgs);
         _throwUtility.Initialize(friendlyTeam.playArea, team);
+        _utilityHandler.AddUtility(_throwUtility);
         
         _outOfPlayUtility = new OutOfPlayUtility(outOfBoundsUtilityArgs);
         _outOfPlayUtility.Initialize(friendlyTeam.playArea, team);
+        _utilityHandler.AddUtility(_outOfPlayUtility);
     }
 
 
@@ -290,6 +299,7 @@ public class DodgeballAI : Actor
         animator.SetTrigger(_SPlayGhost);
     }
 
+    private UtilityHandler _utilityHandler;
     private void Update()
     {
         _pickUpUtility.Update();
@@ -298,55 +308,7 @@ public class DodgeballAI : Actor
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
-            if (triggerOutOfPlay)
-            {
-                // ghostData.particleEffect.SetActive(true);
-                triggerOutOfPlay = false;
-                ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.ghostMaterial;
-                ghostData.ghostLegs.SetActive(true);
-                ghostData.ghostHair.SetActive(true);
-                ghostData.humanLegs.SetActive(false);
-                ghostData.humanHair.SetActive(false);
-            }
-
-            if (hasBall)
-            {
-                ballPossessionTime = 0;
-                _possessedBall.transform.position = rightBallIndex.BallPosition;
-                rightBallIndex.SetBallType(BallType.None);
-                _possessedBall.gameObject.SetActive(true);
-
-                var rb = _possessedBall.GetComponent<Rigidbody>();
-                rb.velocity = transform.forward;
-
-                _possessedBall = null;
-
-                targetUtilityArgs.ik.solvers.lookAt.SetLookAtWeight(0f);
-                targetUtility.ResetLookWeight();
-                hasBall = false;
-                throwAnimationPlaying = false;
-            }
-
-            animator.SetFloat(_SXAxis, 0);
-            animator.SetFloat(_SYAxis, 0);
-            _pickUpUtility.StopPickup(this);
-            targetUtility.ResetLookWeight();
-
-            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Praying Ghost")) triggerOutOfPlay = true;
-            else return;
-            _outOfPlayUtility.Execute(this);
-
-            if (_outOfPlayUtility.Roll(this) == 0) return;
-
-            ghostData.ghostLegs.SetActive(false);
-            ghostData.ghostHair.SetActive(false);
-            ghostData.humanLegs.SetActive(true);
-            ghostData.humanHair.SetActive(true);
-            animator.Play("Anticipating");
-            ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.humanMaterial;
-            outOfPlay = false;
-            triggerOutOfPlay = false;
-            currentState = AIState.Idle;
+            if (OutOfPlayUtilityMethod()) return;
         }
 
         if (throwAnimationPlaying) targetUtility.Execute(this);
@@ -363,37 +325,67 @@ public class DodgeballAI : Actor
 
         _moveUtility.ResetBackOff();
 
-        var dodgeUtility = _dodgeUtility.Roll(this);
-        var catchUtility = _catchUtility.Roll(this);
-        var pickUpUtility = _pickUpUtility.Roll(this);
-        var throwUtility = _throwUtility.Roll(this);
-        var moveUtility = _moveUtility.Roll(this);
+        var utility = _utilityHandler.EvaluateUtility(this);
+        var inPickup = currentState == AIState.PickUp;
+        currentState = _utilityHandler.GetState();
+            
+        if (inPickup && currentState != AIState.PickUp) 
+            _pickUpUtility.StopPickup(this);
 
-        if (dodgeUtility > catchUtility && dodgeUtility > pickUpUtility && dodgeUtility > throwUtility &&
-            dodgeUtility > moveUtility)
+        ExecuteCurrentState(utility);
+    }
+
+    private bool OutOfPlayUtilityMethod()
+    {
+        if (triggerOutOfPlay)
         {
-            currentState = AIState.Dodge;
-        }
-        else if (catchUtility > pickUpUtility && catchUtility > throwUtility && catchUtility > moveUtility)
-        {
-            Debug.Log($"[{gameObject.name}] is catching a ball!");
-            currentState = AIState.Catch;
-        }
-        else if (pickUpUtility > throwUtility && pickUpUtility > moveUtility)
-        {
-            currentState = AIState.PickUp;
-        }
-        else if (throwUtility > moveUtility)
-        {
-            currentState = AIState.Throw;
-        }
-        else
-        {
-            if (currentState == AIState.PickUp) _pickUpUtility.StopPickup(this);
-            currentState = AIState.Move;
+            triggerOutOfPlay = false;
+            ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.ghostMaterial;
+            ghostData.ghostLegs.SetActive(true);
+            ghostData.ghostHair.SetActive(true);
+            ghostData.humanLegs.SetActive(false);
+            ghostData.humanHair.SetActive(false);
         }
 
-        ExecuteCurrentState();
+        if (hasBall)
+        {
+            ballPossessionTime = 0;
+            _possessedBall.transform.position = rightBallIndex.BallPosition;
+            rightBallIndex.SetBallType(BallType.None);
+            _possessedBall.gameObject.SetActive(true);
+
+            var rb = _possessedBall.GetComponent<Rigidbody>();
+            rb.velocity = transform.forward;
+
+            _possessedBall = null;
+
+            targetUtilityArgs.ik.solvers.lookAt.SetLookAtWeight(0f);
+            targetUtility.ResetLookWeight();
+            hasBall = false;
+            throwAnimationPlaying = false;
+        }
+
+        animator.SetFloat(_SXAxis, 0);
+        animator.SetFloat(_SYAxis, 0);
+        _pickUpUtility.StopPickup(this);
+        targetUtility.ResetLookWeight();
+
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Praying Ghost")) triggerOutOfPlay = true;
+        else return true;
+        _outOfPlayUtility.Execute(this);
+
+        if (_outOfPlayUtility.Roll(this) == 0) return true;
+
+        ghostData.ghostLegs.SetActive(false);
+        ghostData.ghostHair.SetActive(false);
+        ghostData.humanLegs.SetActive(true);
+        ghostData.humanHair.SetActive(true);
+        animator.Play("Anticipating");
+        ghostData.bodyWithMaterial.GetComponent<Renderer>().material = ghostData.humanMaterial;
+        outOfPlay = false;
+        triggerOutOfPlay = false;
+        currentState = AIState.Idle;
+        return false;
     }
 
     // invoke on trigger enter/dodgeball hit
@@ -406,16 +398,11 @@ public class DodgeballAI : Actor
 
     internal bool IsTargetingBall(GameObject ball) => CurrentTarget == ball;
 
-    private void ExecuteCurrentState()
+    // extract to state machine
+    private void ExecuteCurrentState(IUtility utility)
     {
         switch (currentState)
         {
-            case AIState.Dodge:
-                _dodgeUtility.Execute(this);
-                break;
-            case AIState.Catch:
-                _catchUtility.Execute(this);
-                break;
             case AIState.PickUp:
                 if (_pickUpUtility.Execute(this) == 1f)
                 {
@@ -433,20 +420,17 @@ public class DodgeballAI : Actor
             case AIState.Throw:
                 if (_throwUtility.Execute(this) == 0f)
                 {
-                    // todo, we need to handle the timer better
                     _moveUtility.Roll(this);
                     _moveUtility.PossessionMove(this);
                 }
                 else ThrowBallAnimation();
 
                 break;
-            case AIState.Move:
-                _moveUtility.Execute(this);
-                break;
-            case AIState.OutOfPlay:
-                break;
             case AIState.Possession:
                 if (!_moveUtility.PossessionMove(this)) currentState = AIState.BackOff;
+                break;
+            default:
+                utility.Execute(this);
                 break;
         }
     }

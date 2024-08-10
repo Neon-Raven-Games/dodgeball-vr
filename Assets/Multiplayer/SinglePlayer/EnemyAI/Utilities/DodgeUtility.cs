@@ -1,9 +1,9 @@
 using Hands.SinglePlayer.EnemyAI;
 using UnityEngine;
 
-public class DodgeUtility : Utility<DodgeUtilityArgs>
+public class DodgeUtility : Utility<DodgeUtilityArgs>, IUtility
 {
-    public DodgeUtility(DodgeUtilityArgs args) : base(args)
+    public DodgeUtility(DodgeUtilityArgs args) : base(args, DodgeballAI.AIState.Dodge)
     {
     }
 

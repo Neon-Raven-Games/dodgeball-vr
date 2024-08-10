@@ -10,10 +10,13 @@ namespace Hands.SinglePlayer.EnemyAI
 
         private Bounds playAreaBounds;
         private RaycastHit hit;
-        protected Utility(T args)
+        protected Utility(T args, DodgeballAI.AIState state)
         {
             this.args = args;
+            State = state;
         }
+
+        public DodgeballAI.AIState State { get;}
 
         // this will be called by the AI class in update loop
         public abstract float Execute(DodgeballAI ai);

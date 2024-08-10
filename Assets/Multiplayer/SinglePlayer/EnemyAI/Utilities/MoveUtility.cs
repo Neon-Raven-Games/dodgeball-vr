@@ -2,7 +2,7 @@
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
-    public class MoveUtility : Utility<MoveUtilityArgs>
+    public class MoveUtility : Utility<MoveUtilityArgs>, IUtility
     {
         private Vector3 currentTargetPosition;
         private float changeTargetCooldown;
@@ -11,7 +11,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private float backoffDuration = .8f;
         private float backoffStartTime;
 
-        public MoveUtility(MoveUtilityArgs args) : base(args)
+        public MoveUtility(MoveUtilityArgs args) : base(args, DodgeballAI.AIState.Move)
         {
             noiseOffset = new Vector3(Random.value, 0, Random.value) * 10f;
             changeTargetCooldown = Random.Range(0.1f, 1.5f);

@@ -2,9 +2,9 @@
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
-    public class CatchUtility : Utility<CatchUtilityArgs>
+    public class CatchUtility : Utility<CatchUtilityArgs>, IUtility
     {
-        public CatchUtility(CatchUtilityArgs args) : base(args)
+        public CatchUtility(CatchUtilityArgs args) : base(args, DodgeballAI.AIState.Catch)
         {
         }
 
@@ -16,8 +16,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         public override float Roll(DodgeballAI ai) => CalculateCatchUtility(ai);
 
         public float CalculateCatchUtility(DodgeballAI ai)
-        {
-            return 0;
+             {
+                 
                  float utility = 0;
          
                  foreach (var trajectory in ai.liveBallTrajectories.Values)

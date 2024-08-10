@@ -2,11 +2,11 @@
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
-    public class OutOfPlayUtility : Utility<OutOfPlayUtilityArgs>
+    public class OutOfPlayUtility : Utility<OutOfPlayUtilityArgs>, IUtility
     {
         private bool _finished;
 
-        public OutOfPlayUtility(OutOfPlayUtilityArgs args) : base(args)
+        public OutOfPlayUtility(OutOfPlayUtilityArgs args) : base(args, DodgeballAI.AIState.OutOfPlay)
         {
         }
 
