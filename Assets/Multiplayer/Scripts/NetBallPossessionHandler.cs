@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
@@ -19,8 +20,14 @@ public class NetBallPossessionHandler : MonoBehaviour
 
     public void Start()
     {
-        _anim = GetComponent<Animator>();
         foreach (var dodgeball in dodgeballs) _dodgeballDictionary[dodgeball.type] = dodgeball;
+        _anim.enabled = true;
+    }
+
+    private void Awake()
+    {
+        _anim = GetComponent<Animator>();
+        _anim.enabled = false;
     }
 
     private NetBallPossession _possession;

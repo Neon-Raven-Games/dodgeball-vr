@@ -33,7 +33,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: RightIdle_to_RightGrabBall
-  m_Speed: 1
+  m_Speed: 4
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -2149662297295770826}
@@ -46,7 +46,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 1140514bd57b5f0439ca997fb0c91a1f, type: 2}
+  m_Motion: {fileID: 7400000, guid: 3246188dd55e79e4aa2faa59b38d898f, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -60,7 +60,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: RightGrabBall_to_RightIdle
-  m_Speed: 1
+  m_Speed: 6
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 5894137074811773040}
@@ -73,7 +73,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: ac9f6d8d522d1a54f887297c8c0e1345, type: 2}
+  m_Motion: {fileID: 7400000, guid: 94bce7af223e73f4bad8d52a12ea72ee, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 

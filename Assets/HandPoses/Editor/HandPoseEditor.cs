@@ -96,6 +96,7 @@ public class HandPoseEditor : EditorWindow
         AssetDatabase.Refresh();
     }
     
+    
     private void CreateAnimationClip(string animationPath, GameObject handRoot, HandPose fromPose, HandPose toPose)
     {
         var animationClip = new AnimationClip();
