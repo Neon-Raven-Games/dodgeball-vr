@@ -28,6 +28,11 @@ public class ParticleSystemPreviewEditor : Editor
         EditorGUILayout.LabelField("Animation Preview", EditorStyles.boldLabel);
 
         _isPreviewing = GUILayout.Toggle(_isPreviewing, "Preview", "Button");
+        if (!particleSystem.isPlaying && _isPreviewing && !hasPlayed)
+        {
+            particleSystem.Play();
+        }
+        
         if (_isPreviewing)
         {
             ParticleSystem.MainModule mainModule = particleSystem.main;
