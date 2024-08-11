@@ -5,7 +5,9 @@ using UnityEngine;
 public class AIAnimationHelper : MonoBehaviour
 {
     [SerializeField] private DodgeballAI dodgeballAI;
-    [SerializeField] private GameObject particleEffect;
+    [SerializeField] private ShadowStep shadowStep;
+    public static readonly int SSpecialOne = Animator.StringToHash("SpecialOne");
+    public static readonly int SSpecialOneExit = Animator.StringToHash("ShadowDash_SpinThrow_L");
     // Start is called before the first frame update
     public void Throw()
     {
@@ -14,8 +16,7 @@ public class AIAnimationHelper : MonoBehaviour
     
     public void ShadowStep()
     {
-        particleEffect.SetActive(true);
-        particleEffect.GetComponent<ParticleSystem>().Play();
+        if (shadowStep != null) shadowStep.InitialShadowStepFinished();
     }
 
     // Update is called once per frame

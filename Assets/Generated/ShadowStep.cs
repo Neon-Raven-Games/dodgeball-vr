@@ -1,121 +1,66 @@
 using System;
-using System.Collections.Concurrent;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class ShadowStep : MonoBehaviour
 {
     [SerializeField] private GameObject player;
-    [SerializeField] private GameObject shadowStepEffect;
     [SerializeField] private float stepDistance = 5f;
-    [SerializeField] private float disappearDuration = 0.5f;
+    [SerializeField] private float stepDuration;
     [SerializeField] private Vector3 stepDirection = Vector3.forward;
-    [SerializeField] private float fxOffset;
-    [SerializeField] private ParticleSystem spriteSystem;
+    [SerializeField] private Transform shadowStepToUnparent;
+    [SerializeField] private Transform shadowStepParent;
 
-    private Vector3 _originalPosition;
-    private ConcurrentDictionary<Material, Color> playerMaterials = new();
+    private Vector3 _originalEffectLocalPosition;
     private Animator _anim;
 
     private void Start()
     {
         _anim = player.GetComponentInChildren<Animator>();
-        CacheAllMaterials();
-    }
-
-    private void CacheAllMaterials()
-    {
-        playerMaterials.Clear();
-        foreach (var rend in player.GetComponentsInChildren<Renderer>())
-        {
-            foreach (var material in rend.materials)
-            {
-                if (!playerMaterials.ContainsKey(material))
-                {
-                    playerMaterials.TryAdd(material, material.color);
-                }
-            }
-        }
     }
 
     public void ShadowStepMove()
     {
-        _originalPosition = player.transform.position;
+        _originalEffectLocalPosition = shadowStepToUnparent.transform.localPosition;
+        shadowStepToUnparent.transform.parent = null;
+        _anim.SetTrigger(AIAnimationHelper.SSpecialOne);
+    }
 
+    /// <summary>
+    /// Animation event called from the the last frame of the shadow step exit animation
+    /// </summary>
+    public void InitialShadowStepFinished()
+    {
+        player.SetActive(false);
         var targetPosition = player.transform.TransformPoint(stepDirection * stepDistance);
         targetPosition = ClampPositionWithinBounds(targetPosition);
-
-        PerformShadowStep(targetPosition).Forget();
+        ShadowStepEntryFinished(targetPosition);
     }
 
-    private async UniTask LerpAllColorsToBlack()
+    /// <summary>
+    /// Resumes shadowstep animation in the entry position
+    /// </summary>
+    /// <param name="targetPosition">Place where the character landed in their shadow step.</param>
+    private void ShadowStepEntryFinished(Vector3 targetPosition)
     {
-        var time = disappearDuration / 4;
-        for (float t = 0; t < time; t += Time.deltaTime)
-        {
-            foreach (var material in playerMaterials.Keys)
-            {
-                material.color = Color.Lerp(material.color, Color.black, t / time);
-            }
-            await UniTask.Yield(); 
-        }
-    }
-
-    private async UniTask LerpAllColorsToOriginal()
-    {
-        for (float t = 0; t < disappearDuration; t += Time.deltaTime)
-        {
-            foreach (var material in playerMaterials.Keys)
-            {
-                material.color = Color.Lerp(material.color, playerMaterials[material], t / disappearDuration);
-            }
-            await UniTask.Yield(); // Ensure smooth transition over time
-        }
-    }
-
-    private async UniTask WaitForParticleSystemTime()
-    {
-        
-        while (spriteSystem.time < 0.2f)
-        {
-            await UniTask.Yield();
-        }
-    }
-
-    private async UniTaskVoid PerformShadowStep(Vector3 targetPosition)
-    {
-        _anim.Play("ShadowStep");
-        
-        PlayEffect(player.transform.position);
-        await WaitForParticleSystemTime();
-        await LerpAllColorsToBlack();
-        
-        var animStateInfo = _anim.GetCurrentAnimatorStateInfo(0);
-        float normalizedTime = animStateInfo.normalizedTime % 1;
-
-        player.SetActive(false);
-
-        await UniTask.Delay(TimeSpan.FromSeconds(disappearDuration * 0.25f));
         player.transform.position = targetPosition;
-        
-        PlayEffect(player.transform.position);
-        player.SetActive(true);
-        _anim.Play("ShadowStep", 0, normalizedTime);
-
-        await LerpAllColorsToOriginal();
+        shadowStepToUnparent.transform.parent = shadowStepParent;
+        shadowStepToUnparent.transform.localPosition = _originalEffectLocalPosition;
+        Reappear().Forget();
     }
-
-    private void PlayEffect(Vector3 position)
+    
+    private async UniTaskVoid Reappear()
     {
-        shadowStepEffect.SetActive(false);
-        shadowStepEffect.transform.position = position;
-        shadowStepEffect.SetActive(true);
+        await UniTask.Delay(TimeSpan.FromSeconds(stepDuration));
+        player.SetActive(true);
+        _anim.Play(AIAnimationHelper.SSpecialOneExit);
     }
 
     private Vector3 ClampPositionWithinBounds(Vector3 targetPosition)
     {
-        Vector3 minBounds = _originalPosition - transform.localScale / 2;
-        Vector3 maxBounds = _originalPosition + transform.localScale / 2;
+        Vector3 minBounds = _originalEffectLocalPosition - transform.localScale / 2;
+        Vector3 maxBounds = _originalEffectLocalPosition + transform.localScale / 2;
 
         targetPosition.x = Mathf.Clamp(targetPosition.x, minBounds.x, maxBounds.x);
         targetPosition.y = Mathf.Clamp(targetPosition.y, minBounds.y, maxBounds.y);
