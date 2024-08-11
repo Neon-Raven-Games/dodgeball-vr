@@ -13,7 +13,6 @@ public class ParticleSystemPreviewEditor : Editor
 
     void OnDisable()
     {
-        Debug.Log("Disabling preview");
         hasPlayed = false;
         EditorApplication.update -= Update;
     }

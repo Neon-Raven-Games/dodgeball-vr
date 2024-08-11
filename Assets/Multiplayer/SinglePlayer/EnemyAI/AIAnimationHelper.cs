@@ -15,10 +15,11 @@ public class AIAnimationHelper : MonoBehaviour
     public void ShadowStep()
     {
         particleEffect.SetActive(true);
+        particleEffect.GetComponent<ParticleSystem>().Play();
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         
     }
