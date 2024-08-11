@@ -7,7 +7,6 @@ using UnityEngine;
 
 public class Test1
 {
-    [MenuItem("Test/Test1")]
     public static async UniTaskVoid TestFunc()
     {
         await DoSomeThing();
