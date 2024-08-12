@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class ShadowStep : MonoBehaviour
 {
@@ -8,12 +9,12 @@ public class ShadowStep : MonoBehaviour
     [SerializeField] private float stepDistance = 5f;
     [SerializeField] private float stepDuration;
     [SerializeField] private Vector3 stepDirection = Vector3.forward;
-    [SerializeField] private Transform shadowStepToUnparent;
-    [SerializeField] private Transform shadowStepParent;
 
     [SerializeField] private AnimationCurve entryCurve;
     [SerializeField] private AnimationCurve exitCurve;
-
+    [SerializeField] private GameObject exitEffect;
+    [SerializeField] private GameObject entryEffect;
+    [SerializeField] private GameObject floorSmoke;
     [SerializeField] private float entrySpeed;
     [SerializeField] private float exitSpeed;
     [SerializeField] private float exitDuration;
@@ -24,7 +25,6 @@ public class ShadowStep : MonoBehaviour
     private bool _isShadowStepping;
     private void Start()
     {
-        shadowStepToUnparent.transform.parent = null;
         _anim = player.GetComponentInChildren<Animator>();
     }
 
@@ -32,7 +32,6 @@ public class ShadowStep : MonoBehaviour
     {
         if (_isShadowStepping) return;
         _isShadowStepping = true;
-        _originalEffectLocalPosition = shadowStepToUnparent.transform.localPosition;
         _anim.SetTrigger(AIAnimationHelper.SSpecialOne);
         ShadowStepEnter().Forget();
     }
@@ -53,6 +52,9 @@ public class ShadowStep : MonoBehaviour
     
     private async UniTaskVoid ShadowStepEnter()
     {
+        floorSmoke.transform.position = player.transform.position + stepDirection * (stepDistance / 8);
+        floorSmoke.SetActive(true);
+        // entryEffect.SetActive(true);
         var entryPoint = player.transform.TransformPoint(stepDirection * (stepDistance / 4));
         var start = player.transform.position;
         var entryTime = 0f;
@@ -70,7 +72,6 @@ public class ShadowStep : MonoBehaviour
     {
         if (!_isShadowStepping) return;
         _isShadowStepping = false;
-        shadowStepToUnparent.transform.localPosition = _originalEffectLocalPosition;
         Reappear().Forget();
     }
 
@@ -82,7 +83,10 @@ public class ShadowStep : MonoBehaviour
         targetPosition = ClampPositionWithinBounds(targetPosition);
         player.transform.position = targetPosition;
         await UniTask.Delay(TimeSpan.FromSeconds(stepDuration));
+        entryEffect.SetActive(false);
+        exitEffect.SetActive(true);
         player.SetActive(true);
+        floorSmoke.SetActive(false);
         _anim.Play(AIAnimationHelper.SSpecialOneExit);
         ShadowStepExit().Forget();
     }

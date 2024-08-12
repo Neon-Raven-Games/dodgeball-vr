@@ -7,6 +7,7 @@ using Hands.SinglePlayer.EnemyAI.Priority;
 using Hands.SinglePlayer.EnemyAI.Utilities;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
 using UnityEngine;
+using UnityEngine.XR;
 using Random = UnityEngine.Random;
 
 public class ActorTeam
@@ -59,7 +60,7 @@ public class DodgeballAI : Actor
 
     private OutOfPlayUtility _outOfPlayUtility;
     private DodgeUtility _dodgeUtility;
-    private MoveUtility _moveUtility;
+    protected MoveUtility _moveUtility;
     public TargetUtility targetUtility;
     private CatchUtility _catchUtility;
     internal PickUpUtility _pickUpUtility;
@@ -300,7 +301,9 @@ public class DodgeballAI : Actor
     }
 
     protected UtilityHandler _utilityHandler;
-    private void Update()
+    
+    // do extended update methods get called?
+    protected virtual void Update()
     {
         _pickUpUtility.Update();
         if (hasBall) ballPossessionTime += Time.deltaTime;
@@ -325,6 +328,11 @@ public class DodgeballAI : Actor
 
         _moveUtility.ResetBackOff();
 
+        if (currentState == AIState.Special)
+        {
+            HandleSpecial();
+            return;
+        }
         var utility = _utilityHandler.EvaluateUtility(this);
         var inPickup = currentState == AIState.PickUp;
         currentState = _utilityHandler.GetState();
@@ -429,10 +437,18 @@ public class DodgeballAI : Actor
             case AIState.Possession:
                 if (!_moveUtility.PossessionMove(this)) currentState = AIState.BackOff;
                 break;
+            case AIState.Special:
+                HandleSpecial();
+                break;
             default:
                 utility.Execute(this);
                 break;
         }
+    }
+
+    protected virtual void HandleSpecial()
+    {
+        _moveUtility.Execute(this);
     }
 
     private void OnCollisionEnter(Collision collision)

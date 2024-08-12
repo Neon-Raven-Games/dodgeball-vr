@@ -236,27 +236,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             ai.animator.SetFloat(_SYAxis, Mathf.Clamp(_animBlendTreeAxis.y, -1f, 1f));
 
         }
-
-
-        private static Vector3 ClampPositionToPlayArea(Vector3 position, DodgeballPlayArea playArea, Team team)
-        {
-            Bounds playAreaBounds;
-            if (team == Team.TeamOne)
-            {
-                playAreaBounds = new Bounds(playArea.team1PlayArea.position,
-                    new Vector3(playArea.team1PlayArea.localScale.x, 1, playArea.team1PlayArea.localScale.z));
-            }
-            else
-            {
-                playAreaBounds = new Bounds(playArea.team2PlayArea.position,
-                    new Vector3(playArea.team2PlayArea.localScale.x, 1, playArea.team2PlayArea.localScale.z));
-            }
-
-            position.x = Mathf.Clamp(position.x, playAreaBounds.min.x, playAreaBounds.max.x);
-            position.z = Mathf.Clamp(position.z, playAreaBounds.min.z, playAreaBounds.max.z);
-            return position;
-        }
-
+        
         public void ResetBackOff()
         {
             backoffStartTime = 0;

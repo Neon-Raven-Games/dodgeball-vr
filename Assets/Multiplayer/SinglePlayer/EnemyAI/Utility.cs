@@ -10,13 +10,14 @@ namespace Hands.SinglePlayer.EnemyAI
 
         private Bounds playAreaBounds;
         private RaycastHit hit;
+
         protected Utility(T args, DodgeballAI.AIState state)
         {
             this.args = args;
             State = state;
         }
 
-        public DodgeballAI.AIState State { get;}
+        public DodgeballAI.AIState State { get; }
 
         // this will be called by the AI class in update loop
         public abstract float Execute(DodgeballAI ai);
@@ -74,6 +75,7 @@ namespace Hands.SinglePlayer.EnemyAI
 
             return false;
         }
+
         protected bool IsInPlayArea(Vector3 position) =>
             playAreaBounds.Contains(position);
 
@@ -100,6 +102,25 @@ namespace Hands.SinglePlayer.EnemyAI
             return nearestBall;
         }
 
+        protected static Vector3 ClampPositionToPlayArea(Vector3 position, DodgeballPlayArea playArea, Team team)
+        {
+            Bounds playAreaBounds;
+            if (team == Team.TeamOne)
+            {
+                playAreaBounds = new Bounds(playArea.team1PlayArea.position,
+                    new Vector3(playArea.team1PlayArea.localScale.x, 1, playArea.team1PlayArea.localScale.z));
+            }
+            else
+            {
+                playAreaBounds = new Bounds(playArea.team2PlayArea.position,
+                    new Vector3(playArea.team2PlayArea.localScale.x, 1, playArea.team2PlayArea.localScale.z));
+            }
+
+            position.x = Mathf.Clamp(position.x, playAreaBounds.min.x, playAreaBounds.max.x);
+            position.z = Mathf.Clamp(position.z, playAreaBounds.min.z, playAreaBounds.max.z);
+            return position;
+        }
+
         protected bool IsTargetInLineOfSight(DodgeballAI ai)
         {
             if (ai.CurrentTarget == null)
@@ -123,7 +144,7 @@ namespace Hands.SinglePlayer.EnemyAI
         public float randomnessFactor = 0.1f;
         public float separationDistance = 2f;
         public float alignmentWeight = 1f;
-        public float cohesionWeight = 1f; 
+        public float cohesionWeight = 1f;
         public float separationWeight = 1.5f;
         public float moveIntervalMin = 2f;
         public float moveIntervalMax = 5f;
@@ -176,7 +197,7 @@ namespace Hands.SinglePlayer.EnemyAI
         // Time to wait when out of bounds
         public float outOfBoundsWaitTime = 3f;
     }
-    
+
     [Serializable]
     public class ShadowStepUtilityArgs : UtilityArgs
     {
@@ -188,5 +209,19 @@ namespace Hands.SinglePlayer.EnemyAI
         public float entrySpeed;
         public float exitSpeed;
         public float exitDuration;
+        public GameObject floorSmoke;
+        public GameObject exitEffect;
+        public GameObject entryEffect;
+    }
+
+    [Serializable]
+    public class NinjaHandSignUtilityArgs : UtilityArgs
+    {
+        public float handSignDuration = 2f;
+        public float handSignCooldown = 5f;
+        public float handSignDebugRoll = 75f;
+
+        public Collider collider;
+        // todo, randomness, game state/battle phase, player success rate
     }
 }
