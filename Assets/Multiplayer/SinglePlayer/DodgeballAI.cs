@@ -44,7 +44,8 @@ public class DodgeballAI : Actor
         Move,
         OutOfPlay,
         BackOff,
-        Possession
+        Possession,
+        Special
     }
 
     // utility properties
@@ -136,12 +137,11 @@ public class DodgeballAI : Actor
         }
     }
 
-    private void PopulateUtilities()
+    protected virtual void PopulateUtilities()
     {
         _utilityHandler = new UtilityHandler();
         targetUtility = new TargetUtility(targetUtilityArgs, this, priorityHandler.targetUtility);
         targetUtility.Initialize(friendlyTeam.playArea, team);
-        // _utilityHandler.AddUtility(targetUtility);
         
         _moveUtility = new MoveUtility(moveUtilityArgs);
         _moveUtility.Initialize(friendlyTeam.playArea, team);
@@ -299,7 +299,7 @@ public class DodgeballAI : Actor
         animator.SetTrigger(_SPlayGhost);
     }
 
-    private UtilityHandler _utilityHandler;
+    protected UtilityHandler _utilityHandler;
     private void Update()
     {
         _pickUpUtility.Update();

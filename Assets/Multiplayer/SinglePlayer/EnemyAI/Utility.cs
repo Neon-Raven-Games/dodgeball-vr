@@ -176,4 +176,17 @@ namespace Hands.SinglePlayer.EnemyAI
         // Time to wait when out of bounds
         public float outOfBoundsWaitTime = 3f;
     }
+    
+    [Serializable]
+    public class ShadowStepUtilityArgs : UtilityArgs
+    {
+        public float stepDistance = 5f;
+        public float stepDuration;
+        public Vector3 stepDirection = Vector3.forward;
+        public AnimationCurve entryCurve;
+        public AnimationCurve exitCurve;
+        public float entrySpeed;
+        public float exitSpeed;
+        public float exitDuration;
+    }
 }

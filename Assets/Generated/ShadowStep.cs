@@ -1,7 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class ShadowStep : MonoBehaviour
 {
@@ -12,49 +11,80 @@ public class ShadowStep : MonoBehaviour
     [SerializeField] private Transform shadowStepToUnparent;
     [SerializeField] private Transform shadowStepParent;
 
+    [SerializeField] private AnimationCurve entryCurve;
+    [SerializeField] private AnimationCurve exitCurve;
+
+    [SerializeField] private float entrySpeed;
+    [SerializeField] private float exitSpeed;
+    [SerializeField] private float exitDuration;
+    
     private Vector3 _originalEffectLocalPosition;
     private Animator _anim;
 
+    private bool _isShadowStepping;
     private void Start()
     {
+        shadowStepToUnparent.transform.parent = null;
         _anim = player.GetComponentInChildren<Animator>();
     }
 
     public void ShadowStepMove()
     {
+        if (_isShadowStepping) return;
+        _isShadowStepping = true;
         _originalEffectLocalPosition = shadowStepToUnparent.transform.localPosition;
-        shadowStepToUnparent.transform.parent = null;
         _anim.SetTrigger(AIAnimationHelper.SSpecialOne);
+        ShadowStepEnter().Forget();
     }
 
+    private async UniTaskVoid ShadowStepExit()
+    {
+        var playerPosition = player.transform.position;
+        var exitPoint = player.transform.TransformPoint(-stepDirection * stepDistance / 2);
+        
+        var exitTime = 0f;
+        while (exitTime < 1)
+        {
+            player.transform.position = Vector3.Lerp(playerPosition, exitPoint, exitCurve.Evaluate(exitTime));
+            exitTime += Time.deltaTime / exitDuration;
+            await UniTask.Yield();
+        }
+    }
+    
+    private async UniTaskVoid ShadowStepEnter()
+    {
+        var entryPoint = player.transform.TransformPoint(stepDirection * (stepDistance / 4));
+        var start = player.transform.position;
+        var entryTime = 0f;
+        while (_isShadowStepping)
+        {
+            player.transform.position = Vector3.Lerp(start, entryPoint, entryCurve.Evaluate(entryTime));
+            entryTime += Time.deltaTime / entrySpeed;
+            await UniTask.Yield();
+        }
+    }
     /// <summary>
     /// Animation event called from the the last frame of the shadow step exit animation
     /// </summary>
     public void InitialShadowStepFinished()
     {
-        player.SetActive(false);
-        var targetPosition = player.transform.TransformPoint(stepDirection * stepDistance);
-        targetPosition = ClampPositionWithinBounds(targetPosition);
-        ShadowStepEntryFinished(targetPosition);
-    }
-
-    /// <summary>
-    /// Resumes shadowstep animation in the entry position
-    /// </summary>
-    /// <param name="targetPosition">Place where the character landed in their shadow step.</param>
-    private void ShadowStepEntryFinished(Vector3 targetPosition)
-    {
-        player.transform.position = targetPosition;
-        shadowStepToUnparent.transform.parent = shadowStepParent;
+        if (!_isShadowStepping) return;
+        _isShadowStepping = false;
         shadowStepToUnparent.transform.localPosition = _originalEffectLocalPosition;
         Reappear().Forget();
     }
-    
+
     private async UniTaskVoid Reappear()
     {
+        await UniTask.Yield();
+        player.SetActive(false);
+        var targetPosition = player.transform.TransformPoint(stepDirection * stepDistance);
+        targetPosition = ClampPositionWithinBounds(targetPosition);
+        player.transform.position = targetPosition;
         await UniTask.Delay(TimeSpan.FromSeconds(stepDuration));
         player.SetActive(true);
         _anim.Play(AIAnimationHelper.SSpecialOneExit);
+        ShadowStepExit().Forget();
     }
 
     private Vector3 ClampPositionWithinBounds(Vector3 targetPosition)
