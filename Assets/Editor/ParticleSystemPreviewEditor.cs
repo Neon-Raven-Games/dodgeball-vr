@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(ParticleSystem))]
+// [CustomEditor(typeof(ParticleSystem))]
 public class ParticleSystemPreviewEditor : Editor
 {
     private bool _isPreviewing = false;
