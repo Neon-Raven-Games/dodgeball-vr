@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a9752b0c8e144801967e6897679604b, type: 3}
+  m_Name: vHierarchy Data
+  m_EditorClassIdentifier: 
+  sceneDatas_byGuid:
+    keys:
+    - d02fceab8ca3eb843a32b2e5f46112fd
+    - 4e90cee3a2e2ceb489ac97f34dcae595
+    - cef896f92b6ed8044831492118bf95c1
+    values:
+    - goDatas_byGlobalId:
+        keys:
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-5227245552730870069-2093839902
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-3610005978619497574-1407155214
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-3610005978619497574-1226308490
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-3610005978619497574-491409702
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-1322971105-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-838324400-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-1803846536-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-2029055123-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-899966213-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-671699062-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-1665124982-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-264965730-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-1052622887-0
+        - globalObjectIdString: GlobalObjectId_V1-2-d02fceab8ca3eb843a32b2e5f46112fd-7936838033338502271-1847387851588289689
+        values:
+        - colorIndex: 7
+          iconNameOrGuid: StandaloneInputModule Icon
+        - colorIndex: 2
+          iconNameOrGuid: ReflectionProbe Icon
+        - colorIndex: 2
+          iconNameOrGuid: ReflectionProbe Icon
+        - colorIndex: 2
+          iconNameOrGuid: ReflectionProbe Icon
+        - colorIndex: 4
+          iconNameOrGuid: MeshCollider Icon
+        - colorIndex: 8
+          iconNameOrGuid: Settings Icon
+        - colorIndex: 6
+          iconNameOrGuid: Favorite
+        - colorIndex: 4
+          iconNameOrGuid: Terrain Icon
+        - colorIndex: 8
+          iconNameOrGuid: SphereCollider Icon
+        - colorIndex: 6
+          iconNameOrGuid: AvatarMask On Icon
+        - colorIndex: 2
+          iconNameOrGuid: AvatarMask On Icon
+        - colorIndex: 7
+          iconNameOrGuid: AvatarMask On Icon
+        - colorIndex: 3
+          iconNameOrGuid: MeshCollider Icon
+        - colorIndex: 9
+          iconNameOrGuid: PreMatCube
+    - goDatas_byGlobalId:
+        keys:
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-1083205558-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-919132148155112260-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-1548815010-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-1029997304-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-1030793238-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-1419572985-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-643920462-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-1593949644-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-521083775-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-1994139210-0
+        - globalObjectIdString: GlobalObjectId_V1-2-4e90cee3a2e2ceb489ac97f34dcae595-6951955460464916565-5244855024966565816
+        values:
+        - colorIndex: 2
+          iconNameOrGuid: LightProbes Icon
+        - colorIndex: 0
+          iconNameOrGuid: Terrain Icon
+        - colorIndex: 0
+          iconNameOrGuid: PreMatQuad
+        - colorIndex: 0
+          iconNameOrGuid: AudioClip Icon
+        - colorIndex: 0
+          iconNameOrGuid: AvatarMask On Icon
+        - colorIndex: 0
+          iconNameOrGuid: Terrain Icon
+        - colorIndex: 0
+          iconNameOrGuid: AvatarMask On Icon
+        - colorIndex: 0
+          iconNameOrGuid: TrailRenderer Icon
+        - colorIndex: 0
+          iconNameOrGuid: cs Script Icon
+        - colorIndex: 0
+          iconNameOrGuid: AudioReverbZone Icon
+        - colorIndex: 0
+          iconNameOrGuid: Settings Icon
+    - goDatas_byGlobalId:
+        keys: []
+        values: []

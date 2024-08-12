@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 10_Base
+  m_Shader: {fileID: 4800000, guid: b430983578466934c944e7171b4c372c, type: 3}
+  m_Parent: {fileID: 2100000, guid: 152f589e6badcea498fdd2b0c464337e, type: 2}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - ADDITIVECONFIG_ON
+  - ALPHACUTOFF_ON
+  - COLORRAMPGRAD_ON
+  - COLORRAMP_ON
+  - HSV_ON
+  - POLARUV_ON
+  - POSTERIZE_ON
+  - PREMULTIPLYCOLOR_ON
+  - SHAPE1CONTRAST_ON
+  - SHAPE1DISTORT_ON
+  - SHAPE2_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _ColorRampTexGradient:
+        m_Texture: {fileID: 457892249546160887}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 6aee247fd792b224c82c6a7750ef6e2b, type: 3}
+        m_Scale: {x: 1, y: 1.11}
+        m_Offset: {x: 0, y: 0}
+    - _MaskTex:
+        m_Texture: {fileID: 2800000, guid: c644f12d7def3a543a6c3ec049bb87f9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Shape2Tex:
+        m_Texture: {fileID: 2800000, guid: 180c2751e46bf154aa1be4187f24096a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShapeDistortTex:
+        m_Texture: {fileID: 2800000, guid: d292c9c372b64c345b3d541abc00ec02, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaCutoffValue: 0.145
+    - _ColorGradingMidPoint: 0.523
+    - _ColorRampBlend: 1
+    - _ColorRampLuminosity: -0.19
+    - _CullingOption: 0
+    - _Glow: 1
+    - _GlowGlobal: 1
+    - _HsvBright: 2
+    - _HsvSaturation: 1.2
+    - _HsvShift: 360
+    - _MaskPow: 1
+    - _PosterizeNumColors: 5.4
+    - _RenderingMode: 3
+    - _RimIntensity: 1
+    - _RimPower: 5
+    - _RimScale: 1
+    - _ShapeBrightness: 0.14
+    - _ShapeContrast: 1.42
+    - _ShapeDistortAmount: 0.49
+    - _ShapeDistortYSpeed: 0.1
+    - _ShapeYSpeed: 1.5
+    - _SrcMode: 1
+    - _ZWrite: 0
+    m_Colors:
+    - _ColorGradingLight: {r: 118.035385, g: 102.585724, b: 0, a: 1}
+    - _ColorGradingMiddle: {r: 1.2108426, g: 0.50710505, b: 0, a: 1}
+    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
+--- !u!28 &457892249546160887
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: z_ColorRampTexGradientTex{"mode":0,"colorKeys":[{"color":{"r":0.8396226167678833,"g":0.2633134722709656,"b":0.22574758529663087,"a":1.0},"time":0.0},{"color":{"r":1.0,"g":0.6428059339523315,"b":0.0,"a":1.0},"time":0.5000076293945313},{"color":{"r":0.9427509307861328,"g":1.0,"b":0.0,"a":1.0},"time":1.0}],"alphaKeys":[{"alpha":1.0,"time":0.0},{"alpha":1.0,"time":1.0}]}
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 3
+  m_Width: 64
+  m_Height: 1
+  m_CompleteImageSize: 256
+  m_MipsStripped: 0
+  m_TextureFormat: 4
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMipmapLimit: 0
+  m_MipmapLimitGroupName: 
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  m_PlatformBlob: 
+  image data: 256
+  _typelessdata: d6433affd74638ffd94936ffda4c34ffdb4f32ffdd5330ffde562fffdf592dffe05c2bffe25f29ffe36227ffe46525ffe66824ffe76b22ffe86e20ffea711effeb741cffec771affed7a19ffef7e17fff08115fff18413fff38711fff48a10fff58d0efff7900cfff8930afff99608fffa9906fffc9c05fffd9f03fffea201ffffa500fffea800fffeab00fffdae00fffdb100fffcb400fffcb700fffcba00fffbbc00fffbbf00fffac200fffac500fff9c800fff9cb00fff8ce00fff8d100fff7d400fff7d700fff6d900fff6dc00fff5df00fff5e200fff5e500fff4e800fff4eb00fff3ee00fff3f100fff2f300fff2f600fff1f900fff1fc00fff0ff00ff
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
