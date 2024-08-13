@@ -25,16 +25,24 @@ public class NinjaAgent : DodgeballAI
     protected override void Update()
     {
         base.Update();
+        if (IsOutOfPlay() || currentState == AIState.PickUp) return;
+        
         if (_handSignUtility.Roll(this) > 0)
             _handSignUtility.Execute(this);
     }
 
+    internal override void SetOutOfPlay(bool value)
+    {
+        if (currentState == AIState.Special) return;
+        base.SetOutOfPlay(value);
+    }
+
     protected override void HandleSpecial()
     {
-        base.HandleSpecial();
-        Debug.Log("Special State");
-        var execute = _shadowStepUtility.Execute(this);
-        if (execute > 0) currentState = AIState.Special;
+        if (IsOutOfPlay() || currentState == AIState.PickUp) return;
+        
+        var execute = _shadowStepUtility.Roll(this);
+        if (execute > 0) _shadowStepUtility.Execute(this);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -42,12 +50,18 @@ public class NinjaAgent : DodgeballAI
         if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
         {
             _shadowStepUtility.ballInTrigger = true;
+            _shadowStepUtility.Execute(this);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.layer == LayerMask.NameToLayer("Ball") && _shadowStepUtility.ballInTrigger)
+        if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
             _shadowStepUtility.ballInTrigger = false;
+    }
+
+    public void InitialShadowStepFinished()
+    {
+        _shadowStepUtility.InitialShadowStepFinished();
     }
 }

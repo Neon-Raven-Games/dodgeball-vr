@@ -201,6 +201,7 @@ namespace Hands.SinglePlayer.EnemyAI
     [Serializable]
     public class ShadowStepUtilityArgs : UtilityArgs
     {
+        public GameObject aiAvatar;
         public float stepDistance = 5f;
         public float stepDuration;
         public Vector3 stepDirection = Vector3.forward;

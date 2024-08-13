@@ -8041,6 +8041,7 @@ Transform:
   - {fileID: 7648182591412206496}
   - {fileID: 8891100753511048740}
   - {fileID: 4739932203318370008}
+  - {fileID: 4870021159345862469}
   m_Father: {fileID: 3160313780840312623}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4519930305421591141
@@ -8056,7 +8057,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dodgeballAI: {fileID: 7250637352051434652}
-  particleEffect: {fileID: 0}
+  shadowStep: {fileID: 0}
 --- !u!95 &3654604652532971092
 Animator:
   serializedVersion: 7
@@ -12703,7 +12704,6 @@ Transform:
   m_Children:
   - {fileID: 3160313780840312623}
   - {fileID: 5601589453730837339}
-  - {fileID: 4870021159345862469}
   - {fileID: 306515469566891249}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
@@ -13042,12 +13042,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5153901054308825539}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.70710677, y: 0, z: 0, w: 0.70710677}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.7499999, y: 0.75000006, z: 0.7500001}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: -0.00004684448, y: -0.037356745, z: 0.007217665}
+  m_LocalScale: {x: 0.7499999, y: 0.74999994, z: 0.74999994}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3932534911446440410}
+  m_Father: {fileID: 3956408298624461668}
   m_LocalEulerAnglesHint: {x: 90, y: 90, z: 90}
 --- !u!33 &6245601347233396450
 MeshFilter:

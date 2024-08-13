@@ -18,13 +18,14 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
+            if (_isHandSignActive && args.collider.enabled) return 0f;
             _isHandSignActive = true;
             args.collider.enabled = true;
             HandSignTimer().Forget();
             // _ai.animator.SetTrigger(AIAnimationHelper.HandSign);
             
             // do we want any particle effects or is a sign enough?
-            return 0f;
+            return 1f;
         }
 
         public override float Roll(DodgeballAI ai)

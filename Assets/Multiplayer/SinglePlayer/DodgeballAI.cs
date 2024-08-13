@@ -232,7 +232,7 @@ public class DodgeballAI : Actor
                 enemyHeadPos.y += 1f;
             }
         }
-
+        
         var velocity = _throwUtility.CalculateThrow(this, rightBallIndex.BallPosition, enemyHeadPos);
         _possessedBall.transform.position = rightBallIndex.BallPosition + velocity * Time.deltaTime * 2;
 
@@ -305,6 +305,13 @@ public class DodgeballAI : Actor
     // do extended update methods get called?
     protected virtual void Update()
     {
+        
+        if (currentState == AIState.Special)
+        {
+            HandleSpecial();
+            return;
+        }
+        
         _pickUpUtility.Update();
         if (hasBall) ballPossessionTime += Time.deltaTime;
 
@@ -328,11 +335,6 @@ public class DodgeballAI : Actor
 
         _moveUtility.ResetBackOff();
 
-        if (currentState == AIState.Special)
-        {
-            HandleSpecial();
-            return;
-        }
         var utility = _utilityHandler.EvaluateUtility(this);
         var inPickup = currentState == AIState.PickUp;
         currentState = _utilityHandler.GetState();
@@ -377,7 +379,7 @@ public class DodgeballAI : Actor
         animator.SetFloat(_SYAxis, 0);
         _pickUpUtility.StopPickup(this);
         targetUtility.ResetLookWeight();
-
+        
         if (animator.GetCurrentAnimatorStateInfo(0).IsName("Praying Ghost")) triggerOutOfPlay = true;
         else return true;
         _outOfPlayUtility.Execute(this);
