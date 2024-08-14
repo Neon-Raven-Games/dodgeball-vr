@@ -54,7 +54,7 @@ public class DevController : Actor
         _moveForwardAction.Enable();
         _lookAction.Enable();
         PopulateTeamObjects();
-
+        return;
         leftHandStateController.SetInPlay(true);
         rightHandStateController.SetInPlay(true);
         leftHandStateController.uITrigger += SetLastHandSideUi;
@@ -84,8 +84,8 @@ public class DevController : Actor
 
     private void OnDisable()
     {
-        leftHandStateController.uITrigger -= SetLastHandSideUi;
-        rightHandStateController.uITrigger -= SetLastHandSideUi;
+        // leftHandStateController.uITrigger -= SetLastHandSideUi;
+        // rightHandStateController.uITrigger -= SetLastHandSideUi;
         _moveForwardAction.Disable();
         _lookAction.Disable();
     }
@@ -94,7 +94,7 @@ public class DevController : Actor
     {
         HandleRotation();
         HandleMovement();
-        SetHasBall();
+        // SetHasBall();
         if (IsOutOfPlay()) HandleOutOfPlay();
     }
 
@@ -143,8 +143,9 @@ public class DevController : Actor
         base.SetOutOfPlay(value);
         outOfBoundsArea.SetActive(value);
         if (!value) whistleSound.Play();
-        leftHandStateController.SetInPlay(!value);
-        rightHandStateController.SetInPlay(!value);
+        // leftHandStateController.SetInPlay(!value);
+        // rightHandStateController.SetInPlay(!value);
+        
         if (!value)
         {
             speed += 0.5f;

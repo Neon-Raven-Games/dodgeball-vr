@@ -8,7 +8,7 @@ public class VacuumHandCannon : MonoBehaviour
     [SerializeField] private float swirlRadius = 1f;
     [SerializeField] private float swirlSpeed = 2f;
     [SerializeField] private float suctionCooldown = 1f;
-    [SerializeField] private float suctionDuration = 2f; // Added suction duration
+    [SerializeField] private float suctionDuration = 2f;
     [SerializeField] private float ballEndScale = 0.4f;
     
     [SerializeField] private bool gripping;

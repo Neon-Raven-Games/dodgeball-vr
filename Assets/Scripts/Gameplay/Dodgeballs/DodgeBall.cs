@@ -40,6 +40,14 @@ public class DodgeBall : MonoBehaviour
         _throwHandle = GetComponent<ThrowHandle>();
         _throwHandle.SetConfigForDevice(Device.UNSPECIFIED, config);
         _throwHandle.SetConfigForDevice(Device.OCULUS_TOUCH, config);
+        
+        var blendShapeIndex = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex("blendShape1.DodgeBall_Base1");
+        skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 0);
+    }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
     }
 
     public void HandleThrowTrajectory(Vector3 velocity)
