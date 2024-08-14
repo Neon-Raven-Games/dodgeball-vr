@@ -43,6 +43,7 @@ public class NinjaAgent : DodgeballAI
         
         var execute = _shadowStepUtility.Roll(this);
         if (execute > 0) _shadowStepUtility.Execute(this);
+        else if (!_shadowStepUtility._shadowSteppingSequencePlaying) _moveUtility.Execute(this);
     }
 
     private void OnTriggerEnter(Collider other)
