@@ -139,6 +139,7 @@ public class DodgeBall : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         if (_ballState == BallState.Possessed) return;
+        
         var param = 0;
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {

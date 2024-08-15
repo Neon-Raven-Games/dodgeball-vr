@@ -17,7 +17,7 @@ public class NetBallPossessionHandler : MonoBehaviour
     [SerializeField] public HandSide handSide;
     private readonly Dictionary<BallType, DodgeballIndex> _dodgeballDictionary = new();
     private HandPose _handPose;
-    private GameObject _currentDodgeball;
+    internal GameObject _currentDodgeball;
     private bool _updatePose;
     private Animator _anim;
     private static readonly int _SGrabbing = Animator.StringToHash("Grabbing");

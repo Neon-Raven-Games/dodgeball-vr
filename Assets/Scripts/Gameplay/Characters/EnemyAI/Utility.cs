@@ -6,7 +6,7 @@ namespace Hands.SinglePlayer.EnemyAI
 {
     public abstract class Utility<T> where T : UtilityArgs
     {
-        protected T args;
+        protected internal T args;
 
         private Bounds playAreaBounds;
         private RaycastHit hit;
@@ -213,6 +213,8 @@ namespace Hands.SinglePlayer.EnemyAI
         public GameObject floorSmoke;
         public GameObject exitEffect;
         public GameObject entryEffect;
+        public float rollChance = 60f;
+        public BipedIK ik;
     }
 
     [Serializable]
@@ -221,7 +223,9 @@ namespace Hands.SinglePlayer.EnemyAI
         public float handSignDuration = 2f;
         public float handSignCooldown = 5f;
         public float handSignDebugRoll = 75f;
-
+        public BipedIK ik;
+        public Transform handSignTarget;
+        public Animator handAnimator;
         public Collider collider;
         // todo, randomness, game state/battle phase, player success rate
     }

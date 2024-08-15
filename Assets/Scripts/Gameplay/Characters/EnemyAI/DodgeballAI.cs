@@ -182,7 +182,7 @@ public class DodgeballAI : Actor
 
     #endregion
 
-    private DodgeBall _possessedBall;
+    internal DodgeBall _possessedBall;
     [SerializeField] private NetBallPossessionHandler leftBallIndex;
     [SerializeField] private NetBallPossessionHandler rightBallIndex;
 
@@ -209,15 +209,12 @@ public class DodgeballAI : Actor
     {
         if (_possessedBall == null || !hasBall)
         {
-            // got out mid throw, poor bastard
             animator.SetTrigger(_SCancelThrow);
             throwAnimationPlaying = false;
             hasBall = false;
             return;
         }
-
         hasBall = false;
-
         animator.ResetTrigger(_SThrow);
         
         // todo, we can set the head better, null error message giving us gc alloc in editor
@@ -233,19 +230,22 @@ public class DodgeballAI : Actor
             }
         }
         
-        var velocity = _throwUtility.CalculateThrow(this, rightBallIndex.BallPosition, enemyHeadPos);
-        _possessedBall.transform.position = rightBallIndex.BallPosition + velocity * Time.deltaTime * 2;
+        var ballPos = rightBallIndex._currentDodgeball ? rightBallIndex.BallPosition :  leftBallIndex.BallPosition;
+        var velocity = _throwUtility.CalculateThrow(this, ballPos, enemyHeadPos);
+        _possessedBall.transform.position = ballPos + velocity * Time.deltaTime * 4;
 
         ballPossessionTime = 0;
 
         _possessedBall.gameObject.SetActive(true);
         rightBallIndex.SetBallType(BallType.None);
+        leftBallIndex.SetBallType(BallType.None);
 
         var rb = _possessedBall.GetComponent<Rigidbody>();
         rb.velocity = velocity;
 
         _possessedBall.HandleThrowTrajectory(velocity);
         _possessedBall.SetLiveBall();
+        _possessedBall._team = team;
         BallThrowRecovery().Forget();
     }
 
@@ -261,7 +261,7 @@ public class DodgeballAI : Actor
 
     private bool throwAnimationPlaying;
 
-    private void ThrowBallAnimation()
+    public void ThrowBallAnimation()
     {
         throwAnimationPlaying = true;
         targetUtilityArgs.ik.solvers.lookAt.SetLookAtWeight(0f);
@@ -294,10 +294,11 @@ public class DodgeballAI : Actor
     {
         if (outOfPlay == value) return;
         base.SetOutOfPlay(value);
-        if (hasBall) _possessedBall._ballState = BallState.Dead;
-        // todo, hits sub state machine - 2
         animator.SetInteger(_SHitVariation, Random.Range(0, 3));
         animator.SetTrigger(_SPlayGhost);
+        
+        if (!_possessedBall) return;
+        if (hasBall) _possessedBall._ballState = BallState.Dead;
     }
 
     protected UtilityHandler _utilityHandler;
@@ -305,7 +306,6 @@ public class DodgeballAI : Actor
     // do extended update methods get called?
     protected virtual void Update()
     {
-        
         if (currentState == AIState.Special)
         {
             HandleSpecial();
@@ -360,7 +360,7 @@ public class DodgeballAI : Actor
         if (hasBall)
         {
             ballPossessionTime = 0;
-            _possessedBall.transform.position = rightBallIndex.BallPosition;
+            _possessedBall.transform.position = rightBallIndex._currentDodgeball ? rightBallIndex.BallPosition :  leftBallIndex.BallPosition;
             rightBallIndex.SetBallType(BallType.None);
             _possessedBall.gameObject.SetActive(true);
 
@@ -456,5 +456,11 @@ public class DodgeballAI : Actor
     private void OnCollisionEnter(Collision collision)
     {
         Debug.Log("ai collision detected!");
+    }
+
+    public void SwitchBallSideToLeft()
+    {
+        leftBallIndex.SetBallType(BallType.Dodgeball);
+        rightBallIndex.SetBallType(BallType.None);
     }
 }
