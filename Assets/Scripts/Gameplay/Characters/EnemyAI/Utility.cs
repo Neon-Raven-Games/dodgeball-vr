@@ -208,13 +208,14 @@ namespace Hands.SinglePlayer.EnemyAI
         public AnimationCurve entryCurve;
         public AnimationCurve exitCurve;
         public float entrySpeed;
-        public float exitSpeed;
         public float exitDuration;
         public GameObject floorSmoke;
         public GameObject exitEffect;
         public GameObject entryEffect;
         public float rollChance = 60f;
         public BipedIK ik;
+        public float shadowStepCooldown = 10f;
+        public Collider collider;
     }
 
     [Serializable]

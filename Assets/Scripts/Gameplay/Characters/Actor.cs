@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -13,9 +14,15 @@ public class Actor : MonoBehaviour
     public ActorTeam opposingTeam;
     public DodgeballPlayArea playArea;
     public float outOfBoundsWaitTime = 1f;
+    public Dictionary<Collider, bool> colliderMap = new();
 
+    public bool IsColliderOwner(Collider collider) => colliderMap.ContainsKey(collider);
+    
     protected void PopulateTeamObjects()
     {
+        var colliders = GetComponentsInChildren<Collider>();
+        foreach (var collider in colliders) colliderMap[collider] = true;
+        
         if (!playArea)
         {
             Debug.LogWarning("Actor could not find dodgeball play area.");

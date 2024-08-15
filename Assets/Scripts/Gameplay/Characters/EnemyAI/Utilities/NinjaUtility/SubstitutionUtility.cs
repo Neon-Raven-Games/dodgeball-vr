@@ -30,9 +30,9 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
                 _ai.currentState == DodgeballAI.AIState.PickUp)
                 return 0;
             if (_shadowSteppingSequencePlaying) return 0;
+            args.collider.enabled = false;
             _shadowSteppingSequencePlaying = true;
-            
-            Debug.Log("Enter Substitution");
+            Debug.Log("Execute sub");
             ShadowStepMove();
             ballInTrigger = false;
             _ai.SetOutOfPlay(false);
@@ -54,18 +54,24 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         public void ShadowStepMove()
         {
             _isShadowStepping = true;
-            args.stepDirection = -ballDirection.normalized;
-            args.stepDirection.y = _ai.transform.position.normalized.y;
+            args.stepDirection = (_ai.transform.position - ballHitPoint).normalized;
+            args.stepDirection.y = 0;
             _animator.SetTrigger(AIAnimationHelper.SSpecialTwo);
             ShadowStepEnter().Forget();
             args.ik.solvers.leftHand.SetIKPositionWeight(0);
             args.ik.solvers.leftHand.SetIKRotationWeight(0);
         }
 
+        // this is not exiting properly
         private async UniTaskVoid ShadowStepExit()
         {
+            if (!_ai)
+            {
+                Debug.Log("Ai was null and broke");
+                return;
+            }
             var playerPosition = _ai.transform.position;
-            var exitPoint = _ai.transform.TransformPoint(-ballDirection.normalized * args.stepDistance / 2);
+            var exitPoint = _ai.transform.TransformPoint(args.stepDirection * args.stepDistance / 2);
             exitPoint.y = _ai.transform.position.y;
 
             var exitTime = 0f;
@@ -81,30 +87,37 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
                 await UniTask.Yield();
             }
 
-            _ai.currentState = DodgeballAI.AIState.Move;
             args.entryEffect.SetActive(false);
+            await UniTask.Yield();
+            
             _shadowSteppingSequencePlaying = false;
-
+            ballInTrigger = false;
+            
+            await UniTask.Yield();
+            _ai.currentState = DodgeballAI.AIState.Move;
         }
 
         private async UniTaskVoid ShadowStepEnter()
         {
             if (!_ai) return;
+            
             args.floorSmoke.transform.position = _ai.transform.position + args.stepDirection * (args.stepDistance / 8);
             args.floorSmoke.SetActive(true);
             args.entryEffect.transform.position = ballHitPoint;
-            _ai.transform.LookAt(-ballDirection.normalized);
+            args.entryEffect.SetActive(true); 
+            // can we make the player look at the entry effect better?
             args.entryEffect.SetActive(true);
 
-            var entryPoint = _ai.transform.TransformPoint(-ballDirection.normalized * args.stepDistance / 2);
+            var entryPoint = _ai.transform.TransformPoint(args.stepDirection * args.stepDistance / 2);
             entryPoint.y = _ai.transform.position.y;
 
             var start = _ai.transform.position;
             var entryTime = 0f;
 
-            while (entryTime < args.stepDuration)
+            while (entryTime < args.stepDuration && _isShadowStepping)
             {
                 if (!_ai) break;
+                _ai.transform.LookAt(ballHitPoint);
 
                 float t = Mathf.Clamp01(entryTime / args.stepDuration); // Clamping to ensure it stays between 0 and 1
                 _ai.transform.position = Vector3.Lerp(start, entryPoint, t);
@@ -112,6 +125,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
                 entryTime += Time.deltaTime * args.entrySpeed; // Control the speed by multiplying with entrySpeed
                 await UniTask.Yield();
             }
+        
         }
 
         /// <summary>

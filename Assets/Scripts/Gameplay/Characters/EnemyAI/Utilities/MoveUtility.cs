@@ -202,9 +202,6 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             noise = new Vector3(Mathf.PerlinNoise(noiseOffset.x, 0), 0, Mathf.PerlinNoise(0, noiseOffset.z)) -
                         Vector3.one * 0.5f;
             currentTargetPosition += noise * args.randomnessFactor;
-            currentTargetPosition = ClampPositionToPlayArea(currentTargetPosition, ai.playArea, ai.team);
-
-            // Smoothly move towards the target position with a slight slowdown as the AI gets closer
             MoveTowards(ai, currentTargetPosition);
         }
 

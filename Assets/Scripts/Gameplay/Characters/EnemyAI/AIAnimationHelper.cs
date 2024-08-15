@@ -10,13 +10,23 @@ public class AIAnimationHelper : MonoBehaviour
     public static readonly int SSpecialTwo = Animator.StringToHash("SpecialTwo");
     public static readonly int SSpecialOneExit = Animator.StringToHash("ShadowDash_SpinThrow_L");
     
+    public ColorLerp colorLerp;
     // todo, use new layer to override hand/arm for signage
     public static readonly int HandSign = Animator.StringToHash("HandSign");
     
     // Start is called before the first frame update
     public void Throw()
     {
+        if (dodgeballAI is NinjaAgent)
+            Debug.Log("animation throw");
         dodgeballAI.ThrowBall();
+    }
+
+    public float colorLerpValue;
+
+    private void Update()
+    {
+        if (colorLerp) colorLerp.lerpValue = colorLerpValue;
     }
     
     public void ShadowStep()
@@ -28,11 +38,5 @@ public class AIAnimationHelper : MonoBehaviour
     public void Substitution()
     {
         if (dodgeballAI is NinjaAgent ninja) ninja.InitialSubstitutionFinished();
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
-        
     }
 }

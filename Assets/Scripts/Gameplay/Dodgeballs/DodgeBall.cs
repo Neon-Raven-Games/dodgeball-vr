@@ -74,7 +74,6 @@ public class DodgeBall : MonoBehaviour
     {
         PlaySound(SoundIndex.Throw);
         _ballState = BallState.Live;
-        ownerActor = null;
     }
 
     private void PlaySound(SoundIndex sound)
@@ -139,6 +138,7 @@ public class DodgeBall : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         if (_ballState == BallState.Possessed) return;
+        if (ownerActor != null && ownerActor.IsColliderOwner(collision.collider)) return;
         
         var param = 0;
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
@@ -201,6 +201,7 @@ public class DodgeBall : MonoBehaviour
         {
             PlaySound(SoundIndex.Hit);
         }
+        ownerActor = null;
     }
 
     public void Throw()

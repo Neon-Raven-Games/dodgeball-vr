@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
@@ -7,7 +6,6 @@ using Hands.SinglePlayer.EnemyAI.Priority;
 using Hands.SinglePlayer.EnemyAI.Utilities;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
 using UnityEngine;
-using UnityEngine.XR;
 using Random = UnityEngine.Random;
 
 public class ActorTeam
@@ -48,6 +46,8 @@ public class DodgeballAI : Actor
         Possession,
         Special
     }
+
+    public bool stayIdle;
 
     // utility properties
     public DodgeUtilityArgs dodgeUtilityArgs;
@@ -140,6 +140,7 @@ public class DodgeballAI : Actor
 
     protected virtual void PopulateUtilities()
     {
+        Debug.Log("pre populate AI pos y: " + transform.position.y);
         _utilityHandler = new UtilityHandler();
         targetUtility = new TargetUtility(targetUtilityArgs, this, priorityHandler.targetUtility);
         targetUtility.Initialize(friendlyTeam.playArea, team);
@@ -306,6 +307,7 @@ public class DodgeballAI : Actor
     // do extended update methods get called?
     protected virtual void Update()
     {
+        if (stayIdle) return;
         if (currentState == AIState.Special)
         {
             HandleSpecial();

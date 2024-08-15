@@ -34,23 +34,28 @@ public class NinjaAgent : DodgeballAI
         if (currentState != AIState.Special && _handSignUtility.active)
         {
             if (_substitutionUtility.Roll(this) > 0)
+            {
+                currentState = AIState.Special;
                 _substitutionUtility.Execute(this);
+            }
             return;
         }
 
         if (_handSignUtility.Roll(this) > 0)
             _handSignUtility.Execute(this);
+        
     }
 
     internal override void SetOutOfPlay(bool value)
     {
-        if (currentState == AIState.Special || _handSignUtility.active || _shadowStepUtility._shadowSteppingSequencePlaying)
+        if (currentState == AIState.Special || _substitutionUtility._shadowSteppingSequencePlaying || _shadowStepUtility._shadowSteppingSequencePlaying)
             return;
         base.SetOutOfPlay(value);
     }
 
     protected override void HandleSpecial()
     {
+        return;
         if (IsOutOfPlay() || currentState == AIState.PickUp)
         {
             return;
@@ -79,18 +84,35 @@ public class NinjaAgent : DodgeballAI
 
     private void OnTriggerEnter(Collider other)
     {
-        if (_shadowStepUtility._shadowSteppingSequencePlaying) return;
-        if (_substitutionUtility._shadowSteppingSequencePlaying) return;
-        if (other.gameObject.layer == LayerMask.NameToLayer("Ball") && ! hasBall)
+        if (_shadowStepUtility._shadowSteppingSequencePlaying)
+        {
+            Debug.Log("ShadowStep cancel");
+            return;
+        }
+
+        if (_substitutionUtility._shadowSteppingSequencePlaying)
+        {
+            Debug.Log("Substitution cancel");
+            return;
+        }
+        if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
         {
             var db = other.GetComponent<DodgeBall>();
-            if (db._ballState != BallState.Live || db._team == team) return;
+            if (db._ballState != BallState.Live || db._team == team)
+            {
+                Debug.Log("Ball not live or same team");
+                return;
+            }
+
             _substitutionUtility.ballInTrigger = true;
             var rb = db.GetComponent<Rigidbody>();
             _substitutionUtility.ballDirection = rb.velocity;
             _substitutionUtility.ballHitPoint = db.transform.position;
             rb.velocity = Vector3.Reflect(rb.velocity, transform.forward);
-            _substitutionUtility.Execute(this);
+            {
+                Debug.Log("Substitution");
+                _substitutionUtility.Execute(this);
+            }
         }
     }
 
