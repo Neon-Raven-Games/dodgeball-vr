@@ -1,6 +1,7 @@
 ﻿using System;
 using RootMotion.FinalIK;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Hands.SinglePlayer.EnemyAI
 {
@@ -216,6 +217,37 @@ namespace Hands.SinglePlayer.EnemyAI
         public BipedIK ik;
         public float shadowStepCooldown = 10f;
         public Collider collider;
+    }
+    
+    [Serializable] 
+    public class SubstitutionUtilityArgs : UtilityArgs
+    {
+        [Header("Avatar")]
+        public GameObject aiAvatar;
+        public BipedIK ik;
+        public Collider collider;
+        
+        [Header("Exit Effects")]
+        public GameObject floorSmoke;
+        public GameObject logEffect;
+        
+        [Header("Entry Effects")]
+        public GameObject entryEffect;
+        public AnimationCurve exitCurve;
+        public ColorLerp colorLerp;
+        public float rentryDuration;
+        
+        [Header("Flags")]
+        public bool sequencePlaying;
+        public bool ballInTrigger;
+
+        [Header("Args")] 
+        public float stepDistance = 5f;
+        public float stepDuration;
+        
+        [Header("Debug and Runtime")]
+        public Vector3 stepDirection = Vector3.forward;
+
     }
 
     [Serializable]

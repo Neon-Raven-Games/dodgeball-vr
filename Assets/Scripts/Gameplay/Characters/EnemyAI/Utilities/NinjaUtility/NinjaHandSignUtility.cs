@@ -78,5 +78,13 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             args.ik.solvers.leftHand.SetIKRotationWeight(0);
             args.handAnimator.SetBool(_SSigning, false);
         }
+
+        public void Cooldown()
+        {
+            _isHandSignActive = false;
+            args.collider.enabled = false;
+            _nextAvailableTime = Time.time + args.handSignCooldown;
+            args.handAnimator.SetBool(_SSigning, false);
+        }
     }
 }

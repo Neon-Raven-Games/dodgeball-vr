@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
+using RootMotion.FinalIK;
 using UnityEngine;
 
 public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
@@ -55,41 +56,63 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
     public void ShadowStepMove()
     {
         if (_shadowSteppingSequencePlaying) return;
-        Debug.Log("ShadowStep entering");
         _shadowSteppingSequencePlaying = true;
         lastShadowStepTime = Time.time;
         _isShadowStepping = true;
-        _animator.SetTrigger(AIAnimationHelper.SSpecialOne);
         args.stepDirection = CalculateValidShadowStep();
         args.stepDirection.y = _ai.transform.position.y;
+        
         ShadowStepEnter().Forget();
     }
 
 
     private Vector3 CalculateValidShadowStep()
     {
+        // Define the preferred angles in degrees for left and right movements
+        float[] preferredAngles = { -45f, 45f, -30f, 30f, -15f, 15f };
 
-        var valid = _ai.playArea.transform.position;
-        valid.y = _ai.transform.position.y;
-        valid = valid.normalized;
-        return valid;
-        var direction = _possibleDirections[UnityEngine.Random.Range(0, _possibleDirections.Length)].normalized;
-        var targetPosition = _ai.transform.TransformPoint(direction * args.stepDistance);
-        targetPosition = ClampPositionToPlayArea(targetPosition, _ai.playArea, _ai.team);
-        var distance = Vector3.Distance(targetPosition, _ai.transform.position);
-        if (distance >= args.stepDistance * 0.9f) return direction;
-        
-        for (var i = 0; i < 5; i++) 
+        Vector3 bestDirection = Vector3.zero;
+        float maxDistance = 0f;
+
+        foreach (float angle in preferredAngles)
         {
-            direction = _possibleDirections[UnityEngine.Random.Range(0, _possibleDirections.Length)].normalized;
-            targetPosition = _ai.transform.TransformPoint(direction * args.stepDistance);
-            targetPosition = ClampPositionToPlayArea(targetPosition, _ai.playArea, _ai.team);
+            // Calculate the direction based on the preferred angle
+            Vector3 direction = Quaternion.Euler(0, angle, 0) * _ai.transform.forward;
+        
+            // Determine the target position in world space
+            Vector3 targetPosition = _ai.transform.TransformPoint(direction * args.stepDistance);
 
-            distance = Vector3.Distance(targetPosition, _ai.transform.position);
-            if (distance >= args.stepDistance * 1.5f) return direction;
+            // Check if the target position is within the bounds of the play area
+            if (IsWithinPlayArea(targetPosition, _ai.playArea.team2PlayArea))
+            {
+                // Calculate the distance to the target position from the AI's current position
+                float distance = Vector3.Distance(_ai.transform.position, targetPosition);
+            
+                // Choose the direction that gives the AI the farthest valid movement
+                if (distance > maxDistance)
+                {
+                    maxDistance = distance;
+                    bestDirection = direction;
+                }
+            }
         }
 
-        return Vector3.left;
+        // If no valid direction is found (unlikely, but a safety check)
+        if (bestDirection == Vector3.zero)
+        {
+            // Default to moving left if nothing else is valid
+            bestDirection = _ai.transform.TransformDirection(Vector3.left);
+        }
+
+        return bestDirection;
+    }
+
+    private bool IsWithinPlayArea(Vector3 position, Transform playArea)
+    {
+        // Assume playArea has a method or property that gives us the bounds
+        Bounds bounds = new Bounds(playArea.transform.position, playArea.localScale);
+
+        return bounds.Contains(position);
     }
 
 
@@ -115,6 +138,8 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
     private async UniTaskVoid ShadowStepEnter()
     {
         if (!_ai) return;
+        await UniTask.WaitUntil(() => args.ik.solvers.leftHand.GetIKPositionWeight() == 0);
+        _animator.SetTrigger(AIAnimationHelper.SSpecialOne);
         args.floorSmoke.transform.position = _ai.transform.position + args.stepDirection * (args.stepDistance / 8);
         args.floorSmoke.SetActive(true);
         var entryPoint = _ai.transform.TransformPoint(args.stepDirection * (args.stepDistance / 4));

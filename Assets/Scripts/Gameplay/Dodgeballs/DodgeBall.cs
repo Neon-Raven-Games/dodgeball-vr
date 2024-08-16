@@ -24,7 +24,7 @@ public class DodgeBall : MonoBehaviour
     internal int index;
     public Action<int, Vector3, Vector3> throwTrajectory;
     private int ballLayer;
-    private Actor ownerActor;
+    internal Actor ownerActor;
 
     public void Start()
     {

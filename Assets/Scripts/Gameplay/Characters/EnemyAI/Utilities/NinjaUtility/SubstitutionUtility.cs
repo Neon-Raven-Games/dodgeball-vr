@@ -1,41 +1,38 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
 using UnityEngine;
 
 namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 {
-    public class SubstitutionUtility : Utility<ShadowStepUtilityArgs>, IUtility
+    public class SubstitutionUtility : Utility<SubstitutionUtilityArgs>, IUtility
     {
         private readonly Animator _animator;
         private readonly DodgeballAI _ai;
-        internal bool _shadowSteppingSequencePlaying;
-        private bool _isShadowStepping;
-        public bool ballInTrigger;
-        public Vector3 ballDirection;
-        public Vector3 ballHitPoint;
+        public bool inSequence => args.sequencePlaying;
 
-        public SubstitutionUtility(ShadowStepUtilityArgs args, DodgeballAI.AIState state, DodgeballAI ai) : base(args,
+        public SubstitutionUtility(SubstitutionUtilityArgs args, DodgeballAI.AIState state, DodgeballAI ai) : base(args,
             state)
         {
             _ai = ai;
             _animator = ai.animator;
         }
 
+        public void BallInTrigger()
+        {
+            args.ballInTrigger = true;
+        }
+
         public override float Execute(DodgeballAI ai)
         {
-            if (_ai.currentState == DodgeballAI.AIState.Special ||
-                _ai.currentState == DodgeballAI.AIState.Possession ||
+            if (_ai.currentState == DodgeballAI.AIState.Possession ||
                 _ai.currentState == DodgeballAI.AIState.Throw ||
                 _ai.currentState == DodgeballAI.AIState.PickUp)
                 return 0;
-            if (_shadowSteppingSequencePlaying) return 0;
-            args.collider.enabled = false;
-            _shadowSteppingSequencePlaying = true;
-            Debug.Log("Execute sub");
+            if (args.sequencePlaying) return 0;
+            args.sequencePlaying = true;
             ShadowStepMove();
-            ballInTrigger = false;
-            _ai.SetOutOfPlay(false);
+            Debug.Log("Execute sub");
             return 1f;
         }
 
@@ -46,109 +43,104 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
                 _ai.currentState == DodgeballAI.AIState.Throw ||
                 _ai.currentState == DodgeballAI.AIState.PickUp)
                 return 0;
-            if (_shadowSteppingSequencePlaying) return 0;
-            if (ballInTrigger) return float.MaxValue;
+            if (args.sequencePlaying) return 0;
+            if (args.ballInTrigger) return float.MaxValue;
             return 0f;
         }
 
         public void ShadowStepMove()
         {
-            _isShadowStepping = true;
-            args.stepDirection = (_ai.transform.position - ballHitPoint).normalized;
-            args.stepDirection.y = 0;
-            _animator.SetTrigger(AIAnimationHelper.SSpecialTwo);
-            ShadowStepEnter().Forget();
-            args.ik.solvers.leftHand.SetIKPositionWeight(0);
-            args.ik.solvers.leftHand.SetIKRotationWeight(0);
+            Substitution().Forget();
         }
 
-        // this is not exiting properly
-        private async UniTaskVoid ShadowStepExit()
+        private async UniTaskVoid Substitution()
         {
             if (!_ai)
             {
                 Debug.Log("Ai was null and broke");
                 return;
             }
-            var playerPosition = _ai.transform.position;
-            var exitPoint = _ai.transform.TransformPoint(args.stepDirection * args.stepDistance / 2);
+
+            args.sequencePlaying = true;
+            InitializeSubstitution();
+
+            await LerpSubstitutionMovement();
+            UniTask.Yield();
+
+            _ai.currentState = DodgeballAI.AIState.Move;
+            args.sequencePlaying = false;
+            args.ballInTrigger = false;
+        }
+
+        private async Task LerpSubstitutionMovement()
+        {
+            var exitPoint = _ai.transform.position + (args.stepDirection * args.stepDistance);
             exitPoint.y = _ai.transform.position.y;
 
-            var exitTime = 0f;
-            while (exitTime < 1)
+            var t = 0f;
+            while (t < 1)
             {
-                float t = Mathf.Clamp01(exitTime); // Clamp t between 0 and 1
+                t = Mathf.Clamp01(t + (Time.deltaTime / args.stepDuration));
 
-                // Use the clamped t to evaluate the exit curve and Lerp the position
-                _ai.transform.position = Vector3.Lerp(playerPosition, exitPoint, args.exitCurve.Evaluate(t));
+                if (t > 0.2f && args.aiAvatar.activeInHierarchy)
+                {
+                    args.aiAvatar.SetActive(false);
+                    args.ik.solvers.leftHand.SetIKPositionWeight(0);
+                    args.ik.solvers.leftHand.SetIKRotationWeight(0);
+                    _ai.transform.position = exitPoint; // Teleport to exit point
+                }
+                else
+                {
+                    args.colorLerp.lerpValue = Mathf.Lerp(1, 0, t + 0.8f);
+                }
 
-                // Increment exitTime with respect to exitDuration
-                exitTime += Time.deltaTime / args.exitDuration;
                 await UniTask.Yield();
             }
 
+            args.entryEffect.SetActive(true);
+            args.colorLerp.lerpValue = 1;
+            args.aiAvatar.SetActive(true);
+            
+            exitPoint += args.stepDirection * (args.stepDistance / 4);
+            exitPoint.y = _ai.transform.position.y;
+            
+            t = 0;
+            args.sequencePlaying = false;
+            while (t < 1)
+            {
+                t = Mathf.Clamp01(t + (Time.deltaTime / args.rentryDuration));
+
+                    _ai.transform.position = Vector3.Lerp(_ai.transform.position, exitPoint, 
+                        args.exitCurve.Evaluate(t));
+                    
+                    args.colorLerp.lerpValue = Mathf.Lerp(1, 0, t);
+
+                await UniTask.Yield();
+            }
+
+            _ai.transform.position = exitPoint;
             args.entryEffect.SetActive(false);
-            await UniTask.Yield();
-            
-            _shadowSteppingSequencePlaying = false;
-            ballInTrigger = false;
-            
-            await UniTask.Yield();
-            _ai.currentState = DodgeballAI.AIState.Move;
         }
 
-        private async UniTaskVoid ShadowStepEnter()
+
+        private void InitializeSubstitution()
         {
-            if (!_ai) return;
+            _ai.currentState = DodgeballAI.AIState.Special;
+            args.collider.enabled = false;
+            _ai.SetOutOfPlay(false);
+            args.ballInTrigger = false;
+
+            _animator.SetTrigger(AIAnimationHelper.SSpecialTwo);
+            args.stepDirection = new Vector3(Random.Range(0f, 1f), 0, Random.Range(0f, 1f));
             
             args.floorSmoke.transform.position = _ai.transform.position + args.stepDirection * (args.stepDistance / 8);
             args.floorSmoke.SetActive(true);
-            args.entryEffect.transform.position = ballHitPoint;
-            args.entryEffect.SetActive(true); 
-            // can we make the player look at the entry effect better?
-            args.entryEffect.SetActive(true);
-
-            var entryPoint = _ai.transform.TransformPoint(args.stepDirection * args.stepDistance / 2);
-            entryPoint.y = _ai.transform.position.y;
-
-            var start = _ai.transform.position;
-            var entryTime = 0f;
-
-            while (entryTime < args.stepDuration && _isShadowStepping)
-            {
-                if (!_ai) break;
-                _ai.transform.LookAt(ballHitPoint);
-
-                float t = Mathf.Clamp01(entryTime / args.stepDuration); // Clamping to ensure it stays between 0 and 1
-                _ai.transform.position = Vector3.Lerp(start, entryPoint, t);
-
-                entryTime += Time.deltaTime * args.entrySpeed; // Control the speed by multiplying with entrySpeed
-                await UniTask.Yield();
-            }
-        
-        }
-
-        /// <summary>
-        /// Animation event called from the the last frame of the shadow step exit animation
-        /// </summary>
-        public void InitialShadowStepFinished()
-        {
-            if (!_isShadowStepping) return;
-            _isShadowStepping = false;
-            Reappear().Forget();
-            _ai.SetOutOfPlay(false);
-        }
-
-        // todo, validate game object disable and re-enable working
-        private async UniTaskVoid Reappear()
-        {
-            await UniTask.Yield();
-            args.aiAvatar.SetActive(false);
-            await UniTask.Delay(TimeSpan.FromSeconds(args.stepDuration));
-
-            args.aiAvatar.SetActive(true);
-            args.floorSmoke.SetActive(false);
-            ShadowStepExit().Forget();
+            args.logEffect.SetActive(false);
+            args.entryEffect.SetActive(false);
+            var pos = _ai.transform.position;
+            pos.y = args.logEffect.transform.position.y;
+            args.logEffect.transform.position = pos;
+            args.logEffect.SetActive(true);
         }
     }
 }

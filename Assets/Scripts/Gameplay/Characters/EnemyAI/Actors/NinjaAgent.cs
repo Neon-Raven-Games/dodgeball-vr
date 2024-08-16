@@ -1,3 +1,4 @@
+using System;
 using Hands.SinglePlayer.EnemyAI;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine;
 public class NinjaAgent : DodgeballAI
 {
     [SerializeField] private ShadowStepUtilityArgs shadowStepArgs;
-    [SerializeField] private ShadowStepUtilityArgs substitutionArgs;
+    [SerializeField] private SubstitutionUtilityArgs substitutionUtilityArgs;
     [SerializeField] private NinjaHandSignUtilityArgs handSignUtilityArgs;
     private SubstitutionUtility _substitutionUtility;
     private ShadowStepUtility _shadowStepUtility;
@@ -14,7 +15,7 @@ public class NinjaAgent : DodgeballAI
     protected override void PopulateUtilities()
     {
         base.PopulateUtilities();
-        _substitutionUtility = new SubstitutionUtility(substitutionArgs, AIState.Special, this);
+        _substitutionUtility = new SubstitutionUtility(substitutionUtilityArgs, AIState.Special, this);
         _substitutionUtility.Initialize(friendlyTeam.playArea, team);
 
         _handSignUtility = new NinjaHandSignUtility(handSignUtilityArgs, this);
@@ -35,51 +36,28 @@ public class NinjaAgent : DodgeballAI
         {
             if (_substitutionUtility.Roll(this) > 0)
             {
-                currentState = AIState.Special;
-                _substitutionUtility.Execute(this);
+                // currentState = AIState.Special;
+                // _substitutionUtility.Execute(this);
             }
             return;
         }
 
-        if (_handSignUtility.Roll(this) > 0)
+        if (!_substitutionUtility.inSequence && _handSignUtility.Roll(this) > 0)
             _handSignUtility.Execute(this);
         
     }
 
     internal override void SetOutOfPlay(bool value)
     {
-        if (currentState == AIState.Special || _substitutionUtility._shadowSteppingSequencePlaying || _shadowStepUtility._shadowSteppingSequencePlaying)
+        if (_substitutionUtility.inSequence || _shadowStepUtility._shadowSteppingSequencePlaying)
             return;
         base.SetOutOfPlay(value);
     }
 
     protected override void HandleSpecial()
     {
-        return;
-        if (IsOutOfPlay() || currentState == AIState.PickUp)
-        {
-            return;
-        }
-
-        if (_shadowStepUtility.Roll(this) > 0)
-        {
-            Debug.Log("Shadow Step");
-            _shadowStepUtility.Execute(this);
-            return;
-        }
-
-        var execute = _substitutionUtility.Roll(this);
-        if (execute > 0)
-        {
-            Debug.Log("Substitution");
-            _substitutionUtility.Execute(this);
-        }
-        else
-        {
-            Debug.Log("Cancelling Special");
-            currentState = hasBall ? AIState.Possession : AIState.Idle;
-            _moveUtility.Execute(this);
-        }
+        // we can handle logic here if we need to,
+        // seemed to go pretty well without tho
     }
 
     private void OnTriggerEnter(Collider other)
@@ -90,7 +68,7 @@ public class NinjaAgent : DodgeballAI
             return;
         }
 
-        if (_substitutionUtility._shadowSteppingSequencePlaying)
+        if (_substitutionUtility.inSequence)
         {
             Debug.Log("Substitution cancel");
             return;
@@ -104,31 +82,25 @@ public class NinjaAgent : DodgeballAI
                 return;
             }
 
-            _substitutionUtility.ballInTrigger = true;
+            _substitutionUtility.BallInTrigger();
+            
             var rb = db.GetComponent<Rigidbody>();
-            _substitutionUtility.ballDirection = rb.velocity;
-            _substitutionUtility.ballHitPoint = db.transform.position;
             rb.velocity = Vector3.Reflect(rb.velocity, transform.forward);
-            {
-                Debug.Log("Substitution");
-                _substitutionUtility.Execute(this);
-            }
+            db.transform.position += rb.velocity.normalized * 3 * Time.fixedDeltaTime;
+            Debug.Log("Ball in trigger, executing");
+            _substitutionUtility.Execute(this);
+            _handSignUtility.Cooldown();
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
-            _substitutionUtility.ballInTrigger = false;
+        // if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
+            // _substitutionUtility.ballInTrigger = false;
     }
 
     public void InitialShadowStepFinished()
     {
         _shadowStepUtility.InitialShadowStepFinished();
-    }
-
-    public void InitialSubstitutionFinished()
-    {
-        _substitutionUtility.InitialShadowStepFinished();
     }
 }
