@@ -32,17 +32,11 @@ public class NinjaAgent : DodgeballAI
     {
         base.Update();
         if (IsOutOfPlay() || currentState == AIState.PickUp || currentState == AIState.Throw) return;
-        if (currentState != AIState.Special && _handSignUtility.active)
-        {
-            if (_substitutionUtility.Roll(this) > 0)
-            {
-                // currentState = AIState.Special;
-                // _substitutionUtility.Execute(this);
-            }
-            return;
-        }
+        if (currentState != AIState.Special && _handSignUtility.active) return;
 
-        if (!_substitutionUtility.inSequence && _handSignUtility.Roll(this) > 0)
+        if (!_shadowStepUtility._shadowSteppingSequencePlaying && 
+            !_substitutionUtility.inSequence &&
+            _handSignUtility.Roll(this) > 0)
             _handSignUtility.Execute(this);
         
     }
@@ -52,10 +46,18 @@ public class NinjaAgent : DodgeballAI
         if (_substitutionUtility.inSequence || _shadowStepUtility._shadowSteppingSequencePlaying)
             return;
         base.SetOutOfPlay(value);
+        if (currentState == AIState.Special) currentState = AIState.Idle;
+        _handSignUtility.Cooldown();
     }
 
     protected override void HandleSpecial()
     {
+        if (!_substitutionUtility.inSequence && !_shadowStepUtility._shadowSteppingSequencePlaying)
+        {
+            _handSignUtility.Cooldown();
+            currentState = AIState.Move;
+            _substitutionUtility.Reset();
+        }
         // we can handle logic here if we need to,
         // seemed to go pretty well without tho
     }
@@ -83,7 +85,6 @@ public class NinjaAgent : DodgeballAI
             }
 
             _substitutionUtility.BallInTrigger();
-            
             var rb = db.GetComponent<Rigidbody>();
             rb.velocity = Vector3.Reflect(rb.velocity, transform.forward);
             db.transform.position += rb.velocity.normalized * 3 * Time.fixedDeltaTime;

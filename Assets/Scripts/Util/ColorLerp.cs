@@ -1,3 +1,4 @@
+using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ public class MaterialPropertyColors
 
 public class ColorLerp : MonoBehaviour
 {
+    [SerializeField] private int playerBodyMaterialIndex;
     // todo, pool materials for better performance
     [SerializeField] private Renderer[] renderers;
     private Material[] _materialCopies;
@@ -24,11 +26,14 @@ public class ColorLerp : MonoBehaviour
     private static readonly int _SRimColor = Shader.PropertyToID("_RimColor");
 
     private bool _initialized;
+    public event Action onMaterialsLoaded;
+
     private async void Start()
     {
         await InitializeMaterialsAsync();
         _previousLerpValue = lerpValue;
         _initialized = true;
+        onMaterialsLoaded?.Invoke();
     }
 
     private async UniTask InitializeMaterialsAsync()
@@ -92,5 +97,10 @@ public class ColorLerp : MonoBehaviour
             if (_originalColors[i].originalSmoothness >= 0 && _materialCopies[i].HasProperty(_SMoothness))
                 _materialCopies[i].SetFloat(_SMoothness, Mathf.Lerp(_originalColors[i].originalSmoothness, _TARGET_SMOOTHNESS, lerpValue));
         }
+    }
+
+    public Material GetPlayerMaterial()
+    {
+        return _materialCopies[playerBodyMaterialIndex];
     }
 }

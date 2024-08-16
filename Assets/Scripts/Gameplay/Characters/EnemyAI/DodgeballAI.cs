@@ -105,7 +105,17 @@ public class DodgeballAI : Actor
 
     private void Start()
     {
+        var colorLerp = GetComponent<ColorLerp>();
+        if (colorLerp) colorLerp.onMaterialsLoaded += SwapPlayerBody;
         targetUtility.ResetTargetSwitchProbability();
+    }
+
+    private void SwapPlayerBody()
+    {
+        var colorLerp = GetComponent<ColorLerp>();
+        colorLerp.onMaterialsLoaded -= SwapPlayerBody;
+        ghostData.humanMaterial = colorLerp.GetPlayerMaterial();
+            
     }
 
     private bool _isGhost;
@@ -140,7 +150,6 @@ public class DodgeballAI : Actor
 
     protected virtual void PopulateUtilities()
     {
-        Debug.Log("pre populate AI pos y: " + transform.position.y);
         _utilityHandler = new UtilityHandler();
         targetUtility = new TargetUtility(targetUtilityArgs, this, priorityHandler.targetUtility);
         targetUtility.Initialize(friendlyTeam.playArea, team);
@@ -336,7 +345,6 @@ public class DodgeballAI : Actor
         }
 
         _moveUtility.ResetBackOff();
-
         var utility = _utilityHandler.EvaluateUtility(this);
         var inPickup = currentState == AIState.PickUp;
         currentState = _utilityHandler.GetState();

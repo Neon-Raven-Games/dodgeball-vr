@@ -203,20 +203,33 @@ namespace Hands.SinglePlayer.EnemyAI
     public class ShadowStepUtilityArgs : UtilityArgs
     {
         public GameObject aiAvatar;
+        public BipedIK ik;
+        public ColorLerp colorLerp;
+        
+        public float rollChance = 60f;
+        public float shadowStepCooldown = 10f;
+        
+        [Header("Movement Properties")]
         public float stepDistance = 5f;
         public float stepDuration;
         public Vector3 stepDirection = Vector3.forward;
-        public AnimationCurve entryCurve;
-        public AnimationCurve exitCurve;
-        public float entrySpeed;
-        public float exitDuration;
-        public GameObject floorSmoke;
-        public GameObject exitEffect;
+        
+        [Header("Entry Properties")] 
         public GameObject entryEffect;
-        public float rollChance = 60f;
-        public BipedIK ik;
-        public float shadowStepCooldown = 10f;
-        public Collider collider;
+        public GameObject floorSmoke;
+        public float entrySpeed;
+        public int introColorLerpFrame;
+        public AnimationClip introAnimationClip;
+        public AnimationCurve entryCurve;
+        public float introColorLerpValue;
+        
+        [Header("Exit Properties")]
+        public AnimationCurve exitCurve;
+        public float exitDuration;
+        public GameObject exitEffect;
+        public int outroColorFrame;
+        public AnimationClip outroAnimationClip;
+        public float outroColorLerpValue;
     }
     
     [Serializable] 

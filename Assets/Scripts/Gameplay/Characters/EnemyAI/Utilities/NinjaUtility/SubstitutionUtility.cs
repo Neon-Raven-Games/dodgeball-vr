@@ -65,8 +65,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             InitializeSubstitution();
 
             await LerpSubstitutionMovement();
-            UniTask.Yield();
-
+            await UniTask.Yield();
             _ai.currentState = DodgeballAI.AIState.Move;
             args.sequencePlaying = false;
             args.ballInTrigger = false;
@@ -87,7 +86,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
                     args.aiAvatar.SetActive(false);
                     args.ik.solvers.leftHand.SetIKPositionWeight(0);
                     args.ik.solvers.leftHand.SetIKRotationWeight(0);
-                    _ai.transform.position = exitPoint; // Teleport to exit point
+                    _ai.transform.position = exitPoint;
                 }
                 else
                 {
@@ -106,7 +105,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             
             t = 0;
             args.sequencePlaying = false;
-            while (t < 1)
+            while (t < 0.9f)
             {
                 t = Mathf.Clamp01(t + (Time.deltaTime / args.rentryDuration));
 
@@ -114,7 +113,6 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
                         args.exitCurve.Evaluate(t));
                     
                     args.colorLerp.lerpValue = Mathf.Lerp(1, 0, t);
-
                 await UniTask.Yield();
             }
 
@@ -141,6 +139,12 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             pos.y = args.logEffect.transform.position.y;
             args.logEffect.transform.position = pos;
             args.logEffect.SetActive(true);
+        }
+
+        public void Reset()
+        {
+            args.ballInTrigger = false;
+            
         }
     }
 }
