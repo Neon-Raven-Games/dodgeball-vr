@@ -115,7 +115,6 @@ public class DodgeballAI : Actor
         var colorLerp = GetComponent<ColorLerp>();
         colorLerp.onMaterialsLoaded -= SwapPlayerBody;
         ghostData.humanMaterial = colorLerp.GetPlayerMaterial();
-            
     }
 
     private bool _isGhost;
@@ -153,27 +152,27 @@ public class DodgeballAI : Actor
         _utilityHandler = new UtilityHandler();
         targetUtility = new TargetUtility(targetUtilityArgs, this, priorityHandler.targetUtility);
         targetUtility.Initialize(friendlyTeam.playArea, team);
-        
+
         _moveUtility = new MoveUtility(moveUtilityArgs);
         _moveUtility.Initialize(friendlyTeam.playArea, team);
         _utilityHandler.AddUtility(_moveUtility);
-        
+
         _dodgeUtility = new DodgeUtility(dodgeUtilityArgs);
         _dodgeUtility.Initialize(friendlyTeam.playArea, team);
         _utilityHandler.AddUtility(_dodgeUtility);
-        
+
         _catchUtility = new CatchUtility(catchUtilityArgs);
         _catchUtility.Initialize(friendlyTeam.playArea, team);
         _utilityHandler.AddUtility(_catchUtility);
-        
+
         _pickUpUtility = new PickUpUtility(pickUpUtilityArgs, this);
         _pickUpUtility.Initialize(friendlyTeam.playArea, team);
         _utilityHandler.AddUtility(_pickUpUtility);
-        
+
         _throwUtility = new ThrowUtility(throwUtilityArgs);
         _throwUtility.Initialize(friendlyTeam.playArea, team);
         _utilityHandler.AddUtility(_throwUtility);
-        
+
         _outOfPlayUtility = new OutOfPlayUtility(outOfBoundsUtilityArgs);
         _outOfPlayUtility.Initialize(friendlyTeam.playArea, team);
         _utilityHandler.AddUtility(_outOfPlayUtility);
@@ -224,9 +223,10 @@ public class DodgeballAI : Actor
             hasBall = false;
             return;
         }
+
         hasBall = false;
         animator.ResetTrigger(_SThrow);
-        
+
         // todo, we can set the head better, null error message giving us gc alloc in editor
         var actor = CurrentTarget.GetComponent<Actor>();
         Vector3 enemyHeadPos = Vector3.zero;
@@ -239,8 +239,8 @@ public class DodgeballAI : Actor
                 enemyHeadPos.y += 1f;
             }
         }
-        
-        var ballPos = rightBallIndex._currentDodgeball ? rightBallIndex.BallPosition :  leftBallIndex.BallPosition;
+
+        var ballPos = rightBallIndex._currentDodgeball ? rightBallIndex.BallPosition : leftBallIndex.BallPosition;
         var velocity = _throwUtility.CalculateThrow(this, ballPos, enemyHeadPos);
         _possessedBall.transform.position = ballPos + velocity * Time.deltaTime * 4;
 
@@ -306,13 +306,13 @@ public class DodgeballAI : Actor
         base.SetOutOfPlay(value);
         animator.SetInteger(_SHitVariation, Random.Range(0, 3));
         animator.SetTrigger(_SPlayGhost);
-        
+
         if (!_possessedBall) return;
         if (hasBall) _possessedBall._ballState = BallState.Dead;
     }
 
     protected UtilityHandler _utilityHandler;
-    
+
     // do extended update methods get called?
     protected virtual void Update()
     {
@@ -322,7 +322,7 @@ public class DodgeballAI : Actor
             HandleSpecial();
             return;
         }
-        
+
         _pickUpUtility.Update();
         if (hasBall) ballPossessionTime += Time.deltaTime;
 
@@ -348,8 +348,8 @@ public class DodgeballAI : Actor
         var utility = _utilityHandler.EvaluateUtility(this);
         var inPickup = currentState == AIState.PickUp;
         currentState = _utilityHandler.GetState();
-            
-        if (inPickup && currentState != AIState.PickUp) 
+
+        if (inPickup && currentState != AIState.PickUp)
             _pickUpUtility.StopPickup(this);
 
         ExecuteCurrentState(utility);
@@ -370,7 +370,9 @@ public class DodgeballAI : Actor
         if (hasBall)
         {
             ballPossessionTime = 0;
-            _possessedBall.transform.position = rightBallIndex._currentDodgeball ? rightBallIndex.BallPosition :  leftBallIndex.BallPosition;
+            _possessedBall.transform.position = rightBallIndex._currentDodgeball
+                ? rightBallIndex.BallPosition
+                : leftBallIndex.BallPosition;
             rightBallIndex.SetBallType(BallType.None);
             _possessedBall.gameObject.SetActive(true);
 
@@ -389,7 +391,7 @@ public class DodgeballAI : Actor
         animator.SetFloat(_SYAxis, 0);
         _pickUpUtility.StopPickup(this);
         targetUtility.ResetLookWeight();
-        
+
         if (animator.GetCurrentAnimatorStateInfo(0).IsName("Praying Ghost")) triggerOutOfPlay = true;
         else return true;
         _outOfPlayUtility.Execute(this);
