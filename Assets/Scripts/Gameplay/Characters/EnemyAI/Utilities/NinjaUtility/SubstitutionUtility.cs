@@ -25,9 +25,8 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
-            if (_ai.currentState == DodgeballAI.AIState.Throw)
+            if (_ai.currentState == DodgeballAI.AIState.PickUp || args.sequencePlaying)
                 return 0;
-            if (args.sequencePlaying) return 0;
             args.sequencePlaying = true;
             ShadowStepMove();
             Debug.Log("Execute sub");

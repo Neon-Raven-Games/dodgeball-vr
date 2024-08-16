@@ -25,6 +25,7 @@ public class NetBallPossessionHandler : MonoBehaviour
 
     public void Start()
     {
+        if(!_anim) _anim = GetComponent<Animator>();
         foreach (var dodgeball in dodgeballs) _dodgeballDictionary[dodgeball.type] = dodgeball;
         _anim.enabled = true;
     }
