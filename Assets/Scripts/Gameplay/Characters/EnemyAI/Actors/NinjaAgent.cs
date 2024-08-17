@@ -34,20 +34,21 @@ public class NinjaAgent : DodgeballAI
         if (IsOutOfPlay() || currentState == AIState.PickUp || currentState == AIState.Throw) return;
         if (currentState != AIState.Special && _handSignUtility.active) return;
 
-        if (!_shadowStepUtility._shadowSteppingSequencePlaying && 
+        if (!_shadowStepUtility._shadowSteppingSequencePlaying &&
             !_substitutionUtility.inSequence &&
             _handSignUtility.Roll(this) > 0)
             _handSignUtility.Execute(this);
-        
     }
 
     internal override void SetOutOfPlay(bool value)
     {
         if (_substitutionUtility.inSequence || _shadowStepUtility._shadowSteppingSequencePlaying)
             return;
+
         base.SetOutOfPlay(value);
-        if (currentState == AIState.Special) currentState = AIState.Idle;
+        currentState = AIState.OutOfPlay;
         _handSignUtility.Cooldown();
+        leftBallIndex.SetBallType(BallType.None);
     }
 
     protected override void HandleSpecial()
@@ -55,7 +56,6 @@ public class NinjaAgent : DodgeballAI
         if (!_substitutionUtility.inSequence && !_shadowStepUtility._shadowSteppingSequencePlaying)
         {
             _handSignUtility.Cooldown();
-            currentState = AIState.Move;
             _substitutionUtility.Reset();
         }
         // we can handle logic here if we need to,
@@ -75,6 +75,7 @@ public class NinjaAgent : DodgeballAI
             Debug.Log("Substitution cancel");
             return;
         }
+
         if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
         {
             var db = other.GetComponent<DodgeBall>();
@@ -91,13 +92,15 @@ public class NinjaAgent : DodgeballAI
             Debug.Log("Ball in trigger, executing");
             _substitutionUtility.Execute(this);
             _handSignUtility.Cooldown();
+            if (!_substitutionUtility.inSequence)
+                currentState = AIState.Move;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         // if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
-            // _substitutionUtility.ballInTrigger = false;
+        // _substitutionUtility.ballInTrigger = false;
     }
 
     public void InitialShadowStepFinished()

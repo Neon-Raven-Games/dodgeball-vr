@@ -192,7 +192,7 @@ public class DodgeballAI : Actor
     #endregion
 
     internal DodgeBall _possessedBall;
-    [SerializeField] private NetBallPossessionHandler leftBallIndex;
+    [SerializeField] protected NetBallPossessionHandler leftBallIndex;
     [SerializeField] private NetBallPossessionHandler rightBallIndex;
 
 
@@ -269,7 +269,7 @@ public class DodgeballAI : Actor
         throwAnimationPlaying = false;
     }
 
-    private bool throwAnimationPlaying;
+    protected bool throwAnimationPlaying;
 
     public void ThrowBallAnimation()
     {
@@ -370,9 +370,18 @@ public class DodgeballAI : Actor
         if (hasBall)
         {
             ballPossessionTime = 0;
-            _possessedBall.transform.position = rightBallIndex._currentDodgeball
-                ? rightBallIndex.BallPosition
-                : leftBallIndex.BallPosition;
+            if (leftBallIndex._currentDodgeball)
+            {
+                _possessedBall.transform.position = leftBallIndex.BallPosition;
+                leftBallIndex.SetBallType(BallType.None);
+            }
+            else
+            {
+                // todo, this needs better validation, and is temporary
+                if (rightBallIndex._currentDodgeball)
+                    _possessedBall.transform.position = rightBallIndex.BallPosition;
+            }
+            
             rightBallIndex.SetBallType(BallType.None);
             _possessedBall.gameObject.SetActive(true);
 

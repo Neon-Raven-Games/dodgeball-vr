@@ -80,20 +80,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             MoveTowards(ai, ai.targetUtility.CurrentTarget.transform.position);
 
             if (Time.time < _pickupCheckTime) return true;
-            // DodgeballAI currentAi;
-            // foreach (var player in ai.opposingTeam.actors)
-            // {
-            //     currentAi = player.GetComponent<DodgeballAI>();
-            //     if (currentAi != null && currentAi.CurrentTarget && currentAi.CurrentTarget == ai.CurrentTarget)
-            //     {
-            //         if (Vector3.Distance(currentAi.transform.position, ai.CurrentTarget.transform.position) <
-            //             Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
-            //         {
-            //             return false;
-            //         }
-            //     }
-            // }
-
+ 
             _pickupCheckStep = Random.Range(0.5f, 1.5f);
             _pickupCheckTime = Time.time + _pickupCheckStep;
             return true;

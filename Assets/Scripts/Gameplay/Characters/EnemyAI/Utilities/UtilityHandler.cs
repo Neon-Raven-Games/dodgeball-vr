@@ -22,9 +22,11 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         public IUtility EvaluateUtility(DodgeballAI ai)
         {
             var highestUtility = 0f;
+            var str = "Utilities:\n";
             foreach (var utility in _utilities)
             {
                 var utilityValue = utility.Roll(ai);
+                str += $"{utility.State}: {utilityValue}\n";
                 if (utilityValue > highestUtility)
                 {
                     highestUtility = utilityValue;

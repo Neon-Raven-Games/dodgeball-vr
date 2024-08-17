@@ -35,10 +35,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         public override float Roll(DodgeballAI ai)
         {
-            if (_ai.currentState == DodgeballAI.AIState.Special ||
-                _ai.currentState == DodgeballAI.AIState.Possession ||
-                _ai.currentState == DodgeballAI.AIState.Throw ||
-                _ai.currentState == DodgeballAI.AIState.PickUp)
+            if (_ai.currentState == DodgeballAI.AIState.Special)
                 return 0;
             if (args.sequencePlaying) return 0;
             if (args.ballInTrigger) return float.MaxValue;

@@ -77,8 +77,11 @@ namespace Hands.SinglePlayer.EnemyAI
             return false;
         }
 
-        protected bool IsInPlayArea(Vector3 position) =>
-            playAreaBounds.Contains(position);
+        protected bool IsInPlayArea(Vector3 position)
+        {
+            bool inBounds = playAreaBounds.Contains(position);
+            return inBounds;
+        }
 
         protected GameObject FindNearestBallInPlayArea(DodgeballPlayArea playArea, DodgeballAI ai, out float distance)
         {
@@ -174,6 +177,8 @@ namespace Hands.SinglePlayer.EnemyAI
         public float pickupDistanceThreshold;
         public BipedIK ik;
         public float lerpBackSpeed = 3f;
+        public float avoidanceDistance = 0.35f;
+        public float avoidanceFactor = 1f;
     }
 
     [Serializable]

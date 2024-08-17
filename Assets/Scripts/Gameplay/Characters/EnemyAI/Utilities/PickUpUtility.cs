@@ -6,21 +6,22 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
     public class PickUpUtility : Utility<PickUpUtilityArgs>, IUtility
     {
         private DodgeballAI _ai;
+
         public PickUpUtility(PickUpUtilityArgs args, DodgeballAI ai) : base(args, DodgeballAI.AIState.PickUp)
         {
             _ai = ai;
         }
+
         private float ballDistance;
 
         public override float Execute(DodgeballAI ai)
         {
             // Check conditions for picking up the ball
-            if (!ai.CurrentTarget|| !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
+            if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
                 return 0;
-                
-            var flatBall = ai.targetUtility.BallTarget.transform.position;
-            flatBall.y = ai.transform.position.y;
-            ballDistance = Vector3.Distance(ai.transform.position, flatBall);
+
+            ballDistance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
+
             if (ballDistance < args.pickupDistanceThreshold)
             {
                 ai.PickUpBall(ai.targetUtility.BallTarget);
@@ -38,6 +39,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             if (isLerpingBackToIdle) LerpBackToIdleUpdate(_ai);
         }
+
         private void LerpBackToIdleUpdate(DodgeballAI ai)
         {
             var newY = Mathf.Lerp(ai.transform.position.y, 0.11f, Time.deltaTime * args.lerpBackSpeed);
@@ -45,18 +47,24 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             pos.y = newY;
             ai.transform.position = pos;
 
-            args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(args.ik.solvers.spine.GetIKPositionWeight(), 0, Time.deltaTime * args.lerpBackSpeed));
-            args.ik.solvers.rightHand.SetIKPositionWeight(Mathf.Lerp(args.ik.solvers.rightHand.GetIKPositionWeight(), 0, Time.deltaTime * args.lerpBackSpeed));
-            args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(args.ik.solvers.spine.GetIKPositionWeight(), 0, Time.deltaTime * args.lerpBackSpeed);
-    
-          if (args.ik.solvers.rightHand.GetIKPositionWeight() <= 0 || args.ik.solvers.spine.GetIKPositionWeight() <= 0 || args.ik.solvers.rightHand.maintainRotationWeight <= 0)
+            args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(args.ik.solvers.spine.GetIKPositionWeight(), 0,
+                Time.deltaTime * args.lerpBackSpeed));
+            args.ik.solvers.rightHand.SetIKPositionWeight(Mathf.Lerp(args.ik.solvers.rightHand.GetIKPositionWeight(), 0,
+                Time.deltaTime * args.lerpBackSpeed));
+            args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(args.ik.solvers.spine.GetIKPositionWeight(),
+                0, Time.deltaTime * args.lerpBackSpeed);
+
+            if (args.ik.solvers.rightHand.GetIKPositionWeight() <= 0 ||
+                args.ik.solvers.spine.GetIKPositionWeight() <= 0 ||
+                args.ik.solvers.rightHand.maintainRotationWeight <= 0)
             {
                 args.ik.solvers.spine.SetIKPositionWeight(0);
                 args.ik.solvers.rightHand.SetIKPositionWeight(0);
                 args.ik.solvers.rightHand.maintainRotationWeight = 0;
-                isLerpingBackToIdle = false; 
+                isLerpingBackToIdle = false;
             }
         }
+
         public void StopPickup(DodgeballAI ai)
         {
             if (!pickup && args.ik.solvers.rightHand.GetIKPositionWeight() == 0) return;
@@ -64,31 +72,6 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             // ai.StartCoroutine(LerpBackToIdle(ai));
             isLerpingBackToIdle = true;
             // Debug.Log("Stop Pickup");
-        }
-        
-        private IEnumerator LerpBackToIdle(DodgeballAI ai)
-        {
-            while (args.ik.solvers.rightHand.GetIKPositionWeight() > 0f)
-            {
-                var newY = Mathf.Lerp(ai.transform.position.y, 0.11f, Time.deltaTime * 3);
-                var pos = ai.transform.position;
-                pos.y = newY;
-                ai.transform.position = pos;
-
-                var spineSolver = args.ik.solvers.spine.GetIKPositionWeight();
-                args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(spineSolver, 0, Time.deltaTime * 3));
-
-                var rightHandSolver = args.ik.solvers.rightHand.GetIKPositionWeight();
-                args.ik.solvers.rightHand.SetIKPositionWeight(Mathf.Lerp(rightHandSolver, 0, Time.deltaTime * 3));
-
-                var spinePosWeight = args.ik.solvers.spine.GetIKPositionWeight();
-                args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(spinePosWeight, 0, Time.deltaTime * 3);
-                yield return null;
-            }
-
-            args.ik.solvers.spine.SetIKPositionWeight(0);
-            args.ik.solvers.rightHand.SetIKPositionWeight(0);
-            args.ik.solvers.rightHand.maintainRotationWeight = 0;
         }
 
         private void ApproachBallToPickUp(DodgeBall dodgeBall, DodgeballAI ai)
@@ -99,7 +82,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             var position = ai.transform.position;
             position.y = Mathf.Lerp(-0.27f, 0.11f, lerpFactor);
             ai.transform.position = position;
-
+            // when stuck, our guy is not calling this function
             args.ik.solvers.spine.target = dodgeBall.transform;
             args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(0.063f, 0, lerpFactor));
 
@@ -108,8 +91,10 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(0.4f, 0, lerpFactor);
         }
 
+
+        private GameObject nearestBall;
         public override float Roll(DodgeballAI ai) => CalculatePickUpUtility(ai);
-        
+
         internal float CalculatePickUpUtility(DodgeballAI ai)
         {
             if (ai.CurrentTarget == null || ai.CurrentTarget.layer != LayerMask.NameToLayer("Ball") ||
@@ -118,7 +103,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 return 0;
             }
 
-            GameObject nearestBall = FindNearestBallInPlayArea(ai.playArea, ai, out ballDistance);
+            nearestBall = FindNearestBallInPlayArea(ai.playArea, ai, out ballDistance);
             if (nearestBall == null || !nearestBall.activeInHierarchy)
             {
                 return 0;
@@ -137,12 +122,13 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 // todo, check trajectory for catch should handle this
                 return 0f;
             }
+
             utility += 5f;
 
-            // var distance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
             utility += (1.0f / ballDistance) * ai.distanceWeight;
 
             utility += Random.value * ai.difficultyFactor;
+
             return utility;
         }
 
@@ -162,6 +148,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                     return true;
                 }
             }
+
             return false;
         }
     }
