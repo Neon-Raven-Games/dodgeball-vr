@@ -20,14 +20,14 @@ public class ShadowCourt : MonoBehaviour
     [SerializeField] private float delay;
     private static ShadowCourt _instance;
     private static bool active;
+    [SerializeField] private float ballLaunchTimeStep;
 
     public static void SmokeScreen()
     {
         if (active) return;
+        GameManager.ChangePhase(BattlePhase.Lackey);
         active = true;
         _instance.smokeEffect.SetActive(true);
-        foreach (var ninja in _instance.ninjaCharacters)
-            ninja.SetActive(false);
 
         _instance.StartSmokeScreen().Forget();
     }
@@ -37,17 +37,21 @@ public class ShadowCourt : MonoBehaviour
         for (var i = 0; i < ninjaCharacters.Count; i++)
         {
             shadowEffects[i].gameObject.SetActive(false);
-            ninjaCharacters[i].SetActive(true);
         }
 
         smokeEffect.SetActive(false);
         active = false;
+        GameManager.ChangePhase(BattlePhase.Lackey);
     }
+
+    [SerializeField]
+    private BallSpawner ballSpawner;
 
     private async UniTaskVoid StartSmokeScreen()
     {
         var currentTime = 0f;
         var secondsToSpawnSmoke = GenerateRandomTimes();
+        var launchBalls = 0f;
 
         await UniTask.Delay(TimeSpan.FromSeconds(delay));
         var i = 0;
@@ -55,7 +59,23 @@ public class ShadowCourt : MonoBehaviour
         {
             await UniTask.Yield();
             currentTime += Time.deltaTime;
-
+            if (launchBalls < currentTime)
+            {
+                var playAreaPos = playArea.position;
+                playAreaPos.y = ballSpawner.planeTransform.position.y;
+                ballSpawner.planeTransform.transform.position = new Vector3(playAreaPos.x, playAreaPos.y,
+                    playAreaPos.z + Random.Range(-playArea.localScale.z / 3, playArea.localScale.z / 3));
+                
+                ballSpawner.planeTransform.transform.localRotation = Quaternion.Euler(4, Random.Range(80, 95), 3);
+                ballSpawner.SpawnBalls();
+                ballLaunchTimeStep = Random.Range(1f, 4.5f);
+                launchBalls += ballLaunchTimeStep;
+                
+                if (launchBalls >= smokeScreenDuration - 4f)
+                    launchBalls = smokeScreenDuration + 4f;
+                
+                i++;
+            }
             if (shadowEffects.Any(x => x.gameObject.activeInHierarchy))
             {
                 if (secondsToSpawnSmoke.Count == 0 || secondsToSpawnSmoke[0] > currentTime) continue;

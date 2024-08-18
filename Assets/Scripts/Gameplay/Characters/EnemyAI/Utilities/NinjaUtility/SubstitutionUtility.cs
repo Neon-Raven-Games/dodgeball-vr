@@ -29,7 +29,6 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
                 return 0;
             args.sequencePlaying = true;
             ShadowStepMove();
-            Debug.Log("Execute sub");
             return 1f;
         }
 

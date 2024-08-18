@@ -42,7 +42,7 @@ public class DodgeballAI : Actor
         stateJson += "\n\n" + "Logs\n" + logsJson;
         Debug.Log(stateJson);
     }
-    
+
     public enum AIState
     {
         Idle,
@@ -118,6 +118,21 @@ public class DodgeballAI : Actor
         var colorLerp = GetComponent<ColorLerp>();
         if (colorLerp) colorLerp.onMaterialsLoaded += SwapPlayerBody;
         targetUtility.ResetTargetSwitchProbability();
+        GameManager.onPhaseChange += OnPhaseChange;
+    }
+
+    private bool phaseChange;
+
+    private void OnPhaseChange(BattlePhase obj)
+    {
+        if (stayIdle && obj == BattlePhase.Lackey)
+        {
+            phaseChange = false;
+            stayIdle = false;
+            return;
+        }
+
+        phaseChange = true;
     }
 
     private void SwapPlayerBody()
@@ -129,6 +144,7 @@ public class DodgeballAI : Actor
 
     private bool _isGhost;
     protected LogBuffer logBuffer;
+
     private void OnEnable()
     {
         PopulateTeamObjects();
@@ -137,6 +153,7 @@ public class DodgeballAI : Actor
 
         logBuffer = GetComponent<LogBuffer>();
     }
+
     protected virtual void LogAction(string actionName, object additionalInfo = null)
     {
         if (logBuffer != null)
@@ -146,10 +163,11 @@ public class DodgeballAI : Actor
             {
                 logEntry += $"\n[{Time.time} Context] {JsonConvert.SerializeObject(additionalInfo)}";
             }
+
             logBuffer.AppendLog(logEntry);
         }
     }
-    
+
 
     private void SubscribeToBallEvents(bool sub)
     {
@@ -272,6 +290,7 @@ public class DodgeballAI : Actor
         {
             Debug.LogError("No ball to throw");
         }
+
         var velocity = _throwUtility.CalculateThrow(this, ballPos, enemyHeadPos);
         _possessedBall.transform.position = ballPos + velocity * Time.deltaTime * 4;
 
@@ -313,6 +332,7 @@ public class DodgeballAI : Actor
     {
         liveBallTrajectories[ballIndex] = trajectory;
     }
+
     internal void RemoveBallTrajectory(int ballIndex)
     {
         liveBallTrajectories.Remove(ballIndex);
@@ -329,6 +349,8 @@ public class DodgeballAI : Actor
     private static readonly int _SPlayGhost = Animator.StringToHash("PlayGhost");
     private static readonly int _SHitVariation = Animator.StringToHash("HitVariation");
 
+    protected UtilityHandler _utilityHandler;
+
     internal override void SetOutOfPlay(bool value)
     {
         if (outOfPlay == value) return;
@@ -340,12 +362,33 @@ public class DodgeballAI : Actor
         if (hasBall) _possessedBall._ballState = BallState.Dead;
     }
 
-    protected UtilityHandler _utilityHandler;
+    protected virtual void HandlePhaseChange()
+    {
+        if (stayIdle && phaseChange)
+        {
+            stayIdle = false;
+            phaseChange = false;
+            return;
+        }
+        
+        if (currentState != AIState.Special && currentState != AIState.Throw && currentState != AIState.OutOfPlay)
+        {
+            stayIdle = true;
+            phaseChange = false;
+            Debug.Log("Notify idle for phase changing");
+        }
+    }
 
     // do extended update methods get called?
     protected virtual void Update()
     {
         if (stayIdle) return;
+        if (phaseChange)
+        {
+            HandlePhaseChange();
+            if (stayIdle) return;
+        }
+
         if (currentState == AIState.Special)
         {
             HandleSpecial();
@@ -365,6 +408,7 @@ public class DodgeballAI : Actor
         {
             throwAnimationPlaying = false;
         }
+
         if (throwAnimationPlaying) targetUtility.Execute(this);
         var targetScore = targetUtility.Roll(this);
         if (throwAnimationPlaying) return;
@@ -372,6 +416,7 @@ public class DodgeballAI : Actor
         {
             targetUtility.UpdateTarget(currentState);
         }
+
         _lastTargetScore = targetScore;
 
         if (currentState == AIState.BackOff)
@@ -421,7 +466,7 @@ public class DodgeballAI : Actor
                 if (rightBallIndex._currentDodgeball)
                     _possessedBall.transform.position = rightBallIndex.BallPosition;
             }
-            
+
             rightBallIndex.SetBallType(BallType.None);
             _possessedBall.gameObject.SetActive(true);
 

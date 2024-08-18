@@ -82,6 +82,7 @@ public class DodgeBall : MonoBehaviour
 
         if (sound == SoundIndex.Hit || sound == SoundIndex.Throw)
         {
+            if (!_rb) return;
             var normalizedVelocity = Mathf.Clamp01(_rb.velocity.magnitude / maxVelocity);
             volume = Mathf.Lerp(minVolume, maxVolume, normalizedVelocity);
         }

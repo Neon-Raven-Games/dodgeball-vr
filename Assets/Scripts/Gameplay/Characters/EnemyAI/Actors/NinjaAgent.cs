@@ -64,6 +64,7 @@ public class NinjaAgent : DodgeballAI
         {
             return;
         }
+
         if (!_substitutionUtility.inSequence && !_shadowStepUtility._shadowSteppingSequencePlaying)
         {
             _handSignUtility.Cooldown();
@@ -111,6 +112,15 @@ public class NinjaAgent : DodgeballAI
             _handSignUtility.Cooldown();
             if (!_substitutionUtility.inSequence)
                 currentState = AIState.Move;
+        }
+    }
+
+    protected override void HandlePhaseChange()
+    {
+        if (!_substitutionUtility.inSequence && !_shadowStepUtility._shadowSteppingSequencePlaying)
+        {
+            currentState = AIState.Move;
+            base.HandlePhaseChange();
         }
     }
 

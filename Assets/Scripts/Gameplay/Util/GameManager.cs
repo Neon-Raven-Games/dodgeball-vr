@@ -1,23 +1,53 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum BattlePhase
+{
+    Lackey,
+    Boss
+}
 public class GameManager : MonoBehaviour
 {
+    private static GameManager _instance;
+    
     public static int teamOneScore;
     public static int teamTwoScore;
+    public BattlePhase battlePhase;
 
     private static Text _teamOneScoreText;
     private static Text _teamTwoScoreText;
-
+    
     public Text teamOneScoreTextInstance;
     public Text teamTwoScoreTextInstance;
+    public DodgeballPlayArea dodgeballPlayArea;
+    
+    public static Action<BattlePhase> onPhaseChange;
     private void Start()
     {
+        if (!_instance)
+        {
+            _instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+        if (!dodgeballPlayArea)
+            dodgeballPlayArea = FindObjectOfType<DodgeballPlayArea>();
+        
         _teamOneScoreText = teamOneScoreTextInstance;
         _teamTwoScoreText = teamTwoScoreTextInstance;
         ResetScores();
+    }
+
+    public static void ChangePhase(BattlePhase phase)
+    {
+        _instance.battlePhase = phase;
+        onPhaseChange?.Invoke(phase);
     }
 
     public static void AddScore(Team team)
@@ -66,4 +96,5 @@ public class GameManager : MonoBehaviour
         _matchBalls.RemoveAt(index);
         _matchBallsInitialPos.RemoveAt(index);
     }
+
 }

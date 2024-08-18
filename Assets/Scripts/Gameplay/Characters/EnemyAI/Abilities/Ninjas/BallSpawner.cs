@@ -13,7 +13,7 @@ public class BallSpawner : MonoBehaviour
     [SerializeField] private float travelTime = 2f;
     [SerializeField] private float centerInfluence = 5f;
     [SerializeField] private float distance = 15f;
-    [SerializeField] private Transform planeTransform;
+    [SerializeField] internal Transform planeTransform;
     [SerializeField] private GameObject ballPrefab;
     [SerializeField] private Vector2 ballLaunchStep;
     private List<BallMovement> balls = new();
@@ -23,11 +23,11 @@ public class BallSpawner : MonoBehaviour
         for (var i = 0; i < numberOfBalls; i++)
         {
             var ball = Instantiate(ballPrefab, Vector3.down, Quaternion.identity);
-
             ball.SetActive(false);
             var movement = ball.AddComponent<BallMovement>();
             movement.Initialize(planeTransform, travelTime, centerInfluence, distance);
             ball.GetComponent<Rigidbody>().isKinematic = true;
+
             balls.Add(movement);
         }
     }

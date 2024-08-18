@@ -24,7 +24,6 @@ public class SmokePoofOnTrigger : MonoBehaviour
     
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Triggered");
         if (other.GetComponent<BallMovement>())
         {
             if (index >= poofs.Count) index = 0;
