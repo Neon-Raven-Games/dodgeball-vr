@@ -7,31 +7,39 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
     {
         private Transform planeTransform;
         private float travelTime = 2f;
-
-        public void Initialize(Transform planeTransform, float travelTime = 2f)
+        private float centerInflucence = 5f;
+        private float distance;
+        public void Initialize(Transform planeTransform, float travelTime, float centerInfluence, float distance)
         {
+            this.centerInflucence = centerInfluence;
+            this.distance = distance;
             this.travelTime = travelTime;
             this.planeTransform = planeTransform;
+        }
+
+        public void StartBallRoutine()
+        {
             MoveBall().Forget();
         }
 
         private async UniTaskVoid MoveBall()
         {
-            Vector3 startPosition = transform.position;
-            Vector3 endPosition = startPosition + planeTransform.forward * 50f; 
-            float elapsedTime = 0f;
+            var startPosition = transform.position;
+            var endPosition = startPosition + planeTransform.forward * distance; 
+            var elapsedTime = 0f;
 
-            Vector3 initialControlPointPosition = (startPosition + endPosition) / 2;
+            var initialControlPointPosition = (startPosition + endPosition) / 2;
+            var pointDistance = Vector3.Distance(transform.position, planeTransform.position);
+
+            // Pick a random point above the plane position for the control point
+            var randomHeight = Random.Range(.8f, 1.5f); // Adjust the range to control how high the arc is
+            var controlPointOffset = new Vector3(initialControlPointPosition.x, planeTransform.position.y + randomHeight, initialControlPointPosition.z);
+            controlPointOffset *= pointDistance * centerInflucence;
             
             while (elapsedTime < travelTime)
             {
                 float t = elapsedTime / travelTime;
-
-                float distance = Vector3.Distance(transform.position, planeTransform.position);
-                Vector3 controlPointOffset = (planeTransform.position - transform.position).normalized * distance * 0.5f; // Scale influence
-                Vector3 dynamicControlPointPosition = initialControlPointPosition + controlPointOffset;
-
-                Vector3 bezierPoint = BezierCurve(startPosition, dynamicControlPointPosition, endPosition, t);
+                Vector3 bezierPoint = BezierCurve(startPosition, controlPointOffset, endPosition, t);
                 transform.position = bezierPoint;
                 elapsedTime += Time.deltaTime;
 

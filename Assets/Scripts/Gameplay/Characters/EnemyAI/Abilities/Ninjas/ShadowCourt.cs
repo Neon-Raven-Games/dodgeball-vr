@@ -17,6 +17,7 @@ public class ShadowCourt : MonoBehaviour
     [SerializeField] private float maxY;
     [SerializeField] private float xOffset;
     public float smokeScreenDuration = 20f;
+    [SerializeField] private float delay;
     private static ShadowCourt _instance;
     private static bool active;
 
@@ -48,6 +49,7 @@ public class ShadowCourt : MonoBehaviour
         var currentTime = 0f;
         var secondsToSpawnSmoke = GenerateRandomTimes();
 
+        await UniTask.Delay(TimeSpan.FromSeconds(delay));
         var i = 0;
         while (currentTime < smokeScreenDuration)
         {
