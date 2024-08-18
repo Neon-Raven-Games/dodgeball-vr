@@ -1,43 +1,42 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.Abilities
 {
     public class ShadowEffectEntity : MonoBehaviour
     {
-        public float moveSpeed;
+        private Vector3[] controlPoints;
+        [SerializeField] private float moveDuration = 3f;
+
+        public void SetBezierCurve(Vector3[] controlPoints)
+        {
+            this.controlPoints = controlPoints;
+            MoveAlongBezierCurve().Forget();
+        }
+
+        private async UniTaskVoid MoveAlongBezierCurve()
+        {
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.deltaTime / moveDuration;
+                transform.position = CalculateBezierPoint(t, controlPoints[0], controlPoints[1], controlPoints[2]);
+                await UniTask.Yield();
+            }
+            gameObject.SetActive(false);
+        }
+
+        private Vector3 CalculateBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2)
+        {
+            float u = 1 - t;
+            float tt = t * t;
+            float uu = u * u;
         
-        [SerializeField] private float xDirection;
-        [SerializeField] private float distanceToTravel;
-        [SerializeField] private float _moveDistance;
+            Vector3 p = uu * p0; // u^2 * p0
+            p += 2 * u * t * p1; // 2 * u * t * p1
+            p += tt * p2; // t^2 * p2
 
-        private void OnDisable()
-        {
-            _moveDistance = 0;
-        }
-
-        public void SetDirectionAndDistance(float xDirection, float distanceToTravel)
-        {
-            this.xDirection = xDirection;
-            this.distanceToTravel = distanceToTravel;
-        }
-        private void Update()
-        {
-            if (xDirection == 0)
-            {
-                _moveDistance += moveSpeed * Time.deltaTime;
-                transform.position += new Vector3(0, 0, moveSpeed * Time.deltaTime);
-            }
-            else
-            {
-                _moveDistance += moveSpeed * Time.deltaTime;
-                transform.position -= new Vector3(0, 0, moveSpeed * Time.deltaTime);
-            }
-
-            if (_moveDistance >= distanceToTravel)
-            {
-                gameObject.SetActive(false);
-            }
+            return p;
         }
     }
 }
