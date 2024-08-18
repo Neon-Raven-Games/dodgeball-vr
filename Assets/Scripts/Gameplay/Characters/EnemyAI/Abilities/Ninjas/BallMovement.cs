@@ -1,5 +1,7 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Hands.SinglePlayer.EnemyAI.Abilities
 {
@@ -9,6 +11,16 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
         private float travelTime = 2f;
         private float centerInflucence = 5f;
         private float distance;
+        private Rigidbody rb;
+        private Collider collider;
+        private void Awake()
+        {
+            rb = GetComponent<Rigidbody>();
+            collider = GetComponent<Collider>();
+        }
+        
+        
+        
         public void Initialize(Transform planeTransform, float travelTime, float centerInfluence, float distance)
         {
             this.centerInflucence = centerInfluence;
@@ -22,8 +34,23 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
             MoveBall().Forget();
         }
 
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.gameObject.layer == LayerMask.NameToLayer("TeamOne") ||
+                other.gameObject.layer == LayerMask.NameToLayer("Ground"))
+            {
+                Debug.Log($"Ball hit something: {other.gameObject.name}");
+                rb.isKinematic = false;
+                rb.velocity = Vector3.Reflect(rb.velocity * 5f, transform.forward);
+                collider.isTrigger = false;
+            }
+        }
+
         private async UniTaskVoid MoveBall()
         {
+            rb.isKinematic = true;
+            collider.isTrigger = true;
+            
             var startPosition = transform.position;
             var endPosition = startPosition + planeTransform.forward * distance; 
             var elapsedTime = 0f;
@@ -36,17 +63,20 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
             var controlPointOffset = new Vector3(initialControlPointPosition.x, planeTransform.position.y + randomHeight, initialControlPointPosition.z);
             controlPointOffset *= pointDistance * centerInflucence;
             
-            while (elapsedTime < travelTime)
+            while (elapsedTime < travelTime && rb.isKinematic)
             {
                 float t = elapsedTime / travelTime;
                 Vector3 bezierPoint = BezierCurve(startPosition, controlPointOffset, endPosition, t);
+                transform.LookAt(bezierPoint);
                 transform.position = bezierPoint;
                 elapsedTime += Time.deltaTime;
 
                 await UniTask.Yield();
+                if (!rb.isKinematic) return;
             }
 
-            transform.position = endPosition; 
+            rb.isKinematic = false;
+            collider.isTrigger = false;
         }
 
         private Vector3 BezierCurve(Vector3 start, Vector3 control, Vector3 end, float t)

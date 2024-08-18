@@ -11,7 +11,6 @@ public class ShadowCourt : MonoBehaviour
     public GameObject smokeEffect;
 
     public List<ShadowEffectEntity> shadowEffects = new();
-    public List<GameObject> ninjaCharacters = new();
     [SerializeField] private Transform playArea;
     [SerializeField] private int spawnCount;
     [SerializeField] private float maxY;
@@ -34,11 +33,6 @@ public class ShadowCourt : MonoBehaviour
 
     private void EndSmokeScreen()
     {
-        for (var i = 0; i < ninjaCharacters.Count; i++)
-        {
-            shadowEffects[i].gameObject.SetActive(false);
-        }
-
         smokeEffect.SetActive(false);
         active = false;
         GameManager.ChangePhase(BattlePhase.Lackey);
@@ -130,7 +124,7 @@ public class ShadowCourt : MonoBehaviour
                 playArea.position.z + playArea.localScale.z * 0.4f);
         }
 
-        return new Vector3(randomX, ninjaCharacters[0].transform.position.y, randomZ);
+        return new Vector3(randomX, transform.position.y, randomZ);
     }
 
     private Vector3[] GenerateBezierControlPoints(Vector3 startPoint, Vector3 endPoint)

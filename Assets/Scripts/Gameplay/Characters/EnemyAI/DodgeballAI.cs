@@ -80,22 +80,13 @@ public class DodgeballAI : Actor
 
     [SerializeField] private GhostData ghostData;
 
-    // ai properties
     public AIState currentState;
     private Vector3 _targetPosition;
 
-    // == ball possession ==
     internal float ballPossessionTime;
-
-
-    // todo, handle this in rolling of move utility
-
     private float _nextMoveTime;
 
-    // Weight for distance in utility calculation
     public float distanceWeight = 1.0f;
-
-    // Difficulty factor for random component of utility calculation
     public float difficultyFactor = 1.0f;
     internal GameObject CurrentTarget => targetUtility.CurrentTarget;
 
@@ -510,7 +501,6 @@ public class DodgeballAI : Actor
         currentState = AIState.OutOfPlay;
         outOfPlay = true;
     }
-
 
     internal bool IsTargetingBall(GameObject ball) => CurrentTarget == ball;
 

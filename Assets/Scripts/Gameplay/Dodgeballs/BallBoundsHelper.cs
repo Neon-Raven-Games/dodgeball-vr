@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Hands.SinglePlayer.EnemyAI.Abilities;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -41,6 +42,7 @@ public class BallBoundsHelper : MonoBehaviour
     
     private void OnTriggerEnter(Collider other)
     {
+        if (other.GetComponent<BallMovement>()) return;
         if (other.gameObject.layer != _ballLayer) return;
         if (forceMode) return;
         if (!BallInPlay.ContainsKey(other.gameObject)) return;
