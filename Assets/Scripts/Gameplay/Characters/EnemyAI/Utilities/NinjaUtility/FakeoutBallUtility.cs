@@ -52,7 +52,7 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
     {
         if (active) return 1f;
         if (_ai.hasBall) return 0f;
-        if (_ai.currentState == DodgeballAI.AIState.Move && Time.time > _nextRollTime)
+        if (_ai.currentState == DodgeballAI.AIState.Move && Time.time > _nextRollTime + 5)
         {
             _nextRollTime = Time.time + Random.Range(args.rollIntervalMin, args.rollIntervalMax);
             return float.MaxValue;
