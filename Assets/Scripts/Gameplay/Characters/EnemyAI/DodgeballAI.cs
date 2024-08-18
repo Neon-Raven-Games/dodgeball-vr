@@ -5,6 +5,7 @@ using Hands.SinglePlayer.EnemyAI;
 using Hands.SinglePlayer.EnemyAI.Priority;
 using Hands.SinglePlayer.EnemyAI.Utilities;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
+using Newtonsoft.Json;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -33,6 +34,15 @@ public class GhostData
 
 public class DodgeballAI : Actor
 {
+    public void Logs()
+    {
+        string stateJson = "Call Stack:\n";
+        stateJson += logBuffer.CaptureState(this);
+        string logsJson = logBuffer.ExportLogs();
+        stateJson += "\n\n" + "Logs\n" + logsJson;
+        Debug.Log(stateJson);
+    }
+    
     public enum AIState
     {
         Idle,
@@ -64,7 +74,7 @@ public class DodgeballAI : Actor
     public TargetUtility targetUtility;
     private CatchUtility _catchUtility;
     internal PickUpUtility _pickUpUtility;
-    private ThrowUtility _throwUtility;
+    protected ThrowUtility _throwUtility;
 
     [SerializeField] private PriorityHandler priorityHandler;
 
@@ -118,13 +128,28 @@ public class DodgeballAI : Actor
     }
 
     private bool _isGhost;
-
+    protected LogBuffer logBuffer;
     private void OnEnable()
     {
         PopulateTeamObjects();
         SubscribeToBallEvents(true);
         PopulateUtilities();
+
+        logBuffer = GetComponent<LogBuffer>();
     }
+    protected virtual void LogAction(string actionName, object additionalInfo = null)
+    {
+        if (logBuffer != null)
+        {
+            string logEntry = $"[{Time.time}] {actionName}";
+            if (additionalInfo != null)
+            {
+                logEntry += $"\n[{Time.time} Context] {JsonConvert.SerializeObject(additionalInfo)}";
+            }
+            logBuffer.AppendLog(logEntry);
+        }
+    }
+    
 
     private void SubscribeToBallEvents(bool sub)
     {
@@ -192,8 +217,8 @@ public class DodgeballAI : Actor
     #endregion
 
     internal DodgeBall _possessedBall;
-    [SerializeField] protected NetBallPossessionHandler leftBallIndex;
-    [SerializeField] private NetBallPossessionHandler rightBallIndex;
+    [SerializeField] protected internal NetBallPossessionHandler leftBallIndex;
+    [SerializeField] internal NetBallPossessionHandler rightBallIndex;
 
 
     public void PickUpBall(DodgeBall ball)
@@ -240,7 +265,13 @@ public class DodgeballAI : Actor
             }
         }
 
-        var ballPos = rightBallIndex._currentDodgeball ? rightBallIndex.BallPosition : leftBallIndex.BallPosition;
+        var ballPos = Vector3.zero;
+        if (leftBallIndex._currentDodgeball) ballPos = leftBallIndex.BallPosition;
+        else if (rightBallIndex._currentDodgeball) ballPos = rightBallIndex.BallPosition;
+        else
+        {
+            Debug.LogError("No ball to throw");
+        }
         var velocity = _throwUtility.CalculateThrow(this, ballPos, enemyHeadPos);
         _possessedBall.transform.position = ballPos + velocity * Time.deltaTime * 4;
 
@@ -264,7 +295,6 @@ public class DodgeballAI : Actor
     private async UniTaskVoid BallThrowRecovery()
     {
         await UniTask.Delay(TimeSpan.FromSeconds(ballThrowRecovery));
-        await UniTask.SwitchToMainThread();
         _possessedBall = null;
         throwAnimationPlaying = false;
     }
@@ -283,7 +313,6 @@ public class DodgeballAI : Actor
     {
         liveBallTrajectories[ballIndex] = trajectory;
     }
-
     internal void RemoveBallTrajectory(int ballIndex)
     {
         liveBallTrajectories.Remove(ballIndex);
@@ -332,10 +361,17 @@ public class DodgeballAI : Actor
             if (OutOfPlayUtilityMethod()) return;
         }
 
+        if (throwAnimationPlaying && currentState != AIState.Throw)
+        {
+            throwAnimationPlaying = false;
+        }
         if (throwAnimationPlaying) targetUtility.Execute(this);
         var targetScore = targetUtility.Roll(this);
         if (throwAnimationPlaying) return;
-        if (targetScore > _lastTargetScore) targetUtility.UpdateTarget(currentState);
+        if (targetScore > _lastTargetScore)
+        {
+            targetUtility.UpdateTarget(currentState);
+        }
         _lastTargetScore = targetScore;
 
         if (currentState == AIState.BackOff)
@@ -345,12 +381,16 @@ public class DodgeballAI : Actor
         }
 
         _moveUtility.ResetBackOff();
-        var utility = _utilityHandler.EvaluateUtility(this);
+        var utility = _utilityHandler.EvaluateUtility(this, out _);
+
         var inPickup = currentState == AIState.PickUp;
+
         currentState = _utilityHandler.GetState();
 
         if (inPickup && currentState != AIState.PickUp)
+        {
             _pickUpUtility.StopPickup(this);
+        }
 
         ExecuteCurrentState(utility);
     }
@@ -430,7 +470,7 @@ public class DodgeballAI : Actor
     internal bool IsTargetingBall(GameObject ball) => CurrentTarget == ball;
 
     // extract to state machine
-    private void ExecuteCurrentState(IUtility utility)
+    protected void ExecuteCurrentState(IUtility utility)
     {
         switch (currentState)
         {
@@ -459,9 +499,6 @@ public class DodgeballAI : Actor
                 break;
             case AIState.Possession:
                 if (!_moveUtility.PossessionMove(this)) currentState = AIState.BackOff;
-                break;
-            case AIState.Special:
-                HandleSpecial();
                 break;
             default:
                 utility.Execute(this);

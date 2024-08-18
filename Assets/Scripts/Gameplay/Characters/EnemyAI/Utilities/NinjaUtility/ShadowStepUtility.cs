@@ -9,19 +9,21 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
     private static DodgeballAI _ai;
     internal bool _shadowSteppingSequencePlaying;
     private bool _isShadowStepping;
-    private bool _canShadowStep;
     private float lastShadowStepTime = -Mathf.Infinity;
+    private TeleportationPathHandler _teleportationPathHandler;
 
+    private readonly float[] _preferredAngles = {-45f, 45f, -30f, 30f, -85f, 85f};
 
     public ShadowStepUtility(ShadowStepUtilityArgs args, DodgeballAI.AIState state, DodgeballAI ai) : base(args, state)
     {
         _ai = ai;
+        _teleportationPathHandler = ai.GetComponent<TeleportationPathHandler>();
         _animator = ai.animator;
     }
 
     public override float Execute(DodgeballAI ai)
     {
-        if (_shadowSteppingSequencePlaying) return 0;
+        if (_shadowSteppingSequencePlaying || _ai.transform.position.y < 0.1f) return 0;
         ShadowStepMove();
         return 1f;
     }
@@ -31,107 +33,211 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
     {
         if (_shadowSteppingSequencePlaying || _ai.currentState != DodgeballAI.AIState.Throw) return 0;
         if (!_ai.hasBall) return 0;
-        
+
         var timeSinceLastStep = Time.time - lastShadowStepTime;
         if (timeSinceLastStep < args.shadowStepCooldown) return 0;
+        lastShadowStepTime = Time.time;
 
         var roll = UnityEngine.Random.Range(1, 100);
-        _canShadowStep = roll > args.rollChance;
+        var canShadowStep = roll > args.rollChance;
 
-        if (!_shadowSteppingSequencePlaying && _ai.hasBall && _canShadowStep) ShadowStepMove();
-        _canShadowStep = false;
+        if (!_shadowSteppingSequencePlaying && _ai.hasBall && canShadowStep) return float.MaxValue;
         return 0;
+    }
+
+    #region refactor methods
+
+    private void OnIntroPointReached()
+    {
+        if (!_isShadowStepping) return;
+        _isShadowStepping = false;
+
+        args.ik.solvers.leftHand.SetIKPositionWeight(0);
+        args.ik.solvers.leftHand.SetIKRotationWeight(0);
+        args.ik.solvers.rightHand.SetIKPositionWeight(0);
+        args.ik.solvers.rightHand.SetIKRotationWeight(0);
+        args.ik.solvers.spine.SetIKPositionWeight(0);
+        args.ik.solvers.lookAt.SetIKPositionWeight(0);
+
+        args.aiAvatar.SetActive(false);
+        _ai.SwitchBallSideToLeft();
+
+        _ai.SetOutOfPlay(false);
+    }
+
+    private void OnFinishTeleport()
+    {
+        ExitTeleport().Forget();
+    }
+
+    private async UniTask ExitTeleport()
+    {
+        await UniTask.Yield();
+
+        if (switchBackToSigning)
+        {
+            var t = 0f;
+            while (t < 1)
+            {
+                t += Time.deltaTime / 0.2f;
+                args.ik.solvers.leftHand.SetIKPositionWeight(t);
+                args.ik.solvers.leftHand.SetIKRotationWeight(t);
+                await UniTask.Yield();
+            }
+
+            switchBackToSigning = false;
+        }
+        else
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
+        }
+
+        _ai.currentState = DodgeballAI.AIState.Move;
+    }
+
+    private async UniTask EnterOutro()
+    {
+        args.entryEffect.SetActive(false);
+        args.exitEffect.SetActive(true);
+        args.aiAvatar.SetActive(true);
+        args.floorSmoke.SetActive(false);
+        _animator.Play(AIAnimationHelper.SSpecialOneExit);
+        LerpColors(0, FrameToSeconds(args.outroColorFrame, args.outroAnimationClip),
+            args.outroAnimationClip, args.outroColorLerpValue,
+            0).Forget();
+        InvokeAnimationEvent(args.outroAnimationClip, args.outroThrowFrame, _ai.ThrowBall).Forget();
+    }
+
+    private bool switchBackToSigning;
+
+    private void OnMovedToOutroPoint()
+    {
+        switchBackToSigning = isSigning;
+        isSigning = false;
+
+        args.ik.solvers.leftHand.SetIKPositionWeight(0);
+        args.ik.solvers.leftHand.SetIKRotationWeight(0);
+
+        EnterOutro().Forget();
+        _shadowSteppingSequencePlaying = false;
     }
 
     public void ShadowStepMove()
     {
         if (_shadowSteppingSequencePlaying) return;
-        Debug.Log("executing shadow step");
         _shadowSteppingSequencePlaying = true;
         lastShadowStepTime = Time.time;
         _isShadowStepping = true;
-        args.stepDirection = CalculateValidShadowStep();
-        args.stepDirection.y = _ai.transform.position.y;
+        InitializeTeleport();
+        _teleportationPathHandler.Teleport(TeleportationType.ShadowStep, args.stepDirection, OnIntroPointReached,
+            OnMovedToOutroPoint,
+            OnFinishTeleport).Forget();
 
-        ShadowStepEnter().Forget();
+        // ShadowStepEnter().Forget();
     }
 
+    private void InitializeTeleport()
+    {
+        args.stepDirection = CalculateValidShadowStep();
+        isSigning = args.ik.solvers.leftHand.IKPositionWeight > 0;
+
+        _animator.SetTrigger(AIAnimationHelper.SSpecialOne);
+
+        LerpColors(0, args.introAnimationClip.length,
+            args.introAnimationClip, 0, args.introColorLerpValue).Forget();
+
+        args.floorSmoke.transform.position = _ai.transform.position + args.stepDirection * (args.stepDistance / 8);
+        args.floorSmoke.SetActive(true);
+    }
+
+    #endregion
+
+    private void RandomizeAngles()
+    {
+        for (var i = _preferredAngles.Length - 1; i > 0; i--)
+        {
+            var j = UnityEngine.Random.Range(0, i + 1);
+            (_preferredAngles[i], _preferredAngles[j]) = (_preferredAngles[j], _preferredAngles[i]);
+        }
+    }
 
     private Vector3 CalculateValidShadowStep()
     {
-        // Define the preferred angles in degrees for left and right movements
-        float[] preferredAngles = {-45f, 45f, -30f, 30f, -15f, 15f};
-
         Vector3 bestDirection = Vector3.zero;
         float maxDistance = 0f;
+        RandomizeAngles();
 
-        foreach (float angle in preferredAngles)
+        for (var i = 0; i < _preferredAngles.Length; i++)
         {
-            // Calculate the direction based on the preferred angle
-            Vector3 direction = Quaternion.Euler(0, angle, 0) * _ai.transform.forward;
+            Vector3 direction = Quaternion.Euler(0, _preferredAngles[i], 0) * _ai.transform.forward;
+            Debug.DrawRay(_ai.transform.position, direction * args.stepDistance, Color.red, 2.0f);
 
-            // Determine the target position in world space
-            Vector3 targetPosition = _ai.transform.TransformPoint(direction * args.stepDistance);
+            Vector3 targetPosition = _ai.transform.position + direction * args.stepDistance;
 
-            // Check if the target position is within the bounds of the play area
-            if (IsWithinPlayArea(targetPosition, _ai.playArea.team2PlayArea))
-            {
-                // Calculate the distance to the target position from the AI's current position
-                float distance = Vector3.Distance(_ai.transform.position, targetPosition);
+            if (!IsWithinPlayArea(targetPosition, _ai.friendlyTeam.playArea)) continue;
 
-                // Choose the direction that gives the AI the farthest valid movement
-                if (distance > maxDistance)
-                {
-                    maxDistance = distance;
-                    bestDirection = direction;
-                }
-            }
+            var distance = Vector3.Distance(_ai.transform.position, targetPosition);
+            if (distance < maxDistance) continue;
+            
+            maxDistance = distance;
+            bestDirection = direction;
         }
 
-        // If no valid direction is found (unlikely, but a safety check)
         if (bestDirection == Vector3.zero)
         {
-            // Default to moving left if nothing else is valid
+            Debug.Log("no best dir");
             bestDirection = _ai.transform.TransformDirection(Vector3.left);
         }
-
+        
         return bestDirection;
     }
 
+    private readonly Vector3[] _bestPoints = new Vector3[4];
+
     private bool IsWithinPlayArea(Vector3 position, Transform playArea)
     {
-        // Assume playArea has a method or property that gives us the bounds
-        Bounds bounds = new Bounds(playArea.transform.position, playArea.localScale);
+        var size = playArea.localScale;
+        size.y = 5;
+        Bounds bounds = new Bounds(playArea.position, size);
+        Debug.DrawRay(position, Vector3.up, Color.cyan, 2.0f);
 
         return bounds.Contains(position);
     }
 
 
-    private async UniTaskVoid ShadowStepExit()
-    {
-        var playerPosition = _ai.transform.position;
-        var exitPoint = _ai.transform.TransformPoint(args.stepDirection * args.stepDistance);
-        exitPoint.y = playerPosition.y;
+    #region custom animation events to refactor
 
-        var exitTime = 0f;
-        while (exitTime < 1)
+    // Invokes throwing animation event
+    private async UniTaskVoid InvokeAnimationEvent(AnimationClip clip, int frame, Action action)
+    {
+        await UniTask.Yield();
+        const float tolerance = 0.01f;
+        var executeDelay = FrameToSeconds(frame, clip);
+        var curTime = 0f;
+
+        while (curTime < executeDelay - tolerance)
         {
-            _ai.transform.position = Vector3.Lerp(exitPoint, playerPosition, args.exitCurve.Evaluate(exitTime));
-            exitTime += Time.deltaTime / args.exitDuration;
+            _ai.transform.LookAt(_ai.targetUtility.CurrentTarget.transform);
+            var animState = _ai.animator.GetCurrentAnimatorStateInfo(0);
+            var normalizedTime = animState.normalizedTime % 1;
+            curTime = normalizedTime * clip.length;
             await UniTask.Yield();
         }
 
-        await UniTask.Yield();
-        _shadowSteppingSequencePlaying = false;
+        action.Invoke();
     }
 
+    private bool isSigning;
+
+    // lerps our character's color
     private async UniTaskVoid LerpColors(float fromSeconds, float toSeconds, AnimationClip clip, float fromValue,
         float toValue)
     {
+        const float tolerance = 0.01f;
         args.colorLerp.lerpValue = fromValue;
         await UniTask.Yield();
         var curTime = 0f;
-        while (curTime < fromSeconds && fromSeconds > 0)
+        while (curTime < fromSeconds && fromSeconds > 0 && args.aiAvatar.activeInHierarchy)
         {
             var animState = _ai.animator.GetCurrentAnimatorStateInfo(0);
             var normalizedTime = animState.normalizedTime % 1;
@@ -139,15 +245,13 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
 
             fromSeconds /= _ai.animator.speed;
             toSeconds /= _ai.animator.speed;
-
             if (curTime >= fromSeconds) break;
 
             await UniTask.Yield();
         }
 
         var currentTime = 0f;
-        const float tolerance = 0.01f;
-        while (Mathf.Abs(currentTime - toSeconds) > tolerance)
+        while (Mathf.Abs(currentTime - toSeconds) > tolerance && args.aiAvatar.activeInHierarchy)
         {
             var animState = _ai.animator.GetCurrentAnimatorStateInfo(0);
             var normalizedTime = animState.normalizedTime % 1;
@@ -156,37 +260,69 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
             var t = Mathf.InverseLerp(fromSeconds, toSeconds, currentTime);
             args.colorLerp.lerpValue = Mathf.Lerp(fromValue, toValue, t);
 
+            if (isSigning)
+            {
+                // todo, this needs to be decoupled, but setting this for the sake of keeping less routines
+                args.ik.solvers.leftHand.SetIKPositionWeight(1 - args.colorLerp.lerpValue);
+                args.ik.solvers.leftHand.SetIKRotationWeight(1 - args.colorLerp.lerpValue);
+            }
+
             await UniTask.Yield();
         }
 
         args.colorLerp.lerpValue = 0;
     }
 
+    #endregion
+
+    private async UniTaskVoid ShadowStepExit()
+    {
+        var exitPoint = _bestPoints[^1];
+        var playerPosition = _bestPoints[^2];
+        _ai.transform.position = playerPosition;
+        Debug.DrawRay(exitPoint, Vector3.up, Color.magenta, 2.0f);
+        var targetTransform = _ai.targetUtility.CurrentTarget;
+        var exitTime = 0f;
+        while (exitTime < 1)
+        {
+            _ai.transform.LookAt(targetTransform.transform);
+            _ai.transform.position = Vector3.Lerp(playerPosition, exitPoint, args.exitCurve.Evaluate(exitTime));
+            exitTime += Time.deltaTime / args.exitDuration;
+            await UniTask.Yield();
+        }
+
+        _ai.transform.position = exitPoint;
+
+        await UniTask.Yield();
+        _shadowSteppingSequencePlaying = false;
+        await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
+    }
 
     private async UniTaskVoid ShadowStepEnter()
     {
         if (!_ai) return;
-        args.ik.solvers.leftHand.SetIKPositionWeight(0);
-        args.ik.solvers.leftHand.SetIKRotationWeight(0);
-        _animator.SetTrigger(AIAnimationHelper.SSpecialOne);
-        
-        LerpColors(0, args.introAnimationClip.length,
-            args.introAnimationClip, 0, args.introColorLerpValue).Forget();
 
-        args.floorSmoke.transform.position = _ai.transform.position + args.stepDirection * (args.stepDistance / 8);
-        args.floorSmoke.SetActive(true);
-        var entryPoint = _ai.transform.TransformPoint(args.stepDirection * (args.stepDistance / 4));
-        entryPoint.y = _ai.transform.position.y;
-        var start = _ai.transform.position;
+        await UniTask.Yield();
+
+        var start = _bestPoints[0];
+        var entryPoint = _bestPoints[1];
+        Debug.DrawRay(entryPoint, Vector3.up, Color.yellow, 2.0f);
+        var introDuration = args.introAnimationClip.length; // Total duration of the intro animation in seconds
         var entryTime = 0f;
-        while (_isShadowStepping && entryTime < 1)
+
+        while (entryTime < 1)
         {
             if (!_ai) break;
-            _ai.transform.position = Vector3.Lerp(start, entryPoint, args.entryCurve.Evaluate(entryTime));
-            entryTime += Time.deltaTime / args.entrySpeed;
-            entryTime = Mathf.Clamp01(entryTime);
+
+            var t = args.entryCurve.Evaluate(entryTime);
+            _ai.transform.position = Vector3.Lerp(start, entryPoint, t);
+
+            entryTime += Time.deltaTime / introDuration;
+
             await UniTask.Yield();
         }
+
+        // InitialShadowStepFinished();
     }
 
     public float FrameToSeconds(int frameNumber, AnimationClip clip)
@@ -201,22 +337,23 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
     {
         if (!_isShadowStepping) return;
         _isShadowStepping = false;
-        Reappear().Forget();
-        _ai.SetOutOfPlay(false);
 
         args.ik.solvers.leftHand.SetIKPositionWeight(0);
         args.ik.solvers.leftHand.SetIKRotationWeight(0);
+        args.ik.solvers.rightHand.SetIKPositionWeight(0);
+        args.ik.solvers.rightHand.SetIKRotationWeight(0);
+        args.ik.solvers.spine.SetIKPositionWeight(0);
+        args.ik.solvers.lookAt.SetIKPositionWeight(0);
+
+        args.aiAvatar.SetActive(false);
+        _ai.SwitchBallSideToLeft();
+
+        // Reappear().Forget();
+        _ai.SetOutOfPlay(false);
     }
 
     private async UniTaskVoid Reappear()
     {
-        await UniTask.Yield();
-        _ai.SwitchBallSideToLeft();
-        args.aiAvatar.SetActive(false);
-        var targetPosition = _ai.transform.TransformPoint(args.stepDirection * args.stepDistance);
-        targetPosition = ClampPositionToPlayArea(targetPosition, _ai.playArea, _ai.team);
-        targetPosition.y = _ai.transform.position.y;
-        _ai.transform.position = targetPosition;
         await UniTask.Delay(TimeSpan.FromSeconds(args.stepDuration));
         args.entryEffect.SetActive(false);
         args.exitEffect.SetActive(true);
@@ -226,9 +363,8 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         LerpColors(0, FrameToSeconds(args.outroColorFrame, args.outroAnimationClip),
             args.outroAnimationClip, args.outroColorLerpValue,
             0).Forget();
-
-        ShadowStepExit().Forget();
+        InvokeAnimationEvent(args.outroAnimationClip, args.outroThrowFrame, _ai.ThrowBall).Forget();
+        // ShadowStepExit().Forget();
         await UniTask.Yield();
-        _shadowSteppingSequencePlaying = false;
     }
 }

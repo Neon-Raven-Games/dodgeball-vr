@@ -1,4 +1,3 @@
-using System;
 using Hands.SinglePlayer.EnemyAI;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
 using UnityEngine;
@@ -8,6 +7,8 @@ public class NinjaAgent : DodgeballAI
     [SerializeField] private ShadowStepUtilityArgs shadowStepArgs;
     [SerializeField] private SubstitutionUtilityArgs substitutionUtilityArgs;
     [SerializeField] private NinjaHandSignUtilityArgs handSignUtilityArgs;
+    [SerializeField] private FakeoutUtilityArgs fakeoutUtilityArgs;
+    private FakeoutBallUtility _fakeoutBallUtility;
     private SubstitutionUtility _substitutionUtility;
     private ShadowStepUtility _shadowStepUtility;
     private NinjaHandSignUtility _handSignUtility;
@@ -24,27 +25,33 @@ public class NinjaAgent : DodgeballAI
         _shadowStepUtility = new ShadowStepUtility(shadowStepArgs, AIState.Special, this);
         _shadowStepUtility.Initialize(friendlyTeam.playArea, team);
 
+        _fakeoutBallUtility = new FakeoutBallUtility(fakeoutUtilityArgs, AIState.Special, this);
+        _fakeoutBallUtility.Initialize(friendlyTeam.playArea, team);
+
         _utilityHandler.AddUtility(_shadowStepUtility);
         _utilityHandler.AddUtility(_substitutionUtility);
+        _utilityHandler.AddUtility(_fakeoutBallUtility);
     }
 
     protected override void Update()
     {
         base.Update();
+        if (_fakeoutBallUtility.active) return;
         if (IsOutOfPlay() || currentState == AIState.PickUp || currentState == AIState.Throw) return;
         if (currentState != AIState.Special && _handSignUtility.active) return;
 
         if (!_shadowStepUtility._shadowSteppingSequencePlaying &&
             !_substitutionUtility.inSequence &&
             _handSignUtility.Roll(this) > 0)
+        {
             _handSignUtility.Execute(this);
+        }
     }
 
     internal override void SetOutOfPlay(bool value)
     {
         if (_substitutionUtility.inSequence || _shadowStepUtility._shadowSteppingSequencePlaying)
             return;
-
         base.SetOutOfPlay(value);
         currentState = AIState.OutOfPlay;
         _handSignUtility.Cooldown();
@@ -53,17 +60,26 @@ public class NinjaAgent : DodgeballAI
 
     protected override void HandleSpecial()
     {
+        if (_fakeoutBallUtility.active)
+        {
+            return;
+        }
         if (!_substitutionUtility.inSequence && !_shadowStepUtility._shadowSteppingSequencePlaying)
         {
             _handSignUtility.Cooldown();
             _substitutionUtility.Reset();
+            currentState = AIState.Move;
         }
-        // we can handle logic here if we need to,
-        // seemed to go pretty well without tho
     }
 
     private void OnTriggerEnter(Collider other)
     {
+        if (_fakeoutBallUtility.active)
+        {
+            Debug.Log("Fakeout cancel");
+            return;
+        }
+
         if (_shadowStepUtility._shadowSteppingSequencePlaying)
         {
             Debug.Log("ShadowStep cancel");
@@ -91,6 +107,7 @@ public class NinjaAgent : DodgeballAI
             db.transform.position += rb.velocity.normalized * 3 * Time.fixedDeltaTime;
             Debug.Log("Ball in trigger, executing");
             _substitutionUtility.Execute(this);
+            LogAction("Substitution execution");
             _handSignUtility.Cooldown();
             if (!_substitutionUtility.inSequence)
                 currentState = AIState.Move;
@@ -105,6 +122,5 @@ public class NinjaAgent : DodgeballAI
 
     public void InitialShadowStepFinished()
     {
-        _shadowStepUtility.InitialShadowStepFinished();
     }
 }

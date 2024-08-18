@@ -19,7 +19,7 @@ public class AIAnimationHelper : MonoBehaviour
 
     public void ShadowStep()
     {
-        if (shadowStep != null) shadowStep.InitialShadowStepFinished();
-        if (dodgeballAI is NinjaAgent ninja) ninja.InitialShadowStepFinished();
+        // if (shadowStep != null) shadowStep.InitialShadowStepFinished();
+        // if (dodgeballAI is NinjaAgent ninja) ninja.InitialShadowStepFinished();
     }
 }

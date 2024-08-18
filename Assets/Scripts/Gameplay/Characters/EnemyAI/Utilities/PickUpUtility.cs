@@ -18,7 +18,11 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             // Check conditions for picking up the ball
             if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
+            {
+                if (ai is NinjaAgent)
+                Debug.Log("ai hasball");
                 return 0;
+            }
 
             ballDistance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
 
@@ -95,7 +99,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private GameObject nearestBall;
         public override float Roll(DodgeballAI ai) => CalculatePickUpUtility(ai);
 
-        internal float CalculatePickUpUtility(DodgeballAI ai)
+        private float CalculatePickUpUtility(DodgeballAI ai)
         {
             if (ai.CurrentTarget == null || ai.CurrentTarget.layer != LayerMask.NameToLayer("Ball") ||
                 ai.hasBall || ai.IsOutOfPlay())
@@ -128,7 +132,6 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             utility += (1.0f / ballDistance) * ai.distanceWeight;
 
             utility += Random.value * ai.difficultyFactor;
-
             return utility;
         }
 

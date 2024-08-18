@@ -57,6 +57,8 @@ public class ColorLerp : MonoBehaviour
             for (var i = 0; i < materials.Length; i++, index++)
             {
                 _materialCopies[index] = new Material(materials[i]);
+                
+                if (!gameObject.activeInHierarchy) return;
                 materials[i] = _materialCopies[index];
 
                 _originalColors[index] = new MaterialPropertyColors
@@ -67,6 +69,7 @@ public class ColorLerp : MonoBehaviour
                 };
             await UniTask.Yield();
             }
+            if (!gameObject.activeInHierarchy) return;
             if (rend is MeshRenderer) rend.materials = materials;
             else if (rend is SkinnedMeshRenderer) rend.sharedMaterials = materials;
             await UniTask.Yield();

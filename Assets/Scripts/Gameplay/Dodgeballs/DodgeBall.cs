@@ -11,7 +11,7 @@ public class DodgeBall : MonoBehaviour
     public float pauseTime = 0.5f;
     internal Team _team;
     public BallState _ballState = BallState.Dead;
-    private Rigidbody _rb;
+    protected Rigidbody _rb;
     [SerializeField] private float maxVelocity = 10f; // The velocity at which the volume should be maximum
     [SerializeField] private float minVolume = 0.1f; // Minimum volume
 
@@ -26,20 +26,20 @@ public class DodgeBall : MonoBehaviour
     private int ballLayer;
     internal Actor ownerActor;
 
-    public void Start()
+    public virtual void Start()
     {
-        GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
-        hitParticle.transform.SetParent(null);
+        // GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
+        if (hitParticle) hitParticle.transform.SetParent(null);
         ballLayer = LayerMask.NameToLayer("Ball");
     }
 
     private void OnEnable()
     {
         _rb = GetComponent<Rigidbody>();
-        var config = ConfigurationManager.GetThrowConfiguration();
-        _throwHandle = GetComponent<ThrowHandle>();
-        _throwHandle.SetConfigForDevice(Device.UNSPECIFIED, config);
-        _throwHandle.SetConfigForDevice(Device.OCULUS_TOUCH, config);
+        // var config = ConfigurationManager.GetThrowConfiguration();
+        // _throwHandle = GetComponent<ThrowHandle>();
+        // _throwHandle.SetConfigForDevice(Device.UNSPECIFIED, config);
+        // _throwHandle.SetConfigForDevice(Device.OCULUS_TOUCH, config);
         
         var blendShapeIndex = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex("blendShape1.DodgeBall_Base1");
         skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 0);
@@ -135,7 +135,7 @@ public class DodgeBall : MonoBehaviour
         skinnedMeshRenderer.SetBlendShapeWeight(index, endValue);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    protected virtual void OnCollisionEnter(Collision collision)
     {
         if (_ballState == BallState.Possessed) return;
         if (ownerActor != null && ownerActor.IsColliderOwner(collision.collider)) return;

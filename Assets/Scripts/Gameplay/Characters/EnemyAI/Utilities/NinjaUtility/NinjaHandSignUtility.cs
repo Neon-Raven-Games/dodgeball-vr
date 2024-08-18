@@ -9,7 +9,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
     public class NinjaHandSignUtility : Utility<NinjaHandSignUtilityArgs>, IUtility
     {
         public bool active => _isHandSignActive;
-        
+
         private static readonly int _SSigning = Animator.StringToHash("Signing");
         private bool _isHandSignActive;
         private float _nextAvailableTime = -Mathf.Infinity;
@@ -22,25 +22,26 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         public override float Execute(DodgeballAI ai)
         {
             if (_isHandSignActive || Time.time < _nextAvailableTime) return 0f;
-            
+
             var rand = Random.Range(1, 100);
             if (rand > args.handSignDebugRoll) return 0f;
-            
+
             _isHandSignActive = true;
             args.collider.enabled = true;
-            
+
             args.ik.solvers.leftHand.target = args.handSignTarget;
             args.handAnimator.SetBool(_SSigning, true);
-            
+
             LerpToHandSignPositionAndRotation(0.25f).Forget();
             HandSignTimer().Forget();
 
             return 1f;
         }
+
         private async UniTask LerpToHandSignPositionAndRotation(float duration)
         {
             float elapsedTime = 0f;
-    
+
             while (elapsedTime < duration)
             {
                 float t = Mathf.Clamp01(elapsedTime / duration);
@@ -57,7 +58,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             args.ik.solvers.leftHand.SetIKPositionWeight(0.8f);
             args.ik.solvers.leftHand.SetIKRotationWeight(0.8f);
         }
-        
+
         public override float Roll(DodgeballAI ai)
         {
             if (_isHandSignActive) return 0f;
@@ -70,13 +71,19 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         private async UniTaskVoid HandSignTimer()
         {
             await UniTask.Delay(TimeSpan.FromSeconds(args.handSignDuration));
+            var t = 0f;
+            while (t < 1)
+            {
+                args.ik.solvers.leftHand.SetIKPositionWeight(1-t);
+                args.ik.solvers.leftHand.SetIKRotationWeight(1-t);
+                t += Time.deltaTime / 1f;
+                await UniTask.Yield();
+            }
 
+            args.handAnimator.SetBool(_SSigning, false);
             _isHandSignActive = false;
             args.collider.enabled = false;
             _nextAvailableTime = Time.time + args.handSignCooldown;
-            args.ik.solvers.leftHand.SetIKPositionWeight(0);
-            args.ik.solvers.leftHand.SetIKRotationWeight(0);
-            args.handAnimator.SetBool(_SSigning, false);
         }
 
         public void Cooldown()

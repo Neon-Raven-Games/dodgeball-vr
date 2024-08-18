@@ -19,17 +19,15 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             return _currentUtility.State;
         }
         
-        public IUtility EvaluateUtility(DodgeballAI ai)
+        public IUtility EvaluateUtility(DodgeballAI ai, out float score)
         {
-            var highestUtility = 0f;
-            var str = "Utilities:\n";
+            score = 0f;
             foreach (var utility in _utilities)
             {
                 var utilityValue = utility.Roll(ai);
-                str += $"{utility.State}: {utilityValue}\n";
-                if (utilityValue > highestUtility)
+                if (utilityValue > score)
                 {
-                    highestUtility = utilityValue;
+                    score = utilityValue;
                     _currentUtility = utility;
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Hands.SinglePlayer.EnemyAI.Abilities;
 using RootMotion.FinalIK;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -86,21 +87,22 @@ namespace Hands.SinglePlayer.EnemyAI
         protected GameObject FindNearestBallInPlayArea(DodgeballPlayArea playArea, DodgeballAI ai, out float distance)
         {
             distance = 200;
-            // find the nearest ball within the play area
+            
             GameObject nearestBall = null;
-            float nearestDistance = float.MaxValue;
+            var nearestDistance = float.MaxValue;
 
             foreach (var ball in playArea.dodgeBalls)
             {
-                if (IsInPlayArea(ball.transform.position))
-                {
-                    distance = Vector3.Distance(ai.transform.position, ball.transform.position);
-                    if (distance < nearestDistance)
-                    {
-                        nearestDistance = distance;
-                        nearestBall = ball;
-                    }
-                }
+                if (!IsInPlayArea(ball.transform.position) || !ball.activeInHierarchy) continue;
+                
+                var ballPos = ball.transform.position;
+                ballPos.y = ai.transform.position.y;
+                distance = Vector3.Distance(ai.transform.position, ballPos);
+
+                if (distance > nearestDistance) continue;
+                    
+                nearestDistance = distance;
+                nearestBall = ball;
             }
 
             return nearestBall;
@@ -141,6 +143,18 @@ namespace Hands.SinglePlayer.EnemyAI
     {
     }
 
+    [Serializable]
+    public class FakeoutUtilityArgs : UtilityArgs
+    {
+        public GameObject entryEffect;
+        public FakeoutBall fakeoutBall;
+        public float rollIntervalMin;
+        public float rollIntervalMax;
+        
+        public float entryDuration = 1f;
+        public NetBallPossessionHandler leftHandIndex;
+    }
+    
     [Serializable]
     public class MoveUtilityArgs : UtilityArgs
     {
@@ -222,7 +236,7 @@ namespace Hands.SinglePlayer.EnemyAI
         [Header("Entry Properties")] 
         public GameObject entryEffect;
         public GameObject floorSmoke;
-        public float entrySpeed;
+        [FormerlySerializedAs("entryTimeSeconds")] public float entrySpeed;
         public int introColorLerpFrame;
         public AnimationClip introAnimationClip;
         public AnimationCurve entryCurve;
@@ -232,9 +246,10 @@ namespace Hands.SinglePlayer.EnemyAI
         public AnimationCurve exitCurve;
         public float exitDuration;
         public GameObject exitEffect;
-        public int outroColorFrame;
         public AnimationClip outroAnimationClip;
         public float outroColorLerpValue;
+        public int outroColorFrame;
+        public int outroThrowFrame;
     }
     
     [Serializable] 
