@@ -26,6 +26,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
             ballDistance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
 
+            
             if (ballDistance < args.pickupDistanceThreshold)
             {
                 ai.PickUpBall(ai.targetUtility.BallTarget);
@@ -73,26 +74,28 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             if (!pickup && args.ik.solvers.rightHand.GetIKPositionWeight() == 0) return;
             pickup = false;
-            // ai.StartCoroutine(LerpBackToIdle(ai));
             isLerpingBackToIdle = true;
-            // Debug.Log("Stop Pickup");
         }
 
+        // the ai is targetting the ball too quickly,
+        // this is resulting in the ai not being able to pick up the ball
+        // it is getting his hand under/infornt the dodgeball, where the colliders interact
+        // we need his hand to be above the dodgeball, so maybe the hand weight should be 0.5
         private void ApproachBallToPickUp(DodgeBall dodgeBall, DodgeballAI ai)
         {
             pickup = true;
-            var lerpFactor = Mathf.Clamp01((ballDistance / args.pickupDistanceThreshold) - 1);
-
+            var lerpFactor = Mathf.Clamp01((ballDistance / args.ikDistanceThreshold) - 1);
             var position = ai.transform.position;
-            position.y = Mathf.Lerp(-0.27f, 0.11f, lerpFactor);
+            
+            position.y = Mathf.Lerp(args.ballPickupHeight, args.ballIdleHeight, lerpFactor);
             ai.transform.position = position;
-            // when stuck, our guy is not calling this function
+            
             args.ik.solvers.spine.target = dodgeBall.transform;
-            args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(0.063f, 0, lerpFactor));
+            args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(args.spineIKWeight, 0, lerpFactor));
 
             args.ik.solvers.rightHand.target = ai.CurrentTarget.transform;
             args.ik.solvers.rightHand.SetIKPositionWeight(Mathf.Lerp(1, 0, lerpFactor));
-            args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(0.4f, 0, lerpFactor);
+            args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(args.maintainRotationWeight, 0, lerpFactor);
         }
 
 

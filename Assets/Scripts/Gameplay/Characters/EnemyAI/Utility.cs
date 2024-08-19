@@ -189,10 +189,13 @@ namespace Hands.SinglePlayer.EnemyAI
     public class PickUpUtilityArgs : UtilityArgs
     {
         public float pickupDistanceThreshold;
+        public float ikDistanceThreshold;
         public BipedIK ik;
         public float lerpBackSpeed = 3f;
-        public float avoidanceDistance = 0.35f;
-        public float avoidanceFactor = 1f;
+        public float ballPickupHeight = -0.27f;
+        public float ballIdleHeight = 0.11f;
+        public float spineIKWeight = 0.063f;
+        public float maintainRotationWeight = 0.4f;
     }
 
     [Serializable]
