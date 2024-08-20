@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public enum SoundIndex
 {
@@ -52,6 +54,7 @@ public class ConfigurationManager : MonoBehaviour
         }
         botMuted = PlayerPrefs.GetInt("BotMuted", 0) == 1;
         skipIntro = PlayerPrefs.GetInt("SkipIntro", 0) == 1;
+        GC.Collect(0);
     }
     
     

@@ -14,7 +14,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
 
     private readonly float[] _preferredAngles = {-45f, 45f, -30f, 30f, -85f, 85f};
 
-    public ShadowStepUtility(ShadowStepUtilityArgs args, DodgeballAI.AIState state, DodgeballAI ai) : base(args, state)
+    public ShadowStepUtility(ShadowStepUtilityArgs args, AIState state, DodgeballAI ai) : base(args, state)
     {
         _ai = ai;
         _teleportationPathHandler = ai.GetComponent<TeleportationPathHandler>();
@@ -31,7 +31,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
 
     public override float Roll(DodgeballAI ai)
     {
-        if (_shadowSteppingSequencePlaying || _ai.currentState != DodgeballAI.AIState.Throw) return 0;
+        if (_shadowSteppingSequencePlaying || _ai.currentState != AIState.Throw) return 0;
         if (!_ai.hasBall) return 0;
 
         var timeSinceLastStep = Time.time - lastShadowStepTime;
@@ -92,7 +92,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
             await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
         }
 
-        _ai.currentState = DodgeballAI.AIState.Move;
+        _ai.currentState = AIState.Move;
     }
 
     private async UniTask EnterOutro()

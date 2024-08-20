@@ -13,13 +13,13 @@ namespace Hands.SinglePlayer.EnemyAI
         private Bounds playAreaBounds;
         private RaycastHit hit;
 
-        protected Utility(T args, DodgeballAI.AIState state)
+        protected Utility(T args, AIState state)
         {
             this.args = args;
             State = state;
         }
 
-        public DodgeballAI.AIState State { get; }
+        public AIState State { get; }
 
         // this will be called by the AI class in update loop
         public abstract float Execute(DodgeballAI ai);
@@ -67,7 +67,7 @@ namespace Hands.SinglePlayer.EnemyAI
                 if (teammate != ai.gameObject)
                 {
                     DodgeballAI teammateAI = teammate.GetComponent<DodgeballAI>();
-                    if (teammateAI != null && teammateAI.currentState == DodgeballAI.AIState.PickUp &&
+                    if (teammateAI != null && teammateAI.currentState == AIState.PickUp &&
                         teammateAI.IsTargetingBall(ball))
                     {
                         return true;

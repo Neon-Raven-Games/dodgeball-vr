@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class DodgeUtility : Utility<DodgeUtilityArgs>, IUtility
 {
-    public DodgeUtility(DodgeUtilityArgs args) : base(args, DodgeballAI.AIState.Dodge)
+    public DodgeUtility(DodgeUtilityArgs args) : base(args, AIState.Dodge)
     {
     }
 

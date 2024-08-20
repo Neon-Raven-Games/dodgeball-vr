@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
 
@@ -98,7 +99,7 @@ public class DodgeBall : MonoBehaviour
         skinnedMeshRenderer.transform.rotation = fromToRotation * skinnedMeshRenderer.transform.rotation;
         hitParticle.transform.position = collision.GetContact(0).point;
         hitParticle.SetActive(true);
-        StartCoroutine(AnimateBlendShape());
+        AnimateBlendShape().Forget();
     }
 
     private void SetDeadBall()
@@ -106,23 +107,21 @@ public class DodgeBall : MonoBehaviour
         _ballState = BallState.Dead;
     }
 
-    IEnumerator AnimateBlendShape()
+    private async UniTaskVoid AnimateBlendShape()
     {
         int blendShapeIndex = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex("blendShape1.DodgeBall_Base1");
         if (blendShapeIndex == -1)
         {
             Debug.LogError("Blend shape not found!");
-            yield break;
+            return;
         }
 
         skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 100);
-        yield return new WaitForSeconds(pauseTime);
-        yield return StartCoroutine(AnimateBlendShapeValue(blendShapeIndex, 100, 0, transitionTime));
-        skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 0);
-        hitParticle.SetActive(false);
+        await UniTask.WaitForSeconds(pauseTime);
+        AnimateBlendShapeValue(blendShapeIndex, 100, 0, transitionTime).Forget();
     }
 
-    IEnumerator AnimateBlendShapeValue(int index, float startValue, float endValue, float duration)
+    private async UniTaskVoid AnimateBlendShapeValue(int index, float startValue, float endValue, float duration)
     {
         float currentTime = 0;
         while (currentTime < duration)
@@ -130,10 +129,10 @@ public class DodgeBall : MonoBehaviour
             float newValue = Mathf.Lerp(startValue, endValue, currentTime / duration);
             skinnedMeshRenderer.SetBlendShapeWeight(index, newValue);
             currentTime += Time.deltaTime;
-            yield return null;
+            await UniTask.Yield();
         }
-
         skinnedMeshRenderer.SetBlendShapeWeight(index, endValue);
+        hitParticle.SetActive(false);
     }
 
     protected virtual void OnCollisionEnter(Collision collision)

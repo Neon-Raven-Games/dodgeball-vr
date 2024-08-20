@@ -6,7 +6,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
     {
         private bool _finished;
 
-        public OutOfPlayUtility(OutOfPlayUtilityArgs args) : base(args, DodgeballAI.AIState.OutOfPlay)
+        public OutOfPlayUtility(OutOfPlayUtilityArgs args) : base(args, AIState.OutOfPlay)
         {
         }
 

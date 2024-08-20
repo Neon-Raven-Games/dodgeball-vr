@@ -7,7 +7,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
     {
         private DodgeballAI _ai;
 
-        public PickUpUtility(PickUpUtilityArgs args, DodgeballAI ai) : base(args, DodgeballAI.AIState.PickUp)
+        public PickUpUtility(PickUpUtilityArgs args, DodgeballAI ai) : base(args, AIState.PickUp)
         {
             _ai = ai;
         }
@@ -16,17 +16,15 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
-            // Check conditions for picking up the ball
             if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
             {
-                if (ai is NinjaAgent)
-                Debug.Log("ai hasball");
+                if (ai is NinjaAgent) Debug.Log("ai hasball");
                 return 0;
             }
 
             ballDistance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
 
-            
+
             if (ballDistance < args.pickupDistanceThreshold)
             {
                 ai.PickUpBall(ai.targetUtility.BallTarget);
@@ -86,10 +84,10 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             pickup = true;
             var lerpFactor = Mathf.Clamp01((ballDistance / args.ikDistanceThreshold) - 1);
             var position = ai.transform.position;
-            
+
             position.y = Mathf.Lerp(args.ballPickupHeight, args.ballIdleHeight, lerpFactor);
             ai.transform.position = position;
-            
+
             args.ik.solvers.spine.target = dodgeBall.transform;
             args.ik.solvers.spine.SetIKPositionWeight(Mathf.Lerp(args.spineIKWeight, 0, lerpFactor));
 

@@ -18,6 +18,20 @@ public class ActorTeam
     public Transform outOfBounds { get; set; }
 }
 
+public enum AIState
+{
+    Idle,
+    Dodge,
+    Catch,
+    PickUp,
+    Throw,
+    Move,
+    OutOfPlay,
+    BackOff,
+    Possession,
+    Special
+}
+
 [Serializable]
 public class GhostData
 {
@@ -43,23 +57,9 @@ public class DodgeballAI : Actor
         Debug.Log(stateJson);
     }
 
-    public enum AIState
-    {
-        Idle,
-        Dodge,
-        Catch,
-        PickUp,
-        Throw,
-        Move,
-        OutOfPlay,
-        BackOff,
-        Possession,
-        Special
-    }
-
     public bool stayIdle;
+    public AIState currentState;
 
-    // utility properties
     public DodgeUtilityArgs dodgeUtilityArgs;
     public TargetUtilityArgs targetUtilityArgs;
     public MoveUtilityArgs moveUtilityArgs;
@@ -67,31 +67,30 @@ public class DodgeballAI : Actor
     public PickUpUtilityArgs pickUpUtilityArgs;
     public ThrowUtilityArgs throwUtilityArgs;
     public OutOfPlayUtilityArgs outOfBoundsUtilityArgs;
+    public float distanceWeight = 1.0f;
+    public float difficultyFactor = 1.0f;
+    public TargetUtility targetUtility;
+
+    [SerializeField] private PriorityHandler priorityHandler;
+    [SerializeField] private GhostData ghostData;
+
+    internal PickUpUtility _pickUpUtility;
+    internal float ballPossessionTime;
+    internal GameObject CurrentTarget => targetUtility.CurrentTarget;
+    internal readonly Dictionary<int, Vector3> liveBallTrajectories = new();
 
     private OutOfPlayUtility _outOfPlayUtility;
     private DodgeUtility _dodgeUtility;
-    protected MoveUtility _moveUtility;
-    public TargetUtility targetUtility;
     private CatchUtility _catchUtility;
-    internal PickUpUtility _pickUpUtility;
-    protected ThrowUtility _throwUtility;
+    private ThrowUtility _throwUtility;
+    private MoveUtility _moveUtility;
+    private LogBuffer logBuffer;
 
-    [SerializeField] private PriorityHandler priorityHandler;
-
-    [SerializeField] private GhostData ghostData;
-
-    public AIState currentState;
     private Vector3 _targetPosition;
-
-    internal float ballPossessionTime;
+    private bool _isGhost;
+    private bool phaseChange;
     private float _nextMoveTime;
 
-    public float distanceWeight = 1.0f;
-    public float difficultyFactor = 1.0f;
-    internal GameObject CurrentTarget => targetUtility.CurrentTarget;
-
-    // Ball trajectories for live balls
-    internal readonly Dictionary<int, Vector3> liveBallTrajectories = new();
 
     #region initialization
 
@@ -112,8 +111,6 @@ public class DodgeballAI : Actor
         GameManager.onPhaseChange += OnPhaseChange;
     }
 
-    private bool phaseChange;
-
     private void OnPhaseChange(BattlePhase obj)
     {
         if (stayIdle && obj == BattlePhase.Lackey)
@@ -133,8 +130,6 @@ public class DodgeballAI : Actor
         ghostData.humanMaterial = colorLerp.GetPlayerMaterial();
     }
 
-    private bool _isGhost;
-    protected LogBuffer logBuffer;
 
     private void OnEnable()
     {
@@ -361,7 +356,7 @@ public class DodgeballAI : Actor
             phaseChange = false;
             return;
         }
-        
+
         if (currentState != AIState.Special && currentState != AIState.Throw && currentState != AIState.OutOfPlay)
         {
             stayIdle = true;
@@ -403,10 +398,7 @@ public class DodgeballAI : Actor
         if (throwAnimationPlaying) targetUtility.Execute(this);
         var targetScore = targetUtility.Roll(this);
         if (throwAnimationPlaying) return;
-        if (targetScore > _lastTargetScore)
-        {
-            targetUtility.UpdateTarget(currentState);
-        }
+        if (targetScore > _lastTargetScore) targetUtility.UpdateTarget(currentState);
 
         _lastTargetScore = targetScore;
 

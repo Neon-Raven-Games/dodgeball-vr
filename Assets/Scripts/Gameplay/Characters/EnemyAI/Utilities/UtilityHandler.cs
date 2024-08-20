@@ -14,7 +14,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             _utilities.Add(utility);
         }
 
-        public DodgeballAI.AIState GetState()
+        public AIState GetState()
         {
             return _currentUtility.State;
         }
@@ -39,7 +39,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
 public interface IUtility
 {
-    DodgeballAI.AIState State { get; }
+    AIState State { get; }
     float Execute(DodgeballAI ai);
     float Roll(DodgeballAI ai);
 }

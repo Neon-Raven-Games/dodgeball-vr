@@ -11,7 +11,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private float backoffDuration = .8f;
         private float backoffStartTime;
 
-        public MoveUtility(MoveUtilityArgs args) : base(args, DodgeballAI.AIState.Move)
+        public MoveUtility(MoveUtilityArgs args) : base(args, AIState.Move)
         {
             noiseOffset = new Vector3(Random.value, 0, Random.value) * 10f;
             changeTargetCooldown = Random.Range(0.1f, 1.5f);
@@ -110,7 +110,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
-            if (ai.currentState == DodgeballAI.AIState.OutOfPlay) return 0f;
+            if (ai.currentState == AIState.OutOfPlay) return 0f;
             FlockMove(ai);
             if (Time.time >= _nextMoveTime) ScheduleNextMove();
             return 1f;
@@ -119,7 +119,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public override float Roll(DodgeballAI ai)
         {
-            if (ai.currentState == DodgeballAI.AIState.OutOfPlay) return 0f;
+            if (ai.currentState == AIState.OutOfPlay) return 0f;
             if (Time.time >= _nextMoveTime)
             {
                 ScheduleNextMove();

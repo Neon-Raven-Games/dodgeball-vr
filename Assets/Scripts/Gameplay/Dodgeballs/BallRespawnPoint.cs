@@ -34,7 +34,6 @@ public class BallRespawnPoint : MonoBehaviour
     public async UniTaskVoid DelayInThreadPool(GameObject ball)
     {
         await UniTask.Delay(TimeSpan.FromSeconds(delayTime));
-        await UniTask.SwitchToMainThread();
         if (BallInPlay(ball) && ball.activeInHierarchy)
         {
             _occupuied = false;
@@ -50,7 +49,6 @@ public class BallRespawnPoint : MonoBehaviour
 
             particleEffect.gameObject.SetActive(true);
             await UniTask.Delay(TimeSpan.FromSeconds(effectDelay * 2));
-            await UniTask.SwitchToMainThread();
             
             ball.transform.rotation = quaternion.identity;
             ball.transform.position = transform.position;
@@ -60,11 +58,9 @@ public class BallRespawnPoint : MonoBehaviour
 
             ball.SetActive(true);
             await UniTask.Delay(TimeSpan.FromSeconds(effectDespawnDelay));
-            await UniTask.SwitchToMainThread();
             particleEffect.gameObject.SetActive(false);
             _occupuied = false;
             
-            await UniTask.SwitchToMainThread();
             BallBoundsHelper.BallInPlay[ball] = true;
         }
     }

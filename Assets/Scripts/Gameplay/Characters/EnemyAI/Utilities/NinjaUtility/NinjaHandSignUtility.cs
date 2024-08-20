@@ -14,8 +14,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         private bool _isHandSignActive;
         private float _nextAvailableTime = -Mathf.Infinity;
 
-        public NinjaHandSignUtility(NinjaHandSignUtilityArgs args, DodgeballAI ai) : base(args,
-            DodgeballAI.AIState.Special)
+        public NinjaHandSignUtility(NinjaHandSignUtilityArgs args, DodgeballAI ai) : base(args, AIState.Special)
         {
         }
 

@@ -41,8 +41,7 @@ public class NinjaAgent : DodgeballAI
         if (currentState != AIState.Special && _handSignUtility.active) return;
 
         if (!_shadowStepUtility._shadowSteppingSequencePlaying &&
-            !_substitutionUtility.inSequence &&
-            _handSignUtility.Roll(this) > 0)
+            !_substitutionUtility.inSequence && _handSignUtility.Roll(this) > 0)
         {
             _handSignUtility.Execute(this);
         }
@@ -98,7 +97,6 @@ public class NinjaAgent : DodgeballAI
             var db = other.GetComponent<DodgeBall>();
             if (db._ballState != BallState.Live || db._team == team)
             {
-                Debug.Log("Ball not live or same team");
                 return;
             }
 

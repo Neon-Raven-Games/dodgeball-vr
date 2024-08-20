@@ -8,7 +8,7 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
     public bool active;
     private float _nextRollTime;
     
-    public FakeoutBallUtility(FakeoutUtilityArgs args, DodgeballAI.AIState state, DodgeballAI ai) : base(args, state)
+    public FakeoutBallUtility(FakeoutUtilityArgs args, AIState state, DodgeballAI ai) : base(args, state)
     {
         _ai = ai;
     }
@@ -33,7 +33,7 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
 
         while (time < 1)
         {
-            _ai.currentState = DodgeballAI.AIState.Special;
+            _ai.currentState = AIState.Special;
             dodgeball.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, time);
             time += Time.deltaTime / args.entryDuration;
             await UniTask.Yield();
@@ -45,14 +45,14 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
         args.entryEffect.SetActive(false);
         await UniTask.Yield();
         active = false;
-        _ai.currentState = DodgeballAI.AIState.Throw;
+        _ai.currentState = AIState.Throw;
     }
 
     public override float Roll(DodgeballAI ai)
     {
         if (active) return 1f;
         if (_ai.hasBall) return 0f;
-        if (_ai.currentState == DodgeballAI.AIState.Move && Time.time > _nextRollTime + 5)
+        if (_ai.currentState == AIState.Move && Time.time > _nextRollTime + 5)
         {
             _nextRollTime = Time.time + Random.Range(args.rollIntervalMin, args.rollIntervalMax);
             return float.MaxValue;

@@ -4,7 +4,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
     public class CatchUtility : Utility<CatchUtilityArgs>, IUtility
     {
-        public CatchUtility(CatchUtilityArgs args) : base(args, DodgeballAI.AIState.Catch)
+        public CatchUtility(CatchUtilityArgs args) : base(args, AIState.Catch)
         {
         }
 

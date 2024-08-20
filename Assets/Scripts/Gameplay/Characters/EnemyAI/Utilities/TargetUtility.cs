@@ -47,7 +47,7 @@ namespace Hands.SinglePlayer.EnemyAI
         private float GetPriority(PriorityType type) =>
             _priorityData.GetPriorityValue(type);
 
-        public TargetUtility(TargetUtilityArgs arg, DodgeballAI ai, PriorityData data) : base(arg, DodgeballAI.AIState.Idle)
+        public TargetUtility(TargetUtilityArgs arg, DodgeballAI ai, PriorityData data) : base(arg, AIState.Idle)
         {
             _priorityData = data;
             _ai = ai;
@@ -125,9 +125,9 @@ namespace Hands.SinglePlayer.EnemyAI
             _pickupCheckTime = Time.time + _pickupCheckStep;
         }
 
-        public void UpdateTarget(DodgeballAI.AIState currentState)
+        public void UpdateTarget(AIState currentState)
         {
-            if (currentState == DodgeballAI.AIState.OutOfPlay) return;
+            if (currentState == AIState.OutOfPlay) return;
             var timeSinceLastSwitch = Time.time - _lastTargetChangeTime;
 
             _targetSwitchProbability = _minSwitchProbability + (_maxSwitchProbability - _minSwitchProbability) *
@@ -146,9 +146,9 @@ namespace Hands.SinglePlayer.EnemyAI
             }
 
 
-            if (currentState != DodgeballAI.AIState.Possession &&
-                currentState != DodgeballAI.AIState.Throw &&
-                currentState != DodgeballAI.AIState.BackOff)
+            if (currentState != AIState.Possession &&
+                currentState != AIState.Throw &&
+                currentState != AIState.BackOff)
                 CheckForNearbyDodgeballs();
         }
 

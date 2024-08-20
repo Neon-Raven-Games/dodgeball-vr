@@ -11,7 +11,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         private readonly DodgeballAI _ai;
         public bool inSequence => args.sequencePlaying;
 
-        public SubstitutionUtility(SubstitutionUtilityArgs args, DodgeballAI.AIState state, DodgeballAI ai) : base(args,
+        public SubstitutionUtility(SubstitutionUtilityArgs args, AIState state, DodgeballAI ai) : base(args,
             state)
         {
             _ai = ai;
@@ -25,7 +25,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
-            if (_ai.currentState == DodgeballAI.AIState.PickUp || args.sequencePlaying)
+            if (_ai.currentState == AIState.PickUp || args.sequencePlaying)
                 return 0;
             args.sequencePlaying = true;
             ShadowStepMove();
@@ -34,7 +34,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         public override float Roll(DodgeballAI ai)
         {
-            if (_ai.currentState == DodgeballAI.AIState.Special)
+            if (_ai.currentState == AIState.Special)
                 return 0;
             if (args.sequencePlaying) return 0;
             if (args.ballInTrigger) return float.MaxValue;
@@ -59,7 +59,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
             await LerpSubstitutionMovement();
             await UniTask.Yield();
-            _ai.currentState = DodgeballAI.AIState.Move;
+            _ai.currentState = AIState.Move;
             args.sequencePlaying = false;
             args.ballInTrigger = false;
         }
@@ -116,7 +116,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         private void InitializeSubstitution()
         {
-            _ai.currentState = DodgeballAI.AIState.Special;
+            _ai.currentState = AIState.Special;
             args.collider.enabled = false;
             _ai.SetOutOfPlay(false);
             args.ballInTrigger = false;
