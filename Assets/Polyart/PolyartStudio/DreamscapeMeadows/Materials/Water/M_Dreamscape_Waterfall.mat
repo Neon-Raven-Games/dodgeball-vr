@@ -11,8 +11,10 @@ Material:
   m_Shader: {fileID: 4800000, guid: 66906d5c57c4a9c4eb411e5bca74e37c, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_ValidKeywords:
+  - _RECEIVE_SHADOWS_OFF
+  m_InvalidKeywords:
+  - _RECEIVESHADOWS_OFF
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -87,7 +89,7 @@ Material:
     m_Floats:
     - _AlphaCutoff: 0.5
     - _ColorDepthFade: 0.43
-    - _DisplaceStrength: 0
+    - _DisplaceStrength: -0.1
     - _DisplaceStrength1: 0.469
     - _EnvironmentReflections: 1
     - _Float0: 0.84
@@ -98,9 +100,9 @@ Material:
     - _Line02ScaleY: 1
     - _Line02Speed: -1
     - _LineAcceleration: 1.2
-    - _LineScaleWidth: 1
+    - _LineScaleWidth: 0.4
     - _LineTreshold: 0.672
-    - _LineUVFade: 0.64
+    - _LineUVFade: 0.9
     - _LinesScaleX: 2.52
     - _LinesScaleX2: 9.3
     - _LinesScaleY: 1.95
@@ -109,14 +111,14 @@ Material:
     - _LinesSpeed2: 0.6
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _ReceiveShadows: 1
+    - _ReceiveShadows: 0
     - _RippleSpeed: 2
-    - _Smoothness: 1
+    - _Smoothness: 0.3
     - _Smoothness1: 1
     - _SpecularHighlights: 1
     - _UVFade: -0.65
     - _VoronoiSpeed: 2.3
-    - _WaveNormalIntensity: 0.597
+    - _WaveNormalIntensity: 0
     - _WaveNormalIntensity1: 0.21
     - _WaveTiling01: 1
     - _WaveTiling02: 1
@@ -125,8 +127,8 @@ Material:
     - __dirty: 0
     m_Colors:
     - _ColorDeep: {r: 0.06581525, g: 0.8207547, b: 0.7680069, a: 0}
-    - _ColorShallow: {r: 0.2214756, g: 0.6776948, b: 0.745283, a: 1}
+    - _ColorShallow: {r: 0.20784315, g: 0.50980395, b: 0.65882355, a: 1}
     - _DisplacementMovement: {r: 0, g: 1, b: 0, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-    - _LineColor: {r: 0.19424175, g: 0.71653634, b: 0.9150943, a: 1}
+    - _LineColor: {r: 0.2171591, g: 0.5770892, b: 0.754717, a: 1}
   m_BuildTextureStacks: []
