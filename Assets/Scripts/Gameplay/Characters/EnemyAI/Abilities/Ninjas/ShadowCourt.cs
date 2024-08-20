@@ -9,6 +9,8 @@ using Random = UnityEngine.Random;
 public class ShadowCourt : MonoBehaviour
 {
     public GameObject smokeEffect;
+    [SerializeField] private Material shadowMaterial;
+    [SerializeField] private float shadowSpeed;
 
     public List<ShadowEffectEntity> shadowEffects = new();
     [SerializeField] private Transform playArea;
@@ -36,10 +38,24 @@ public class ShadowCourt : MonoBehaviour
         smokeEffect.SetActive(false);
         active = false;
         GameManager.ChangePhase(BattlePhase.Lackey);
+        shadowMaterial.SetFloat(_SOcclusionMap, 0);
     }
 
-    [SerializeField]
-    private BallSpawner ballSpawner;
+    [SerializeField] private BallSpawner ballSpawner;
+
+    private static readonly int _SOcclusionMap = Shader.PropertyToID("_OcclusionMap");
+
+    private async UniTaskVoid LerpShadow()
+    {
+        var currentTime = 0f;
+        if (currentTime <= shadowSpeed)
+        {
+            currentTime += Time.deltaTime;
+            Debug.Log("Shadow Speed: " + shadowSpeed + "cur time: " + currentTime + "cur lerp: " + currentTime / shadowSpeed);
+            shadowMaterial.SetFloat(_SOcclusionMap, Mathf.Lerp(0, 0.8f, currentTime / shadowSpeed));
+            UniTask.Yield();
+        }
+    }
 
     private async UniTaskVoid StartSmokeScreen()
     {
@@ -47,33 +63,39 @@ public class ShadowCourt : MonoBehaviour
         var secondsToSpawnSmoke = GenerateRandomTimes();
         var launchBalls = 0f;
 
+        LerpShadow().Forget();
+
         await UniTask.Delay(TimeSpan.FromSeconds(delay));
         var i = 0;
         while (currentTime < smokeScreenDuration)
         {
             await UniTask.Yield();
             currentTime += Time.deltaTime;
+
+
             if (launchBalls < currentTime)
             {
                 var playAreaPos = playArea.position;
                 playAreaPos.y = ballSpawner.planeTransform.position.y;
                 ballSpawner.planeTransform.transform.position = new Vector3(playAreaPos.x, playAreaPos.y,
                     playAreaPos.z + Random.Range(-playArea.localScale.z / 3, playArea.localScale.z / 3));
-                
+
                 ballSpawner.planeTransform.transform.localRotation = Quaternion.Euler(4, Random.Range(80, 95), 3);
                 ballSpawner.SpawnBalls();
                 ballLaunchTimeStep = Random.Range(1f, 4.5f);
                 launchBalls += ballLaunchTimeStep;
-                
+
                 if (launchBalls >= smokeScreenDuration - 4f)
                     launchBalls = smokeScreenDuration + 4f;
-                
+
                 i++;
             }
+
             if (shadowEffects.Any(x => x.gameObject.activeInHierarchy))
             {
                 if (secondsToSpawnSmoke.Count == 0 || secondsToSpawnSmoke[0] > currentTime) continue;
-            } 
+            }
+
             var shadow = shadowEffects.FirstOrDefault(x => !x.gameObject.activeInHierarchy);
             if (shadow)
             {
@@ -84,7 +106,7 @@ public class ShadowCourt : MonoBehaviour
                 shadow.SetBezierCurve(controlPoints);
                 shadow.gameObject.SetActive(true);
             }
-            
+
             if (secondsToSpawnSmoke.Count > 0 && secondsToSpawnSmoke[0] < currentTime) secondsToSpawnSmoke.RemoveAt(0);
         }
 
@@ -120,7 +142,7 @@ public class ShadowCourt : MonoBehaviour
         }
         else
         {
-            randomZ = Random.Range(playArea.position.z ,
+            randomZ = Random.Range(playArea.position.z,
                 playArea.position.z + playArea.localScale.z * 0.4f);
         }
 

@@ -361,7 +361,6 @@ public class DodgeballAI : Actor
         {
             stayIdle = true;
             phaseChange = false;
-            Debug.Log("Notify idle for phase changing");
         }
     }
 

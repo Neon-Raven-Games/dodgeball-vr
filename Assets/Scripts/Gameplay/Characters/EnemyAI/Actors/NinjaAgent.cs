@@ -104,7 +104,6 @@ public class NinjaAgent : DodgeballAI
             var rb = db.GetComponent<Rigidbody>();
             rb.velocity = Vector3.Reflect(rb.velocity, transform.forward);
             db.transform.position += rb.velocity.normalized * 3 * Time.fixedDeltaTime;
-            Debug.Log("Ball in trigger, executing");
             _substitutionUtility.Execute(this);
             LogAction("Substitution execution");
             _handSignUtility.Cooldown();
