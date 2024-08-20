@@ -39,7 +39,6 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
             if (other.gameObject.layer == LayerMask.NameToLayer("TeamOne") ||
                 other.gameObject.layer == LayerMask.NameToLayer("Ground"))
             {
-                Debug.Log($"Ball hit something: {other.gameObject.name}");
                 rb.isKinematic = false;
                 rb.velocity = Vector3.Reflect(rb.velocity * 5f, transform.forward);
                 collider.isTrigger = false;

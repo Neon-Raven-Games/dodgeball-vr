@@ -18,13 +18,10 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
             if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
             {
-                if (ai is NinjaAgent) Debug.Log("ai hasball");
                 return 0;
             }
 
             ballDistance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
-
-
             if (ballDistance < args.pickupDistanceThreshold)
             {
                 ai.PickUpBall(ai.targetUtility.BallTarget);

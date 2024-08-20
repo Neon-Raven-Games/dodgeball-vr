@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
 using UnityEngine;
@@ -8,14 +9,42 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 {
     public class NinjaHandSignUtility : Utility<NinjaHandSignUtilityArgs>, IUtility
     {
+        private CancellationTokenSource _cancellationTokenSource;
         public bool active => _isHandSignActive;
 
         private static readonly int _SSigning = Animator.StringToHash("Signing");
         private bool _isHandSignActive;
         private float _nextAvailableTime = -Mathf.Infinity;
+        private readonly object _lock = new object();
 
+        public void Dispose()
+        {
+            _cancellationTokenSource?.Dispose();
+        }
+        
         public NinjaHandSignUtility(NinjaHandSignUtilityArgs args, DodgeballAI ai) : base(args, AIState.Special)
         {
+            _cancellationTokenSource = new CancellationTokenSource();
+        }
+
+        public void CancelTask()
+        {
+            if (!active) return;
+            _isHandSignActive = false;
+
+            lock (_lock)
+            {
+                if (_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Dispose();
+                }
+
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource = new CancellationTokenSource();
+
+                args.ik.solvers.leftHand.SetIKPositionWeight(0.8f);
+                args.ik.solvers.leftHand.SetIKRotationWeight(0.8f);
+            }
         }
 
         public override float Execute(DodgeballAI ai)
@@ -41,7 +70,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         {
             float elapsedTime = 0f;
 
-            while (elapsedTime < duration)
+            while (elapsedTime < duration && !GetCancellationToken().IsCancellationRequested)
             {
                 float t = Mathf.Clamp01(elapsedTime / duration);
 
@@ -67,14 +96,31 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             return roll > args.handSignDebugRoll ? 1f : 0f;
         }
 
+        public CancellationToken GetCancellationToken()
+        {
+            return _cancellationTokenSource.Token;
+        }
+
         private async UniTaskVoid HandSignTimer()
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(args.handSignDuration));
+            try
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(args.handSignDuration),
+                    cancellationToken: GetCancellationToken());
+            }
+            catch (OperationCanceledException)
+            {
+                args.handAnimator.SetBool(_SSigning, false);
+                _isHandSignActive = false;
+                args.collider.enabled = false;
+            }
+
+            if (!_isHandSignActive) return;
             var t = 0f;
             while (t < 1)
             {
-                args.ik.solvers.leftHand.SetIKPositionWeight(1-t);
-                args.ik.solvers.leftHand.SetIKRotationWeight(1-t);
+                args.ik.solvers.leftHand.SetIKPositionWeight(1 - t);
+                args.ik.solvers.leftHand.SetIKRotationWeight(1 - t);
                 t += Time.deltaTime / 1f;
                 await UniTask.Yield();
             }
@@ -87,6 +133,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         public void Cooldown()
         {
+            if (_isHandSignActive) CancelTask();
             _isHandSignActive = false;
             args.collider.enabled = false;
             _nextAvailableTime = Time.time + args.handSignCooldown;

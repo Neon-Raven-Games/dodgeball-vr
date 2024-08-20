@@ -95,12 +95,13 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         _ai.currentState = AIState.Move;
     }
 
-    private async UniTask EnterOutro()
+    private void EnterOutro()
     {
         args.entryEffect.SetActive(false);
         args.exitEffect.SetActive(true);
         args.aiAvatar.SetActive(true);
         args.floorSmoke.SetActive(false);
+        
         _animator.Play(AIAnimationHelper.SSpecialOneExit);
         LerpColors(0, FrameToSeconds(args.outroColorFrame, args.outroAnimationClip),
             args.outroAnimationClip, args.outroColorLerpValue,
@@ -118,7 +119,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         args.ik.solvers.leftHand.SetIKPositionWeight(0);
         args.ik.solvers.leftHand.SetIKRotationWeight(0);
 
-        EnterOutro().Forget();
+        EnterOutro();
         _shadowSteppingSequencePlaying = false;
     }
 
@@ -132,8 +133,30 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         _teleportationPathHandler.Teleport(TeleportationType.ShadowStep, args.stepDirection, OnIntroPointReached,
             OnMovedToOutroPoint,
             OnFinishTeleport).Forget();
+    }
 
-        // ShadowStepEnter().Forget();
+    public void ShadowStepIntroOverride()
+    {
+        InitializeTeleport();
+        _teleportationPathHandler.Teleport(TeleportationType.ShadowStep, args.stepDirection, 
+            () => args.aiAvatar.SetActive(false), null, null).Forget();
+    }
+    
+    public async UniTaskVoid ShadowStepOutroOverride()
+    {
+        args.entryEffect.SetActive(false);
+        args.exitEffect.SetActive(true);
+        args.aiAvatar.SetActive(true);
+        args.floorSmoke.SetActive(false);
+        
+        _animator.Play("SmokeOutro");
+
+        LerpColors(0, FrameToSeconds(args.outroColorFrame, args.outroAnimationClip),
+            args.outroAnimationClip, args.outroColorLerpValue,
+            0).Forget();
+        await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+        _ai.stayIdle = false;
+
     }
 
     private void InitializeTeleport()
@@ -262,7 +285,6 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
 
             if (isSigning)
             {
-                // todo, this needs to be decoupled, but setting this for the sake of keeping less routines
                 args.ik.solvers.leftHand.SetIKPositionWeight(1 - args.colorLerp.lerpValue);
                 args.ik.solvers.leftHand.SetIKRotationWeight(1 - args.colorLerp.lerpValue);
             }
@@ -271,6 +293,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         }
 
         args.colorLerp.lerpValue = 0;
+        _shadowSteppingSequencePlaying = false;
     }
 
     #endregion

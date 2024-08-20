@@ -1,6 +1,9 @@
+using System;
+using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class NinjaAgent : DodgeballAI
 {
@@ -112,12 +115,19 @@ public class NinjaAgent : DodgeballAI
         }
     }
 
+    private void OnDestroy()
+    {
+        _handSignUtility.Dispose();
+    }
+
     protected override void HandlePhaseChange()
     {
         if (!_substitutionUtility.inSequence && !_shadowStepUtility._shadowSteppingSequencePlaying)
         {
-            currentState = AIState.Move;
+            if (hasBall) ThrowBall();
+            else currentState = AIState.Move;
             base.HandlePhaseChange();
+            _phaseDelay = Time.time + Random.Range(1, 1.6f);
         }
     }
 
@@ -127,7 +137,44 @@ public class NinjaAgent : DodgeballAI
         // _substitutionUtility.ballInTrigger = false;
     }
 
-    public void InitialShadowStepFinished()
+    private bool entryFinished = false;
+
+    public override void ReturnControl()
     {
+        _phaseDelay = float.MaxValue;
+        _shadowStepUtility.ShadowStepOutroOverride().Forget();
+        outOfPlay = false;
+        if (hasBall) ThrowBall();
+        entryFinished = false;
+    }
+
+    public override void PossessAI()
+    {
+        if (_shadowStepUtility._shadowSteppingSequencePlaying || 
+            _substitutionUtility.inSequence || 
+            _fakeoutBallUtility.active)
+        {
+            return;
+        }
+
+        _shadowStepUtility._shadowSteppingSequencePlaying = false;
+        _substitutionUtility.args.sequencePlaying = false;
+        _fakeoutBallUtility.active = false;
+        if (entryFinished) return; 
+        if (Time.time <= _phaseDelay)
+        {
+            if (hasBall) ThrowBall();
+            _moveUtility.FlockMove(this);
+        }
+        else if (!outOfPlay)
+        {
+            _shadowStepUtility.ShadowStepIntroOverride();
+            _shadowStepUtility._shadowSteppingSequencePlaying = true;
+            entryFinished = true;
+        }
+        else
+        {
+            stayIdle = false;
+        }
     }
 }

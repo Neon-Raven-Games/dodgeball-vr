@@ -17,9 +17,4 @@ public class AIAnimationHelper : MonoBehaviour
         dodgeballAI.ThrowBall();
     }
 
-    public void ShadowStep()
-    {
-        // if (shadowStep != null) shadowStep.InitialShadowStepFinished();
-        // if (dodgeballAI is NinjaAgent ninja) ninja.InitialShadowStepFinished();
-    }
 }

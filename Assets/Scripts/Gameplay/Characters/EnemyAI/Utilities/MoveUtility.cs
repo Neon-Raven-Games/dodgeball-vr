@@ -136,7 +136,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private int neighborCount = 0;
         private Vector3 noise = Vector3.zero;
         private float distance;
-        private void FlockMove(DodgeballAI ai)
+
+        public void FlockMove(DodgeballAI ai)
         {
             if (Time.time > lastTargetChangeTime + changeTargetCooldown)
             {

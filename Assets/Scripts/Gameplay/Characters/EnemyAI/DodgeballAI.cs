@@ -83,12 +83,12 @@ public class DodgeballAI : Actor
     private DodgeUtility _dodgeUtility;
     private CatchUtility _catchUtility;
     private ThrowUtility _throwUtility;
-    private MoveUtility _moveUtility;
+    protected MoveUtility _moveUtility;
     private LogBuffer logBuffer;
 
     private Vector3 _targetPosition;
     private bool _isGhost;
-    private bool phaseChange;
+    internal bool phaseChange;
     private float _nextMoveTime;
 
 
@@ -361,18 +361,47 @@ public class DodgeballAI : Actor
         {
             stayIdle = true;
             phaseChange = false;
+            pickUpUtilityArgs.ik.solvers.rightHand.SetIKPositionWeight(0);
+            pickUpUtilityArgs.ik.solvers.rightHand.SetIKRotationWeight(0);
+            pickUpUtilityArgs.ik.solvers.leftHand.SetIKPositionWeight(0);
+            pickUpUtilityArgs.ik.solvers.leftHand.SetIKRotationWeight(0);
+            pickUpUtilityArgs.ik.solvers.spine.SetIKPositionWeight(0);
+            
+            animator.SetFloat(_SXAxis, 0);
+            animator.SetFloat(_SYAxis, 0);
         }
+    }
+
+    internal float _phaseDelay = 0.5f;
+
+    public virtual void PossessAI()
+    {
+        if (Time.time <= _phaseDelay)
+        {
+            _moveUtility.FlockMove(this);
+        }
+        else
+        {
+            Debug.Log("shadow step here.");
+        }
+    }
+
+    public virtual void ReturnControl()
+    {
+        
     }
 
     // do extended update methods get called?
     protected virtual void Update()
     {
-        if (stayIdle) return;
+        
         if (phaseChange)
         {
+            _phaseDelay = Time.time + 1;
             HandlePhaseChange();
-            if (stayIdle) return;
         }
+
+        if (stayIdle) return;
 
         if (currentState == AIState.Special)
         {
@@ -382,7 +411,6 @@ public class DodgeballAI : Actor
 
         _pickUpUtility.Update();
         if (hasBall) ballPossessionTime += Time.deltaTime;
-
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
