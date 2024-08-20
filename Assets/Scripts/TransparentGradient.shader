@@ -5,12 +5,14 @@ Shader "Custom/GradientShader"
         _MainTex ("Main Texture", 2D) = "white" {}
         _BottomColor ("Bottom Color", Color) = (1, 0, 0, 1)
         _TopColor ("Top Color", Color) = (0, 0, 1, 1)
+        _Cutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
     }
     SubShader
     {
         Tags { "RenderType"="Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha // Enable alpha blending
         ZWrite On // Disable depth writing for transparent objects
+        Cull Off // Enable double-sided rendering
         Pass
         {
             HLSLPROGRAM
@@ -51,7 +53,8 @@ Shader "Custom/GradientShader"
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 texColor = tex2D(_MainTex, i.uv);
-                fixed4 finalColor = texColor * i.color; 
+                fixed4 finalColor = texColor * i.color; // Multiply texture color with gradient color
+                clip(finalColor.a - _Cutoff); // Apply alpha cutoff
                 return finalColor;
             }
             ENDHLSL
