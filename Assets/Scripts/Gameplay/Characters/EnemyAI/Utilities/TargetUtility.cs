@@ -231,7 +231,6 @@ namespace Hands.SinglePlayer.EnemyAI
                     {
                         bestScore = score;
                         bestTarget = ball;
-                        Debug.Log("Best target is ball");
                     }
                 }
             }

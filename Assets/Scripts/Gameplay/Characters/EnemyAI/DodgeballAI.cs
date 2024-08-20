@@ -247,6 +247,7 @@ public class DodgeballAI : Actor
     {
         if (_possessedBall == null || !hasBall)
         {
+            Debug.Log($"AI has no ball to throw{hasBall}, {_possessedBall}");
             animator.SetTrigger(_SCancelThrow);
             throwAnimationPlaying = false;
             hasBall = false;

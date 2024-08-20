@@ -23,7 +23,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
 
     public override float Execute(DodgeballAI ai)
     {
-        if (_shadowSteppingSequencePlaying || _ai.transform.position.y < 0.1f) return 0;
+        if (!ai.hasBall || _shadowSteppingSequencePlaying || _ai.transform.position.y < 0.1f) return 0;
         ShadowStepMove();
         return 1f;
     }
@@ -50,6 +50,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
     private void OnIntroPointReached()
     {
         if (!_isShadowStepping) return;
+        Debug.Log($"Has ball in intro reached {_ai.hasBall}");
         _isShadowStepping = false;
 
         args.ik.solvers.leftHand.SetIKPositionWeight(0);
@@ -63,6 +64,24 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         _ai.SwitchBallSideToLeft();
 
         _ai.SetOutOfPlay(false);
+        // is true, sets ai inactive, waits a sec
+        Debug.Log($"Has ball after set out of play false? {_ai.hasBall}");
+    }
+
+    // the hasBall is being set false somewhere in-between here while our ai is inactive and
+    // should not be working at all
+    
+    private void OnMovedToOutroPoint()
+    {
+        // called next, and has ball is false here
+        Debug.Log($"Has ball in move to outro {_ai.hasBall}");
+        switchBackToSigning = isSigning;
+        isSigning = false;
+
+        args.ik.solvers.leftHand.SetIKPositionWeight(0);
+        args.ik.solvers.leftHand.SetIKRotationWeight(0);
+
+        EnterOutro();
     }
 
     private void OnFinishTeleport()
@@ -106,31 +125,24 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         LerpColors(0, FrameToSeconds(args.outroColorFrame, args.outroAnimationClip),
             args.outroAnimationClip, args.outroColorLerpValue,
             0).Forget();
+        Debug.Log($"Has ball in enter outro reached {_ai.hasBall}");
         InvokeAnimationEvent(args.outroAnimationClip, args.outroThrowFrame, _ai.ThrowBall).Forget();
+        
+        _shadowSteppingSequencePlaying = false;
     }
 
     private bool switchBackToSigning;
 
-    private void OnMovedToOutroPoint()
-    {
-        switchBackToSigning = isSigning;
-        isSigning = false;
-
-        args.ik.solvers.leftHand.SetIKPositionWeight(0);
-        args.ik.solvers.leftHand.SetIKRotationWeight(0);
-
-        EnterOutro();
-        _shadowSteppingSequencePlaying = false;
-    }
-
     public void ShadowStepMove()
     {
         if (_shadowSteppingSequencePlaying) return;
+        Debug.Log($"Has ball in shadow step move {_ai.hasBall}");
         _shadowSteppingSequencePlaying = true;
         lastShadowStepTime = Time.time;
         _isShadowStepping = true;
         InitializeTeleport();
-        _teleportationPathHandler.Teleport(TeleportationType.ShadowStep, args.stepDirection, OnIntroPointReached,
+        _teleportationPathHandler.Teleport(TeleportationType.ShadowStep, args.stepDirection, 
+            OnIntroPointReached,
             OnMovedToOutroPoint,
             OnFinishTeleport).Forget();
     }

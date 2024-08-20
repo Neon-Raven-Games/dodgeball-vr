@@ -20,7 +20,6 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
         active = true;
         args.entryEffect.SetActive(true);
         RunFakeoutAppearEffect().Forget();
-        _ai._possessedBall = args.fakeoutBall;
         return 0f;
     }
 
@@ -57,7 +56,6 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
             _nextRollTime = Time.time + Random.Range(args.rollIntervalMin, args.rollIntervalMax);
             return float.MaxValue;
         }
-        
         return 0f;
     }
 }
