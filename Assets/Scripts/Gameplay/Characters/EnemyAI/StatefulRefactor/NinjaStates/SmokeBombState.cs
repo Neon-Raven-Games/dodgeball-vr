@@ -44,7 +44,6 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         {
             pos.y = AI.transform.position.y;
             var midPoint = (pos + AI.transform.position) / 2;
-            midPoint *= -1;
             midPoint.y += Args.jumpHeight;
             bezierPoints[0] = AI.transform.position;
             bezierPoints[1] = midPoint;
@@ -55,7 +54,6 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         {
             await UniTask.WaitForSeconds(Args.despawnDelay);
             Args.aiAvatar.SetActive(false);
-            Debug.Log("Spawning trail rend");
             Args.trailRenderer.SetActive(true);
 
             var currentTime = 0f;
@@ -68,7 +66,6 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
                 await UniTask.Yield();
             }
             
-            Debug.Log("setting shadowstep fx inactive");
             Args.shadowStepEffect.SetActive(false);
             Args.trailRenderer.SetActive(false);
             AI.transform.position = ninja.currentSmokeBombPosition;
