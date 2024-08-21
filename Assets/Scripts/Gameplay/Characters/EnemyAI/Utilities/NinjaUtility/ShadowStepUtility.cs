@@ -23,6 +23,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
 
     public override float Execute(DodgeballAI ai)
     {
+        return -1f;
         if (!ai.hasBall || _shadowSteppingSequencePlaying || _ai.transform.position.y < 0.1f) return 0;
         ShadowStepMove();
         return 1f;
@@ -31,6 +32,7 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
 
     public override float Roll(DodgeballAI ai)
     {
+        return -1f;
         if (_shadowSteppingSequencePlaying || _ai.currentState != AIState.Throw) return 0;
         if (!_ai.hasBall) return 0;
 
@@ -168,7 +170,6 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
             0).Forget();
         await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
         _ai.stayIdle = false;
-
     }
 
     private void InitializeTeleport()

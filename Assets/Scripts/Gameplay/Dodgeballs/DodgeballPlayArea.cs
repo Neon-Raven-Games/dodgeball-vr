@@ -17,8 +17,8 @@ public class DodgeballPlayArea : MonoBehaviour
     public Color team1Color = Color.blue;
     public Color team2Color = Color.red;
 
-    public GameObject[] team1Actors;
-    public GameObject[] team2Actors;
+    public DodgeballAI[] team1Actors;
+    public DodgeballAI[] team2Actors;
 
     [SerializeField] public int dodgeballCount = 4;
     public List<GameObject> dodgeBalls = new();

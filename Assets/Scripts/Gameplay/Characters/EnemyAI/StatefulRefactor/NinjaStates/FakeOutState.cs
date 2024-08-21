@@ -1,0 +1,78 @@
+﻿using Cysharp.Threading.Tasks;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState;
+using UnityEngine;
+
+namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
+{
+    public class FakeOutState : DerivedAIState<NinjaState, FakeoutUtilityArgs>
+    {
+        public override NinjaState State => NinjaState.FakeOut;
+        private NinjaAgent _ninja;
+        public FakeOutState(DodgeballAI ai, DerivedAIStateController<NinjaState> controller,
+            FakeoutUtilityArgs args) : base(ai, controller, args)
+        {
+            _ninja = ai as NinjaAgent;
+            args.nextRollTime = Time.time + Random.Range(args.rollIntervalMin, args.rollIntervalMax);
+        }
+
+        public override void EnterState()
+        {
+            base.EnterState();
+            AI.hasSpecials = false;
+            RunFakeOutAppearEffect().Forget();
+        }
+
+        public override void ExitState()
+        {
+            active = false;
+            AI.hasSpecials = true;
+        }
+
+        public override void UpdateState()
+        {
+            
+        }
+        
+        private async UniTaskVoid RunFakeOutAppearEffect()
+        {
+            Args.rightHandIndex.SetBallType(BallType.Dodgeball);
+            var dodgeball = Args.rightHandIndex._currentDodgeball;
+            dodgeball.transform.localScale = Vector3.zero;
+            var time = 0f;
+
+            while (time < 1 && !GetCancellationToken().IsCancellationRequested)
+            {
+                dodgeball.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, time);
+                time += Time.deltaTime / Args.entryDuration;
+                await UniTask.Yield();
+            }
+
+            if (GetCancellationToken().IsCancellationRequested)
+            {
+                dodgeball.transform.localScale = Vector3.one;
+                dodgeball.gameObject.SetActive(false);
+                Args.rightHandIndex._currentDodgeball = null;
+                ChangeState(NinjaState.Default);
+                active = false;
+                return;
+            }
+            dodgeball.transform.localScale = Vector3.one;
+            Args.fakeoutBall.gameObject.SetActive(true);
+            AI.PickUpBall(Args.fakeoutBall);
+            Args.fakeoutBall.gameObject.SetActive(false);
+            Args.entryEffect.SetActive(false);
+            await UniTask.Yield();
+        }
+        public override void OnTriggerEnter(Collider collider)
+        {
+        }
+
+        public override void OnTriggerExit(Collision col)
+        {
+        }
+
+        public override void FixedUpdate()
+        {
+        }
+    }
+}

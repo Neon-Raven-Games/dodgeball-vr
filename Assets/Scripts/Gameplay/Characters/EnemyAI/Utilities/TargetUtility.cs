@@ -37,7 +37,6 @@ namespace Hands.SinglePlayer.EnemyAI
         private readonly ActorTeam _enemyTeam;
         private readonly DodgeballPlayArea _playArea;
         private readonly float _difficultyWeight;
-        private float _dodgeballProximityThreshold;
         private float _lastTargetChangeTime;
         private float _targetSwitchProbability;
         private readonly DodgeballAI _ai;
@@ -53,7 +52,7 @@ namespace Hands.SinglePlayer.EnemyAI
             _ai = ai;
             _playArea = ai.playArea;
             _enemyTeam = ai.opposingTeam;
-            CurrentTarget = _enemyTeam.actors[Random.Range(0, _enemyTeam.actors.Count)];
+            CurrentTarget = _enemyTeam.actors[Random.Range(0, _enemyTeam.actors.Count)].gameObject;
             _lastBestTarget = CurrentTarget;
             ActorTarget = CurrentTarget.GetComponent<Actor>();
 
@@ -62,7 +61,6 @@ namespace Hands.SinglePlayer.EnemyAI
             _switchProbabilityIncreaseRate = arg.switchProbabilityIncreaseRate;
             _minimumSwitchTime = arg.minimumSwitchTime;
             _difficultyWeight = arg.difficultyWeight;
-            _dodgeballProximityThreshold = arg.dodgeballProximityThreshold;
             ResetTargetSwitchProbability();
         }
 

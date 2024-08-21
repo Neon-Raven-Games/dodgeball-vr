@@ -152,7 +152,19 @@ namespace Hands.SinglePlayer.EnemyAI
         public float rollIntervalMax;
         
         public float entryDuration = 1f;
-        public NetBallPossessionHandler leftHandIndex;
+        [FormerlySerializedAs("leftHandIndex")] public NetBallPossessionHandler rightHandIndex;
+        public float nextRollTime;
+    }
+    
+    [Serializable]
+    public class SmokeBombUtilityArgs : UtilityArgs
+    {
+        public GameObject aiAvatar;
+        public GameObject trailRenderer;
+        public GameObject shadowStepEffect;
+        public float jumpSeconds = 0.8f;
+        public float despawnDelay;
+        public float jumpHeight = 5f;
     }
     
     [Serializable]
@@ -296,6 +308,8 @@ namespace Hands.SinglePlayer.EnemyAI
         public Transform handSignTarget;
         public Animator handAnimator;
         public Collider collider;
+
+        public float nextHandSignTime;
         // todo, randomness, game state/battle phase, player success rate
     }
 }

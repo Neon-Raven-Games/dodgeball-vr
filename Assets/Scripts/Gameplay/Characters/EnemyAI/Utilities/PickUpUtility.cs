@@ -14,6 +14,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         private float ballDistance;
 
+        public AIState DerivedState { get; }
+
         public override float Execute(DodgeballAI ai)
         {
             if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
@@ -135,15 +137,13 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         private bool IsTeammateCloserToBall(DodgeballAI ai)
         {
-            foreach (var teammate in ai.friendlyTeam.actors)
+            foreach (var teammateAI in ai.friendlyTeam.actors)
             {
-                if (teammate == ai.gameObject) continue;
-
-                var teammateAI = teammate.GetComponent<DodgeballAI>();
+                if (teammateAI == ai) continue;
                 if (teammateAI == null) continue;
 
                 if (teammateAI.CurrentTarget == ai.CurrentTarget &&
-                    Vector3.Distance(teammate.transform.position, ai.CurrentTarget.transform.position) <
+                    Vector3.Distance(teammateAI.transform.position, ai.CurrentTarget.transform.position) <
                     Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
                 {
                     return true;

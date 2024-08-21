@@ -4,7 +4,6 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI.Abilities;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class ShadowCourt : MonoBehaviour
@@ -13,19 +12,21 @@ public class ShadowCourt : MonoBehaviour
     [SerializeField] private Material shadowMaterial;
     [SerializeField] private float shadowSpeed;
     [SerializeField] private ParticleSystem shadowParticleSystem;
-
-    public List<ShadowEffectEntity> shadowEffects = new();
+    [SerializeField] private float ballLaunchTimeStep;
+    [SerializeField] private List<DodgeballAI> dodgeballAIs;
+    [SerializeField] private BallSpawner ballSpawner;
+    [SerializeField] private string occlusionMap;
     [SerializeField] private Transform playArea;
     [SerializeField] private int spawnCount;
     [SerializeField] private float maxY;
     [SerializeField] private float xOffset;
-    public float smokeScreenDuration = 20f;
     [SerializeField] private float delay;
+
+    public List<ShadowEffectEntity> shadowEffects = new();
+    public float smokeScreenDuration = 20f;
     private static ShadowCourt _instance;
     private static bool active;
-    [SerializeField] private float ballLaunchTimeStep;
-
-    [SerializeField] private List<DodgeballAI> dodgeballAIs;
+    
     public static void SmokeScreen()
     {
         if (active) return;
@@ -71,11 +72,6 @@ public class ShadowCourt : MonoBehaviour
         }
     }
 
-    [SerializeField] private BallSpawner ballSpawner;
-    private static readonly int occlusionStrength = Shader.PropertyToID("_OcclusionStrength");
-
-    [SerializeField] private string occlusionMap;
-
     private async UniTaskVoid LerpShadow()
     {
         var currentTime = 0f;
@@ -93,7 +89,6 @@ public class ShadowCourt : MonoBehaviour
         var secondsToSpawnSmoke = GenerateRandomTimes();
         var launchBalls = 0f;
 
-        
         var dur = _instance.shadowParticleSystem.main;
         dur.duration = _instance.smokeScreenDuration;
         _instance.shadowParticleSystem.Play();
@@ -101,7 +96,6 @@ public class ShadowCourt : MonoBehaviour
         LerpShadow().Forget();
 
         await UniTask.Delay(TimeSpan.FromSeconds(delay));
-        var i = 0;
         while (currentTime < smokeScreenDuration)
         {
             await UniTask.Yield();
@@ -120,10 +114,7 @@ public class ShadowCourt : MonoBehaviour
                 ballLaunchTimeStep = Random.Range(1f, 4.5f);
                 launchBalls += ballLaunchTimeStep;
 
-                if (launchBalls >= smokeScreenDuration - 4f)
-                    launchBalls = smokeScreenDuration + 4f;
-
-                i++;
+                if (launchBalls >= smokeScreenDuration - 4f) launchBalls = smokeScreenDuration + 4f;
             }
 
             if (shadowEffects.Any(x => x.gameObject.activeInHierarchy))
@@ -137,7 +128,7 @@ public class ShadowCourt : MonoBehaviour
                 var courtSide = Random.Range(0, 2);
                 shadow.transform.position = GenerateRandomValidPoint(courtSide);
                 var endPoint = GenerateRandomEndPoint(courtSide == 0 ? 1 : 0, shadow.transform.position.x);
-                Vector3[] controlPoints = GenerateBezierControlPoints(shadow.transform.position, endPoint);
+                var controlPoints = GenerateBezierControlPoints(shadow.transform.position, endPoint);
                 shadow.SetBezierCurve(controlPoints);
                 shadow.gameObject.SetActive(true);
             }

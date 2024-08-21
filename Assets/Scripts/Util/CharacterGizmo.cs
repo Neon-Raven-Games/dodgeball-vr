@@ -3,7 +3,7 @@ using UnityEditor;
 
 public class CharacterGizmo : MonoBehaviour
 {
-    [SerializeField] private string gizmoText = "Character";
+    [SerializeField] public string gizmoText = "Character";
     [SerializeField] private Color gizmoColor = Color.cyan;
     [SerializeField] private Color labelColor = Color.white;
     [SerializeField] private float labelOffset = 0.7f;

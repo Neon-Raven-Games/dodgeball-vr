@@ -11,7 +11,7 @@ using Random = UnityEngine.Random;
 
 public class ActorTeam
 {
-    public List<GameObject> actors;
+    public List<DodgeballAI> actors;
     public Color color;
     public Transform playArea;
     public string layerName;
@@ -108,7 +108,6 @@ public class DodgeballAI : Actor
         var colorLerp = GetComponent<ColorLerp>();
         if (colorLerp) colorLerp.onMaterialsLoaded += SwapPlayerBody;
         targetUtility.ResetTargetSwitchProbability();
-        GameManager.onPhaseChange += OnPhaseChange;
     }
 
     private void OnPhaseChange(BattlePhase obj)
@@ -347,6 +346,7 @@ public class DodgeballAI : Actor
 
         if (!_possessedBall) return;
         if (hasBall) _possessedBall._ballState = BallState.Dead;
+        
     }
 
     protected virtual void HandlePhaseChange()
@@ -374,6 +374,7 @@ public class DodgeballAI : Actor
     }
 
     internal float _phaseDelay = 0.5f;
+    public bool hasSpecials;
 
     public virtual void PossessAI()
     {
@@ -404,17 +405,12 @@ public class DodgeballAI : Actor
 
         if (stayIdle) return;
 
-        if (currentState == AIState.Special)
-        {
-            HandleSpecial();
-            return;
-        }
-
         _pickUpUtility.Update();
         if (hasBall) ballPossessionTime += Time.deltaTime;
         // Override all other behaviors
         if (outOfPlay || currentState == AIState.OutOfPlay)
         {
+            currentState = AIState.OutOfPlay;
             if (OutOfPlayUtilityMethod()) return;
         }
 
@@ -437,10 +433,12 @@ public class DodgeballAI : Actor
         }
 
         _moveUtility.ResetBackOff();
-        var utility = _utilityHandler.EvaluateUtility(this, out _);
 
+        var utility = hasSpecials ? 
+            _utilityHandler.EvaluateUtility(this, out _) :
+            _utilityHandler.EvaluateUtilityWithoutSpecial(this, out _);
+        
         var inPickup = currentState == AIState.PickUp;
-
         currentState = _utilityHandler.GetState();
 
         if (inPickup && currentState != AIState.PickUp)
@@ -477,7 +475,6 @@ public class DodgeballAI : Actor
                 if (rightBallIndex._currentDodgeball)
                     _possessedBall.transform.position = rightBallIndex.BallPosition;
             }
-
             rightBallIndex.SetBallType(BallType.None);
             _possessedBall.gameObject.SetActive(true);
 

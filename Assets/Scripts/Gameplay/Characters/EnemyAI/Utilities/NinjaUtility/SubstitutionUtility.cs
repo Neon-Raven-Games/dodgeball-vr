@@ -1,12 +1,14 @@
 ﻿using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using UnityEngine;
 
 namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 {
     public class SubstitutionUtility : Utility<SubstitutionUtilityArgs>, IUtility
     {
+        public NinjaState DerivedState => NinjaState.Substitution;
         private readonly Animator _animator;
         private readonly DodgeballAI _ai;
         public bool inSequence => args.sequencePlaying;
@@ -25,6 +27,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
+            return -1f;
             if (_ai.currentState == AIState.PickUp || args.sequencePlaying)
                 return 0;
             args.sequencePlaying = true;
