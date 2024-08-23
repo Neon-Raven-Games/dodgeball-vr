@@ -32,6 +32,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         public override void ExitState()
         {
             Cooldown();
+            LerpToHandSignPositionAndRotation(0.15f, _currentHandLerpWeight, 0).Forget();
         }
 
         public override void UpdateState()
@@ -47,7 +48,8 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             if (!ColliderOnBallLayer(collider)) return;
 
             var db = collider.gameObject.GetComponent<DodgeBall>();
-            if (HitWithBall(collider, db)) CancelTask();
+            if (HitWithBall(collider, db))
+                ChangeState(NinjaState.Substitution);
         }
 
         private bool HitWithBall(Collider collider, DodgeBall db) =>
@@ -61,7 +63,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
         private void Cooldown()
         {
-            if (active) CancelTask();
+            CancelTask();
 
             Args.collider.enabled = false;
             Args.nextHandSignTime = Time.time + Args.handSignCooldown + 2;
@@ -86,19 +88,22 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         #endregion
 
         #region Behavior
-        
+
         private async UniTaskVoid HandSignTimer()
         {
+            await UniTask.Yield();
+
             try
             {
-                while (true)
+                while (!GetCancellationToken().IsCancellationRequested)
                 {
                     await UniTask.Yield(GetCancellationToken());
                     if (AI.hasBall)
                     {
-                        await UniTask.WaitForSeconds(1.5f);
+                        await UniTask.WaitForSeconds(UnityEngine.Random.Range(1.5f, 10f));
                         if (active && AI.hasBall)
                         {
+                            if (GetCancellationToken().IsCancellationRequested) return;
                             ChangeState(NinjaState.ShadowStep);
                         }
                     }
@@ -106,29 +111,47 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             }
             catch (OperationCanceledException)
             {
-                ChangeState(NinjaState.Substitution);
+                if (active)
+                {
+                    ChangeState(NinjaState.Substitution);
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                Debug.Log("Cancellation token disposed: HandSignState");
             }
         }
 
         private async UniTask LerpToHandSignPositionAndRotation(float duration, float fromValue, float toValue)
         {
             var elapsedTime = 0f;
-
-            while (elapsedTime < duration && !GetCancellationToken().IsCancellationRequested)
+            try
             {
-                var t = Mathf.Clamp01(elapsedTime / duration);
+                while (elapsedTime < duration && !GetCancellationToken().IsCancellationRequested)
+                {
+                    var t = Mathf.Clamp01(elapsedTime / duration);
 
-                Args.ik.solvers.leftHand.SetIKPosition(Args.handSignTarget.position);
-                Args.ik.solvers.leftHand.SetIKPositionWeight(Mathf.Lerp(fromValue, toValue, t));
-                Args.ik.solvers.leftHand.SetIKRotation(Args.handSignTarget.rotation);
-                Args.ik.solvers.leftHand.SetIKRotationWeight(Mathf.Lerp(fromValue, toValue, t));
+                    Args.ik.solvers.leftHand.SetIKPosition(Args.handSignTarget.position);
+                    Args.ik.solvers.leftHand.SetIKPositionWeight(Mathf.Lerp(fromValue, toValue, t));
+                    Args.ik.solvers.leftHand.SetIKRotation(Args.handSignTarget.rotation);
+                    Args.ik.solvers.leftHand.SetIKRotationWeight(Mathf.Lerp(fromValue, toValue, t));
 
-                elapsedTime += Time.deltaTime;
-                await UniTask.Yield();
+                    elapsedTime += Time.deltaTime;
+                    await UniTask.Yield();
+                }
+
+                Args.ik.solvers.leftHand.SetIKPositionWeight(toValue);
+                Args.ik.solvers.leftHand.SetIKRotationWeight(toValue);
             }
-
-            Args.ik.solvers.leftHand.SetIKPositionWeight(toValue);
-            Args.ik.solvers.leftHand.SetIKRotationWeight(toValue);
+            catch (OperationCanceledException)
+            {
+                Debug.Log("LerpToHandSignPositionAndRotation cancelled");
+            }
+            catch (ObjectDisposedException)
+            {
+                // todo we need to make this function handle better
+                Debug.Log("Cancellation token disposed: HandSignState");
+            }
         }
 
         #endregion

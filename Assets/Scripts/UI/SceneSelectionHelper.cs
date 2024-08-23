@@ -10,7 +10,8 @@ public class SceneSelectionHelper : MonoBehaviour
     [SerializeField] private Button dojoButton;
     [SerializeField] private Slider dodgeballCountSlider;
     [SerializeField] private TextMeshProUGUI dodgeballCountText;
-    private BallBoundsHelper _ballBoundsHelper;
+    private BallRespawnManager _ballRespawnManager;
+    
     private void OnEnable()
     {
         var sceneIndex = SceneManager.GetActiveScene().buildIndex;
@@ -18,29 +19,27 @@ public class SceneSelectionHelper : MonoBehaviour
         lobbyButton.interactable = sceneIndex != 0;
         if (sceneIndex != 0)
         {
-            _ballBoundsHelper = FindFirstObjectByType<BallBoundsHelper>();
-            if (_ballBoundsHelper)
+            _ballRespawnManager = FindFirstObjectByType<BallRespawnManager>();
+            if (_ballRespawnManager)
             {
                 dodgeballCountSlider.gameObject.SetActive(true);
                 dodgeballCountText.gameObject.SetActive(true);
-                dodgeballCountSlider.value = _ballBoundsHelper.ballCount;
-                dodgeballCountText.text = _ballBoundsHelper.ballCount.ToString();
             }
         }
         else
         {
-            
             dodgeballCountSlider.gameObject.SetActive(false);
             dodgeballCountText.gameObject.SetActive(false);
         }
+        
         gymButton.interactable = sceneIndex != 1;
         dojoButton.interactable = sceneIndex != 2;
     }
 
     public void SetBalls(float value)
     {
-        if (!_ballBoundsHelper) return;
-        _ballBoundsHelper.SetNewNumberBalls((int) value);
+        if (!_ballRespawnManager) return;
+        _ballRespawnManager.SetNewNumberBalls((int) value);
         dodgeballCountText.text = value.ToString();
     }
 }

@@ -26,7 +26,12 @@ public class ShadowCourt : MonoBehaviour
     public float smokeScreenDuration = 20f;
     private static ShadowCourt _instance;
     private static bool active;
-    
+
+    private void OnDisable()
+    {
+        shadowMaterial.SetFloat(Shader.PropertyToID(occlusionMap), 0); 
+    }
+
     public static void SmokeScreen()
     {
         if (active) return;
@@ -37,21 +42,11 @@ public class ShadowCourt : MonoBehaviour
         _instance.StartSmokeScreen().Forget();
     }
 
-    private void Update()
-    {
-        if (!active) return;
-        foreach (var ai in dodgeballAIs)
-        {
-            if (ai.gameObject.activeInHierarchy && !ai.phaseChange) 
-                ai.PossessAI();
-        }
-    }
-
     private void EndSmokeScreen()
     {
         smokeEffect.SetActive(false);
         active = false;
-        GameManager.ChangePhase(BattlePhase.Lackey);
+        GameManager.ChangePhase(BattlePhase.LackeyReturn);
         shadowParticleSystem.Stop();
         LerpShadowOut().Forget();
     }
@@ -64,11 +59,6 @@ public class ShadowCourt : MonoBehaviour
             currentTime += Time.deltaTime;
             shadowMaterial.SetFloat(Shader.PropertyToID(occlusionMap), Mathf.Lerp(0.8f, 0, currentTime / shadowSpeed));
             await UniTask.Yield();
-        }
-
-        foreach (var ai in dodgeballAIs)
-        {
-            ai.ReturnControl();
         }
     }
 

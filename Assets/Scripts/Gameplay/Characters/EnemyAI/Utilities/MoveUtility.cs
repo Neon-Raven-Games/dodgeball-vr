@@ -25,11 +25,10 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public bool BackOff(DodgeballAI ai)
         {
-            // Check if the AI is already at the edge of its play area
             if (IsAtEdgeOfPlayArea(ai))
             {
-                backoffStartTime = 0; // Reset backoff start time
-                return false; // Exit backoff state
+                backoffStartTime = 0; 
+                return false;
             }
 
             if (backoffStartTime == 0) backoffStartTime = Time.time;
@@ -67,18 +66,12 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         internal bool PickupMove(DodgeballAI ai)
         {
-            if (ai.targetUtility.CurrentTarget.layer != LayerMask.NameToLayer("Ball")) return false;
+            if (!ai.targetUtility.BallTarget || ai.hasBall) return false;
             if (ai.hasBall) return false;
-            if (ai.targetUtility.CurrentTarget.GetComponent<DodgeBall>()._ballState == BallState.Possessed)
-                return false;
-            if (ai.targetUtility.CurrentTarget.transform.position.y > 1.6f) return false;
-            if (!IsInPlayArea(ai.targetUtility.CurrentTarget.transform.position))
-            {
-                return false;
-            }
+            if (ai.targetUtility.BallTarget.transform.position.y > 1f) return false;
+            if (!IsInPlayArea(ai.targetUtility.BallTarget.transform.position)) return false;
 
             MoveTowards(ai, ai.targetUtility.CurrentTarget.transform.position);
-
             if (Time.time < _pickupCheckTime) return true;
  
             _pickupCheckStep = Random.Range(0.5f, 1.5f);
@@ -89,15 +82,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         // if the target is gone or we don't have a ball, return false to switch to idle
         internal bool PossessionMove(DodgeballAI ai)
         {
-            var targetAI = ai.targetUtility.CurrentTarget.GetComponent<Actor>();
-            if (!targetAI && !ai.CurrentTarget.GetComponentInParent<Actor>())
-            {
-                // we need to refresh the target for a better one
-                ai.targetUtility.PossessedBall(ai);
-                PickupMove(ai);
-            }
-
-            // implement better possession moving logic in possession utility
+            if (!ai.targetUtility.ActorTarget) PickupMove(ai);
             FlockMove(ai);
 
             if (ai.hasBall) return true;

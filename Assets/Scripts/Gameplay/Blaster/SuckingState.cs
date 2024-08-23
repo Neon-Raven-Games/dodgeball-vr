@@ -16,6 +16,15 @@ public class SuckingState : BaseHandCanonState
     {
         _suctionCooldownTimer = handCannon.AddComponent<CooldownTimer>();
         _suctionCooldownTimer.SetCooldownTime(handCannon.suctionCooldown);
+        
+        _suctionCooldownTimer.OnCooldownStart += () =>
+        {
+            handCannon.cooldownIndicator.SetActive(true);
+        };
+        _suctionCooldownTimer.OnCooldownEnd += () =>
+        {
+            handCannon.cooldownIndicator.SetActive(false);
+        };
     }
 
     public override void OnTriggerEnter(Collider other)
@@ -103,13 +112,11 @@ public class SuckingState : BaseHandCanonState
         foreach (Collider ball in _ballsInRange)
         {
             var ballScript = ball.GetComponent<DodgeBall>();
-            if (ballScript && ballScript._ballState == BallState.Dead)
+            if (ballScript && (ballScript._ballState == BallState.Dead || (ballScript._ballState == BallState.Live && Vector3.Distance(handCannon.barrelTransform.position, ball.transform.position) < handCannon.liveBallRange)))
             {
                 Rigidbody rb = ball.GetComponent<Rigidbody>();
                 if (rb)
                 {
-                    // even though this rigid body is kinematic, can we make sure it
-                    // doesn't clip through collisions?
                     rb.isKinematic = true;
                     var distanceToBarrel =
                         Vector3.Distance(ball.transform.position, handCannon.barrelTransform.position);
@@ -120,7 +127,7 @@ public class SuckingState : BaseHandCanonState
                     pivotPoint += (pivotPoint - ball.transform.position) *
                                   (currentRadius / distanceToBarrel * handCannon.swirlRadius);
 
-                    var angle = Time.fixedDeltaTime * handCannon.swirlSpeed * 180f;
+                    var angle = Time.deltaTime * handCannon.swirlSpeed * 180f;
                     ball.transform.RotateAround(pivotPoint, handCannon.barrelTransform.forward, angle);
 
                     var directionToBarrel = (handCannon.barrelTransform.position - ball.transform.position).normalized;
@@ -131,12 +138,10 @@ public class SuckingState : BaseHandCanonState
                     if (!Physics.SphereCast(ball.transform.position, ballRadius, directionToBarrel, out RaycastHit hit,
                             (targetPosition - ball.transform.position).magnitude))
                     {
-                        // Only move the ball if the spherecast didn't hit anything
                         ball.transform.position = targetPosition;
                     }
                     else
                     {
-                        // Handle the collision (e.g., stop movement, or slide along the hit surface)
                         ball.transform.position = hit.point - directionToBarrel * ballRadius;
                     }
 
@@ -144,7 +149,7 @@ public class SuckingState : BaseHandCanonState
                         Vector3.one * handCannon.ballEndScale,
                         Time.deltaTime * (handCannon.suctionForce / distanceToBarrel));
 
-                    if (distanceToBarrel < 0.1f)
+                    if (distanceToBarrel < 0.01f)
                     {
                         rb.isKinematic = false;
                         rb.velocity = Vector3.zero;

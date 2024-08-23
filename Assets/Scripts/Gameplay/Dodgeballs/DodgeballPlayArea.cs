@@ -2,8 +2,6 @@
 using UnityEditor;
 #endif
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,47 +15,42 @@ public class DodgeballPlayArea : MonoBehaviour
     public Color team1Color = Color.blue;
     public Color team2Color = Color.red;
 
-    public DodgeballAI[] team1Actors;
-    public DodgeballAI[] team2Actors;
+    public Actor[] team1Actors;
+    public Actor[] team2Actors;
 
+    public readonly Dictionary<DodgeBall, int> dodgeBalls = new();
+    
     [SerializeField] public int dodgeballCount = 4;
-    public List<GameObject> dodgeBalls = new();
+    
+    private static DodgeballPlayArea _instance;
 
-
-    public void Initialize()
+    private void Awake()
     {
-        foreach (var actor in team1Actors)
-        {
-            foreach (var ball in dodgeBalls)
-            {
-                var ai = actor.GetComponent<DodgeballAI>();
-                if (ai) ai.DeRegisterBall(ball.GetComponent<DodgeBall>());
-            }
-        }
-
-        foreach (var actor in team2Actors)
-        {
-            foreach (var ball in dodgeBalls)
-            {
-                var ai = actor.GetComponent<DodgeballAI>();
-                if (ai) ai.DeRegisterBall(ball.GetComponent<DodgeBall>());
-                ball.SetActive(false);
-            }
-        }
-
-        dodgeBalls.Clear();
-        for (var i = 0; i < dodgeballCount; i++)
-        {
-            var ball = BallPool.SetBall(Vector3.zero);
-            dodgeBalls.Add(ball);
-        }
-
-
+        if (_instance != null) Destroy(gameObject);
+        _instance = this;
     }
 
+    public static void RemoveDodgeball(DodgeBall ball)
+    {
+        _instance.dodgeBalls.Remove(ball);
+    }
 
+    public static void AddDodgeBallToGame(DodgeBall ball)
+    {
+        _instance.dodgeBalls.Add(ball, 0);
+    }
+
+#if UNITY_EDITOR
+    private GUIStyle _team1Style;
     private void OnDrawGizmos()
     {
+        _team1Style ??= new GUIStyle()
+        {
+            fontStyle = FontStyle.Bold,
+            normal = {textColor = Color.white},
+            fontSize = 20
+        };
+
         // Draw play area for team 1
         if (team1PlayArea)
         {
@@ -97,25 +90,18 @@ public class DodgeballPlayArea : MonoBehaviour
         if (team1Actors != null)
         {
             Gizmos.color = team1Color;
+            _team1Style.normal.textColor = team2Color;
+
             foreach (var actor in team1Actors)
             {
-                if (actor)
-                {
-                    var str = playerNumber.ToString();
-                    var ai = actor.GetComponent<DodgeballAI>();
-                    if (ai) str += ": " + ai.currentState;
-#if UNITY_EDITOR
-                    GUIStyle style = new GUIStyle();
-                    style.fontStyle = FontStyle.Bold;
-                    style.normal.textColor = team2Color;
-                    style.fontSize = 20;
-                    var yOffset = actor.transform.position;
-                    yOffset.y += 2;
-                    Handles.Label(yOffset, str, style);
-                    playerNumber++;
-#endif
-                    Gizmos.DrawWireSphere(actor.transform.position, 0.5f);
-                }
+                var str = playerNumber.ToString();
+                if (actor is DodgeballAI ai) str += ": " + ai.currentState;
+
+                var yOffset = actor.transform.position;
+                yOffset.y += 2;
+                Handles.Label(yOffset, str, _team1Style);
+                playerNumber++;
+                Gizmos.DrawWireSphere(actor.transform.position, 0.5f);
             }
         }
 
@@ -125,21 +111,16 @@ public class DodgeballPlayArea : MonoBehaviour
             var color = Color.magenta;
             color.a = 0.4f;
             Gizmos.color = color;
-            foreach (var actor in dodgeBalls)
+            _team1Style.normal.textColor = Color.white;
+            foreach (var ball in dodgeBalls.Keys)
             {
-                if (actor)
+                if (ball)
                 {
-#if UNITY_EDITOR
-                    GUIStyle style = new GUIStyle();
-                    style.fontStyle = FontStyle.Bold;
-                    style.normal.textColor = Color.white;
-                    style.fontSize = 20;
-                    var yOffset = actor.transform.position;
+                    var yOffset = ball.transform.position;
                     yOffset.y += 1;
-                    Handles.Label(yOffset, playerNumber.ToString(), style);
+                    Handles.Label(yOffset, playerNumber.ToString(), _team1Style);
                     playerNumber++;
-#endif
-                    Gizmos.DrawWireSphere(actor.transform.position, 0.25f);
+                    Gizmos.DrawWireSphere(ball.transform.position, 0.25f);
                 }
             }
         }
@@ -151,24 +132,17 @@ public class DodgeballPlayArea : MonoBehaviour
             Gizmos.color = team2Color;
             foreach (var actor in team2Actors)
             {
-                if (actor)
-                {
-                    var str = playerNumber.ToString();
-                    var ai = actor.GetComponent<DodgeballAI>();
-                    if (ai) str += ": " + ai.currentState;
-#if UNITY_EDITOR
-                    GUIStyle style = new GUIStyle();
-                    style.fontStyle = FontStyle.Bold;
-                    style.normal.textColor = team1Color;
-                    style.fontSize = 20;
-                    var yOffset = actor.transform.position;
-                    yOffset.y += 2;
-                    Handles.Label(yOffset, str, style);
-                    playerNumber++;
-#endif
-                    Gizmos.DrawWireSphere(actor.transform.position, 0.5f);
-                }
+                var str = playerNumber.ToString();
+                if (actor is DodgeballAI ai) str += ": " + ai.currentState;
+                _team1Style.normal.textColor = team1Color;
+
+                var yOffset = actor.transform.position;
+                yOffset.y += 2;
+                Handles.Label(yOffset, str, _team1Style);
+                playerNumber++;
+                Gizmos.DrawWireSphere(actor.transform.position, 0.5f);
             }
         }
     }
+#endif
 }

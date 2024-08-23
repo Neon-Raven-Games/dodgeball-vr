@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using Cysharp.Threading.Tasks;
+﻿using System.Threading;
 using Hands.SinglePlayer.EnemyAI;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -19,11 +17,6 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
 
         private NinjaAgent ninja;
 
-        public void Dispose()
-        {
-            _cancellationTokenSource?.Dispose();
-        }
-        
         public NinjaHandSignUtility(NinjaHandSignUtilityArgs args, DodgeballAI ai) : base(args, AIState.Special)
         {
             ninja = ai as NinjaAgent;

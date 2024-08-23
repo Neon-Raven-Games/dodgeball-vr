@@ -10,10 +10,14 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         
         public override float Execute(DodgeballAI ai)
         {
+            ai._moveUtility.Execute(ai);
             return ShouldThrow(ai) ? 1f : 0f;
         }
 
-        public override float Roll(DodgeballAI ai) => CalculateThrowUtility(ai);
+        public override float Roll(DodgeballAI ai)
+        {
+            return CalculateThrowUtility(ai);
+        }
 
         internal float CalculateThrowUtility(DodgeballAI ai)
         {
@@ -47,20 +51,16 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         // what is your take on the throwing utility?
         private bool ShouldThrow(DodgeballAI ai)
         {
-            if (!ai.CurrentTarget.GetComponent<Actor>())
-            {
-                return false;
-            }
+            if (!ai.targetUtility.ActorTarget) return false;
             if (!ai.hasBall) return false;
             
-            // not the most in love with this, but I think it's mostly because the movement utility is a bit
-            // off from how you would expect someone with a dodgeball to behave
             var utility = args.possessionTimeWeight * ai.ballPossessionTime;
             if (ai.CurrentTarget != null)
             {
                 var distance = Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position);
                 utility += (1.0f / distance) * ai.distanceWeight;
             }
+            
             var throwing = utility > 0.5f;
             return throwing;
         }

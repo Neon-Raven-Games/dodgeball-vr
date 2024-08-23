@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using Cysharp.Threading.Tasks;
 using Unity.Template.VR.Multiplayer;
 using UnityEngine;
@@ -20,35 +19,27 @@ public class DodgeBall : MonoBehaviour
 
     private ThrowHandle _throwHandle;
 
-    // todo, we can bind to this if we want to in the throw lab for immediate return
     public Action<int> ballNotLive;
     internal int index;
     public Action<int, Vector3, Vector3> throwTrajectory;
-    private int ballLayer;
     internal Actor ownerActor;
 
     public virtual void Start()
     {
-        // GetComponent<ThrowHandle>().onFinalTrajectory += HandleThrowTrajectory;
         if (hitParticle) hitParticle.transform.SetParent(null);
-        ballLayer = LayerMask.NameToLayer("Ball");
     }
 
     private void OnEnable()
     {
         _rb = GetComponent<Rigidbody>();
-        // var config = ConfigurationManager.GetThrowConfiguration();
-        // _throwHandle = GetComponent<ThrowHandle>();
-        // _throwHandle.SetConfigForDevice(Device.UNSPECIFIED, config);
-        // _throwHandle.SetConfigForDevice(Device.OCULUS_TOUCH, config);
-        
         var blendShapeIndex = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex("blendShape1.DodgeBall_Base1");
         skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 0);
+        DodgeballPlayArea.AddDodgeBallToGame(this);
     }
 
     private void OnDisable()
     {
-        StopAllCoroutines();
+        DodgeballPlayArea.RemoveDodgeball(this);
     }
 
     public void HandleThrowTrajectory(Vector3 velocity)
@@ -79,6 +70,7 @@ public class DodgeBall : MonoBehaviour
 
     private void PlaySound(SoundIndex sound)
     {
+        if (!isActiveAndEnabled) return;
         var volume = maxVolume;
 
         if (sound == SoundIndex.Hit || sound == SoundIndex.Throw)
@@ -127,11 +119,11 @@ public class DodgeBall : MonoBehaviour
         while (currentTime < duration)
         {
             float newValue = Mathf.Lerp(startValue, endValue, currentTime / duration);
-            skinnedMeshRenderer.SetBlendShapeWeight(index, newValue);
+            if (skinnedMeshRenderer) skinnedMeshRenderer.SetBlendShapeWeight(index, newValue);
             currentTime += Time.deltaTime;
             await UniTask.Yield();
         }
-        skinnedMeshRenderer.SetBlendShapeWeight(index, endValue);
+        if (skinnedMeshRenderer) skinnedMeshRenderer.SetBlendShapeWeight(index, endValue);
         hitParticle.SetActive(false);
     }
 
@@ -143,14 +135,16 @@ public class DodgeBall : MonoBehaviour
         var param = 0;
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
-            param = 1;
             SetDeadBall();
+            PlaySound(SoundIndex.Hit);
+            return;
         }
 
         if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
-            param = 2;
             SetDeadBall();
+            PlaySound(SoundIndex.Hit);
+            return;
         }
 
         if (_ballState == BallState.Live)
@@ -196,12 +190,10 @@ public class DodgeBall : MonoBehaviour
             if (_ballState == BallState.Dead) ballNotLive?.Invoke(param);
         }
 
-        // todo, find out what this is hitting on the player
         if (param > 0)
         {
             PlaySound(SoundIndex.Hit);
         }
-        ownerActor = null;
     }
 
     public void Throw()

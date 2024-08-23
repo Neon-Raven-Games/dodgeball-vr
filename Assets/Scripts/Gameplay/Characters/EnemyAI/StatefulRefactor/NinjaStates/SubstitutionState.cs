@@ -54,8 +54,11 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         private void InitializeSubstitution()
         {
             Args.collider.enabled = false;
+            
+            if (!AI) return;
             AI.SetOutOfPlay(false);
             AI.animator.SetTrigger(AIAnimationHelper.SSpecialTwo);
+            
             Args.stepDirection = new Vector3(Random.Range(0f, 1f), 0, Random.Range(0f, 1f));
             
             Args.floorSmoke.transform.position = AI.transform.position + Args.stepDirection * (Args.stepDistance / 8);
@@ -69,8 +72,11 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             Args.aiAvatar.SetActive(false);
         }
         
+        
         private async UniTask LerpSubstitutionMovement()
         {
+            await UniTask.Yield();
+            if (!AI) return;
             var exitPoint = AI.transform.position + (Args.stepDirection * Args.stepDistance);
             exitPoint.y = AI.transform.position.y;
 
@@ -96,7 +102,6 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             if (GetCancellationToken().IsCancellationRequested)
             {
                 Args.colorLerp.lerpValue = 0;
-                Debug.LogWarning("Substitution cancelled, exiting state.");
                 ChangeState(NinjaState.Default);
                 return;
             }

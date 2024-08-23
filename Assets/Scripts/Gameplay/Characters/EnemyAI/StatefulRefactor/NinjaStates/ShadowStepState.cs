@@ -20,9 +20,17 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
         public override void EnterState()
         {
-            base.EnterState();
             AI.stayIdle = true;
+            base.EnterState();
             InitializeTeleport();
+            InvokeTeleport().Forget();
+        }
+
+        private async UniTaskVoid InvokeTeleport()
+        {
+            await UniTask.Yield();
+            if (GetCancellationToken().IsCancellationRequested) return;
+            
             _teleportationPathHandler.Teleport(TeleportationType.ShadowStep, Args.stepDirection,
                 OnIntroPointReached, OnMovedToOutroPoint, OnFinishTeleport).Forget();
         }
@@ -30,6 +38,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         public override void ExitState()
         {
             AI.stayIdle = false;
+            CancelTask();
         }
 
         public override void UpdateState()
@@ -79,6 +88,11 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         private void InitializeTeleport()
         {
             Args.stepDirection = CalculateValidShadowStep();
+            if (Args.stepDirection == Vector3.zero)
+            {
+                ChangeState(NinjaState.Default);
+                return;
+            }
             AI.animator.SetTrigger(AIAnimationHelper.SSpecialOne);
 
             LerpColors(0, Args.introAnimationClip.length,
@@ -98,6 +112,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             Args.ik.solvers.leftHand.SetIKPositionWeight(0);
             Args.ik.solvers.leftHand.SetIKRotationWeight(0);
 
+            if (GetCancellationToken().IsCancellationRequested) return;
             EnterOutro();
         }
 
@@ -128,8 +143,9 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             Args.ik.solvers.lookAt.SetIKPositionWeight(0);
 
             Args.aiAvatar.SetActive(false);
+            if (GetCancellationToken().IsCancellationRequested) return;
+            
             AI.SwitchBallSideToLeft();
-
             AI.SetOutOfPlay(false);
         }
 
@@ -152,7 +168,6 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
             while (curTime < executeDelay - tolerance)
             {
-                AI.transform.LookAt(AI.targetUtility.CurrentTarget.transform);
                 var animState = AI.animator.GetCurrentAnimatorStateInfo(0);
                 var normalizedTime = animState.normalizedTime % 1;
                 curTime = normalizedTime * clip.length;
@@ -196,7 +211,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             if (bestDirection == Vector3.zero)
             {
                 Debug.Log("no best dir");
-                bestDirection = AI.transform.TransformDirection(Vector3.left);
+                return Vector3.zero;
             }
 
             return bestDirection;

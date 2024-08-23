@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
 using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
@@ -6,6 +9,10 @@ using Random = UnityEngine.Random;
 
 public class NinjaAgent : DodgeballAI
 {
+    private void OnDisable()
+    {
+        _stateController.CleanUp();
+    }
     public NinjaState State => _stateController.State;
     
     [SerializeField] private ShadowStepUtilityArgs shadowStepArgs;
@@ -41,6 +48,7 @@ public class NinjaAgent : DodgeballAI
 
         _utilityHandler.AddUtility(_substitutionUtility);
         _utilityHandler.AddUtility(_handSignUtility);
+        _utilityHandler.AddUtility(_fakeoutBallUtility);
 
         // todo implement factory helper
         // if we populate a map of the utilities, or have a ninja state on them, we can pass the utilitys in
@@ -67,6 +75,38 @@ public class NinjaAgent : DodgeballAI
         _stateController.Initialize(NinjaState.Default);
         hasSpecials = true;
         
+        GameManager.onPhaseChange += NinjaPhase;
+        
+    }
+
+    private void NinjaPhase(BattlePhase obj)
+    {
+        if (obj == BattlePhase.LackeyReturn)
+        {
+        }
+    }
+
+    private IEnumerator ReturnFromSmokeBomb()
+    {
+        yield return new WaitForSeconds(Random.Range(1f, 1.7f));
+        shadowStepArgs.entryEffect.SetActive(false);
+        shadowStepArgs.entryEffect.SetActive(true);
+        shadowStepArgs.aiAvatar.SetActive(true);
+        var duration = 1.4f;
+        var curTime = 0f;
+
+        var rand = Random.insideUnitCircle * 2;
+        var targetPos = new Vector3(transform.position.x + rand.x, transform.position.y, transform.position.z + rand.y);
+        
+        while (curTime < duration)
+        {
+            transform.position = Vector3.Lerp(transform.position, targetPos, curTime / duration);
+            curTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        _stateController.ChangeState(NinjaState.Default);
+        if (outOfPlay) SetOutOfPlay(false);
     }
 
     internal void SmokeBomb(Vector3 newPos)
@@ -86,6 +126,7 @@ public class NinjaAgent : DodgeballAI
 
     protected override void Update()
     {
+        if (_stateController.State == NinjaState.SmokeBomb) return;
         _gizmo.gizmoText = _stateController.State.ToString();
         if (currentState == AIState.Special)
         {
@@ -124,77 +165,20 @@ public class NinjaAgent : DodgeballAI
         _stateController.OnTriggerEnter(other);
     }
 
-    private void OnDestroy()
-    {
-        _handSignUtility.Dispose();
-    }
-
-    protected override void HandlePhaseChange()
-    {
-        if (!_substitutionUtility.inSequence && !_shadowStepUtility._shadowSteppingSequencePlaying)
-        {
-            if (hasBall) ThrowBall();
-            else currentState = AIState.Move;
-            base.HandlePhaseChange();
-            _phaseDelay = Time.time + Random.Range(1, 1.6f);
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        // if (other.gameObject.layer == LayerMask.NameToLayer("Ball"))
-        // _substitutionUtility.ballInTrigger = false;
-    }
 
     private bool entryFinished = false;
-    public bool fakeOut;
-
-    public override void ReturnControl()
-    {
-        _phaseDelay = float.MaxValue;
-        _shadowStepUtility.ShadowStepOutroOverride().Forget();
-        outOfPlay = false;
-        if (hasBall) ThrowBall();
-        entryFinished = false;
-    }
-
-    public override void PossessAI()
-    {
-        if (_shadowStepUtility._shadowSteppingSequencePlaying ||
-            _substitutionUtility.inSequence ||
-            _fakeoutBallUtility.active)
-        {
-            return;
-        }
-
-        _shadowStepUtility._shadowSteppingSequencePlaying = false;
-        _substitutionUtility.args.sequencePlaying = false;
-        _fakeoutBallUtility.active = false;
-        if (entryFinished) return;
-        if (Time.time <= _phaseDelay)
-        {
-            if (hasBall) ThrowBall();
-            _moveUtility.FlockMove(this);
-        }
-        else if (!outOfPlay)
-        {
-            _shadowStepUtility.ShadowStepIntroOverride();
-            _shadowStepUtility._shadowSteppingSequencePlaying = true;
-            entryFinished = true;
-        }
-        else
-        {
-            stayIdle = false;
-        }
-    }
 
     public void PrepareSmokeBomb()
     {
         stayIdle = true;
+        _stateController.ChangeState(NinjaState.SmokeBomb);
     }
+    
 
     public void EndSmokeBomb()
     {
-        _stateController.ChangeState(NinjaState.Default);
+        stayIdle = false;
+        StartCoroutine(ReturnFromSmokeBomb());
+        
     }
 }

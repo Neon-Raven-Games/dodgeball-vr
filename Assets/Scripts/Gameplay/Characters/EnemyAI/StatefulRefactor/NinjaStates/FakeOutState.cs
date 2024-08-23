@@ -18,6 +18,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         public override void EnterState()
         {
             base.EnterState();
+            AI.hasBall = true;
             AI.hasSpecials = false;
             RunFakeOutAppearEffect().Forget();
         }
@@ -59,9 +60,11 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             dodgeball.transform.localScale = Vector3.one;
             Args.fakeoutBall.gameObject.SetActive(true);
             AI.PickUpBall(Args.fakeoutBall);
+            AI.SetPossessedBall(Args.fakeoutBall);
             Args.fakeoutBall.gameObject.SetActive(false);
             Args.entryEffect.SetActive(false);
             await UniTask.Yield();
+            ChangeState(NinjaState.Default);
         }
         public override void OnTriggerEnter(Collider collider)
         {

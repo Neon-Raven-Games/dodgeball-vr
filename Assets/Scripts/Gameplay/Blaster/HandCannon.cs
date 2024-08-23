@@ -12,9 +12,13 @@ public enum CannonState
 }
 public class HandCannon : MonoBehaviour
 {
+    public AudioSource audioSource;
     internal List<DodgeBall> dodgeBallAmmo = new();
     [SerializeField] private InputActionAsset actionAsset;
     public Transform barrelTransform;
+    public GameObject cooldownIndicator;
+    public float normalizedCooldownTime;
+    
     
     [Header("Shooting Settings")]
     public LineRenderer trajectoryLineRenderer;
@@ -33,6 +37,8 @@ public class HandCannon : MonoBehaviour
     private BaseHandCanonState _currentState;
     private InputAction _gripAction;
     private InputAction _triggerAction;
+    public float liveBallRange;
+
     private void Start()
     {
         _states = new Dictionary<CannonState, BaseHandCanonState>
@@ -46,19 +52,16 @@ public class HandCannon : MonoBehaviour
     }
     private void PopulateInput()
     {
-        // var handSideString = "LeftHand";
-        // if (handSide == HandSide.RIGHT) 
-           
         var handSideString = "RightHand";
 
         _triggerAction = actionAsset.FindAction($"XRI {handSideString} Interaction/UI Press");
         _gripAction = actionAsset.FindAction($"XRI {handSideString} Interaction/Select", true);
 
-        _triggerAction.performed += GripPerformedAction;
-        _triggerAction.canceled += GripReleasedAction;
+        _triggerAction.performed += TriggerPerformedAction;
+        _triggerAction.canceled += TriggerReleasedAction;
         
-        _gripAction.performed += TriggerPerformedAction;
-        _gripAction.canceled += TriggerReleasedAction;
+        _gripAction.performed += GripPerformedAction;
+        _gripAction.canceled += GripReleasedAction;
     }
     public void AddDodgeBall(DodgeBall dodgeBall)
     {
@@ -74,31 +77,39 @@ public class HandCannon : MonoBehaviour
 
     public void GripPerformedAction(InputAction.CallbackContext obj)
     {
+        Debug.Log("Grip performed");
         _currentState?.GripAction();
     }
 
     public void GripReleasedAction(InputAction.CallbackContext obj)
     {
+        Debug.Log("Grip Released");
         _currentState?.GripReleaseAction();
     }
 
     public void TriggerPerformedAction(InputAction.CallbackContext obj)
     {
+        Debug.Log("Trigger performed");
         _currentState?.FireAction();
     }
     
     private void TriggerReleasedAction(InputAction.CallbackContext obj)
     {
+        Debug.Log("Trigger Released");
         _currentState?.FireReleaseAction();
     }
+
+    private CooldownTimer _cooldownTimer;
     
     private void Update()
     {
+        normalizedCooldownTime = _cooldownTimer.NormalizedProgress();
         _currentState?.Update();
     }
     
     private void OnEnable()
     {
+        _cooldownTimer = gameObject.AddComponent<CooldownTimer>();
         PopulateInput();
         _triggerAction.Enable();
         _gripAction.Enable();
@@ -106,9 +117,12 @@ public class HandCannon : MonoBehaviour
     
     private void OnDisable()
     {
-        _triggerAction.performed -= GripPerformedAction;
-        _triggerAction.canceled -= GripReleasedAction;
+        _triggerAction.performed -= TriggerPerformedAction;
+        _triggerAction.canceled -= TriggerReleasedAction;
         _triggerAction.Disable();
+        
+        _gripAction.performed -= GripPerformedAction;
+        _gripAction.canceled -= GripReleasedAction;
         _gripAction.Disable();
     }
 

@@ -64,5 +64,13 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor
         {
             states.Add(state, stateObject);
         }
+
+        public void CleanUp()
+        {
+            foreach(var state in states)
+            {
+                state.Value.CleanUp();
+            }
+        }
     }
 }

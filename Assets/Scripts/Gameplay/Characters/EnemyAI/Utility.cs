@@ -10,7 +10,7 @@ namespace Hands.SinglePlayer.EnemyAI
     {
         protected internal T args;
 
-        private Bounds playAreaBounds;
+        internal Bounds playAreaBounds;
         private RaycastHit hit;
 
         protected Utility(T args, AIState state)
@@ -84,16 +84,16 @@ namespace Hands.SinglePlayer.EnemyAI
             return inBounds;
         }
 
-        protected GameObject FindNearestBallInPlayArea(DodgeballPlayArea playArea, DodgeballAI ai, out float distance)
+        protected DodgeBall FindNearestBallInPlayArea(DodgeballPlayArea playArea, DodgeballAI ai, out float distance)
         {
             distance = 200;
             
-            GameObject nearestBall = null;
+            DodgeBall nearestBall = null;
             var nearestDistance = float.MaxValue;
 
-            foreach (var ball in playArea.dodgeBalls)
+            foreach (var ball in playArea.dodgeBalls.Keys)
             {
-                if (!IsInPlayArea(ball.transform.position) || !ball.activeInHierarchy) continue;
+                if (!IsInPlayArea(ball.transform.position) || !ball.gameObject.activeInHierarchy) continue;
                 
                 var ballPos = ball.transform.position;
                 ballPos.y = ai.transform.position.y;
@@ -165,6 +165,8 @@ namespace Hands.SinglePlayer.EnemyAI
         public float jumpSeconds = 0.8f;
         public float despawnDelay;
         public float jumpHeight = 5f;
+        public ColorLerp colorLerp;
+        public float playEffectDelay;
     }
     
     [Serializable]

@@ -22,17 +22,23 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
 
     public override float Roll(DodgeballAI ai)
     {
-        if (_ninja.fakeOut || _ai.IsOutOfPlay()) return -1f;
-        if (_ai.hasBall || 
-            _ai.currentState == AIState.PickUp || 
-            _ai.currentState == AIState.Throw || 
-            _ai.currentState == AIState.OutOfPlay)
+        if (_ai.IsOutOfPlay())
+        {
             return -1f;
+        }
+
+        if (_ai.hasBall ||
+            _ai.currentState == AIState.PickUp ||
+            _ai.currentState == AIState.Throw ||
+            _ai.currentState == AIState.OutOfPlay)
+        {
+            
+            return -1f;
+        }
         
         if (Time.time > args.nextRollTime + 5)
         {
             args.nextRollTime = Time.time + Random.Range(args.rollIntervalMin, args.rollIntervalMax);
-            Debug.Log($"[{ai.gameObject.name}] Running a fakeout roll, next cooldown time: {args.nextRollTime}");
             return float.MaxValue;
         }
         return 0f;

@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Gameplay.Util;
 using Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 {
@@ -24,58 +25,47 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         public override void FixedUpdate()
         {
         }
-        
-        
+         
         public override void EnterState()
         {
+            if (AI.hasBall) AI.ThrowBall();
             AI.stayIdle = true;
+            
             base.EnterState();
-            InitializeSmokeBomb();
             DespawnToTrajectory().Forget();
         }
         
         private void InitializeSmokeBomb()
         {
             Args.shadowStepEffect.SetActive(true);
-            CalculateBezierPath(ninja.currentSmokeBombPosition);
-        }
-
-        private void CalculateBezierPath(Vector3 pos)
-        {
-            pos.y = AI.transform.position.y;
-            var midPoint = (pos + AI.transform.position) / 2;
-            midPoint.y += Args.jumpHeight;
-            bezierPoints[0] = AI.transform.position;
-            bezierPoints[1] = midPoint;
-            bezierPoints[2] = pos;
         }
 
         private async UniTaskVoid DespawnToTrajectory()
         {
-            await UniTask.WaitForSeconds(Args.despawnDelay);
-            Args.aiAvatar.SetActive(false);
-            Args.trailRenderer.SetActive(true);
-
             var currentTime = 0f;
-            var duration = Args.jumpSeconds;
+            var duration = Args.playEffectDelay;
+            
+            await UniTask.Delay(TimeSpan.FromSeconds(UnityEngine.Random.Range(Args.despawnDelay, Args.despawnDelay + 0.4f)));
+            InitializeSmokeBomb();
             while (currentTime < duration && !GetCancellationToken().IsCancellationRequested)
             {
                 var t = Mathf.Clamp01(currentTime / duration);
-                AI.transform.position = Bezier.CalculateBezierPoint(t, bezierPoints[0], bezierPoints[1], bezierPoints[2]);
+                Args.colorLerp.lerpValue = Mathf.Clamp(t, 0, 0.8f);
                 currentTime += Time.deltaTime;
                 await UniTask.Yield();
             }
             
+            Args.aiAvatar.SetActive(false);
+            AI.transform.position = bezierPoints[2];
+            
             Args.shadowStepEffect.SetActive(false);
-            Args.trailRenderer.SetActive(false);
+            Args.colorLerp.lerpValue = 0;
             AI.transform.position = ninja.currentSmokeBombPosition;
         }
 
         public override void ExitState()
         {
             active = false;
-            Args.aiAvatar.SetActive(true);
-            AI.stayIdle = false;
             CancelTask();
         }
 

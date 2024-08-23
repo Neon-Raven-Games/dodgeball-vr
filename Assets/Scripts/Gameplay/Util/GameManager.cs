@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public enum BattlePhase
 {
     Lackey,
+    LackeyReturn,
     Boss
 }
 public class GameManager : MonoBehaviour

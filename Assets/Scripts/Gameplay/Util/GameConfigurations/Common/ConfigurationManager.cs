@@ -19,6 +19,7 @@ public class ConfigurationManager : MonoBehaviour
     [SerializeField] private List<AudioClip> hitSounds;
     [SerializeField] private List<AudioClip> pickupSounds;
     [SerializeField] public List<ThrowConfiguration> throwConfigurations;
+    [SerializeField] public AudioClip blasterSound;
     
     public static int throwSoundIndex;
     public static int hitIndex;
@@ -71,6 +72,10 @@ public class ConfigurationManager : MonoBehaviour
     {
         return _instance.throwConfigurations;
     }
+
+
+    public static AudioClip GetBlasterSound() =>
+        _instance.blasterSound;
     
     public static AudioClip GetIndexedSound(SoundIndex sound)
     {

@@ -67,7 +67,7 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             args.ballInTrigger = false;
         }
 
-        private async Task LerpSubstitutionMovement()
+        private async UniTask LerpSubstitutionMovement()
         {
             var exitPoint = _ai.transform.position + (args.stepDirection * args.stepDistance);
             exitPoint.y = _ai.transform.position.y;

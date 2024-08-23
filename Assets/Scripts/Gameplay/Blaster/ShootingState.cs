@@ -3,20 +3,23 @@ using UnityEngine;
 
 public class ShootingState : BaseHandCanonState
 {
+    private AudioClip _blasterSound;
     public ShootingState(HandCannon handCannon) : base(handCannon)
     {
+        _blasterSound = ConfigurationManager.GetBlasterSound();
     }
     
     public override void EnterState()
     {
         base.EnterState();
+        
         handCannon.trajectoryLineRenderer.enabled = true;
         if (handCannon.dodgeBallAmmo.Count > 0)
         {
             LaunchDodgeball(handCannon.dodgeBallAmmo.FirstOrDefault());
             handCannon.dodgeBallAmmo.RemoveAt(0);
         }
-        
+        handCannon.audioSource.PlayOneShot(ConfigurationManager.GetBlasterSound());
         handCannon.ChangeState(CannonState.Idle);
     }
     

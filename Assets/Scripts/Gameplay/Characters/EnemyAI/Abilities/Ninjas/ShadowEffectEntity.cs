@@ -25,6 +25,8 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
             }
             gameObject.SetActive(false);
         }
+        
+        Vector3 point = new Vector3();
 
         private Vector3 CalculateBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2)
         {
@@ -32,11 +34,11 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
             float tt = t * t;
             float uu = u * u;
         
-            Vector3 p = uu * p0; // u^2 * p0
-            p += 2 * u * t * p1; // 2 * u * t * p1
-            p += tt * p2; // t^2 * p2
+            point = uu * p0; // u^2 * p0
+            point += 2 * u * t * p1; // 2 * u * t * p1
+            point += tt * p2; // t^2 * p2
 
-            return p;
+            return point;
         }
     }
 }

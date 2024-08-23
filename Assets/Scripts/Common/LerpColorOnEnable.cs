@@ -25,18 +25,18 @@ public class LerpColorOnEnable : MonoBehaviour
     {
         if (!_initialized) return;
         colorLerp.lerpValue = 1;
-        StartColorLerp().Forget();
+        StartCoroutine(StartColorLerp());
     }
     
     
-    private async UniTaskVoid StartColorLerp()
+    private IEnumerator StartColorLerp()
     {
         var curTime = 0f;
         while (curTime < 1)
         {
             curTime += Time.deltaTime / lerpDuration;
             colorLerp.lerpValue = 1 - curTime;
-            await UniTask.Yield();
+            yield return null;
         }
     }
 }

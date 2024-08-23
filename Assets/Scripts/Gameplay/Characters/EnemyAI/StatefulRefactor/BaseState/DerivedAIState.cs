@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
@@ -13,6 +14,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
         void OnTriggerExit(Collision col);
 
         void FixedUpdate();
+        void CleanUp();
     }
 
     public abstract class DerivedAIState<TEnum, TArgs> : IDerivedAIState
@@ -21,6 +23,16 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
     {
         public abstract TEnum State { get; }
         public abstract void FixedUpdate();
+
+        public void CleanUp()
+        {
+            lock (_lock)
+            {
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource.Dispose();
+            }
+        }
+
         public abstract void ExitState();
         public abstract void UpdateState();
         public abstract void OnTriggerEnter(Collider collider);
@@ -70,12 +82,16 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
         {
             lock (_lock)
             {
-                if (_cancellationTokenSource.IsCancellationRequested)
+                try
                 {
+                    _cancellationTokenSource.Cancel();
                     _cancellationTokenSource.Dispose();
                     _cancellationTokenSource = new CancellationTokenSource();
-                    Debug.LogWarning($"[{AI.gameObject.name}] Cancellation token Warning! Entered a state with a " +
-                                     $"cancelled token source. Creating a new one.");
+                }
+                catch (ObjectDisposedException)
+                {
+                    Debug.Log($"Cancellation token already cancelled. {State}");
+                    if (AI) AI.gameObject.SetActive(false);
                 }
             }
 
@@ -91,13 +107,15 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
 
             lock (_lock)
             {
-                if (_cancellationTokenSource.IsCancellationRequested)
+                try
                 {
-                    _cancellationTokenSource.Dispose();
+                    if (_cancellationTokenSource != null)
+                        _cancellationTokenSource.Cancel();
                 }
-
-                _cancellationTokenSource.Cancel();
-                _cancellationTokenSource = new CancellationTokenSource();
+                catch (ObjectDisposedException)
+                {
+                    Debug.Log($"Cancellation token already cancelled. {State}");
+                }
             }
         }
 

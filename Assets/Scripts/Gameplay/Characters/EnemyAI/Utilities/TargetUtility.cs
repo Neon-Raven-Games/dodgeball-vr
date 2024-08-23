@@ -66,117 +66,46 @@ namespace Hands.SinglePlayer.EnemyAI
 
         public override float Execute(DodgeballAI ai)
         {
+            if (!CurrentTarget && _ai.hasBall) CheckForNearbyDodgeballs();
+            if (!CurrentTarget) CurrentTarget = FindBestTarget();
+            if (!CurrentTarget) return -1f;
             LookAtTarget(CurrentTarget.transform.position);
             return 1f;
         }
 
-        private float _pickupCheckTime;
-        private float _pickupCheckStep = 0.4f;
-
         public override float Roll(DodgeballAI ai)
         {
-            LookAtTarget(CurrentTarget.transform.position);
-
-            if (CurrentTarget.activeInHierarchy && CurrentTarget.layer == LayerMask.NameToLayer("Ball"))
+            if (_ai.hasBall)
             {
-                if (!BallTarget) BallTarget = CurrentTarget.GetComponent<DodgeBall>();
-                if (BallTarget)
-                {
-                    if (!IsInPlayArea(BallTarget.transform.position))
-                    {
-                        ai._pickUpUtility.StopPickup(ai);
-                        _lastBestTarget = FindBestTarget();
-                        return CalculateTargetScore(_lastBestTarget);
-                    }
-
-                    if (BallTarget._ballState == BallState.Dead) return 1f;
-                }
-            }
-            else
-            {
-                BallTarget = null;
+                CurrentTarget = FindBestTarget();
+                return 1f;
             }
 
-
-            if (!CurrentTarget.activeInHierarchy)
+            if (!BallTarget) CheckForNearbyDodgeballs();
+            
+            else if (BallTarget &&
+                     (BallTarget._ballState != BallState.Dead || !BallTarget.gameObject.activeInHierarchy))
             {
-                ai._pickUpUtility.StopPickup(ai);
-                _lastBestTarget = FindBestTarget();
-            }
-
-            if (_lastBestTarget && Time.time < _pickupCheckTime) return CalculateTargetScore(_lastBestTarget);
-            IncrementPickupStepCheck();
-            _lastBestTarget = FindBestTarget();
-            return CalculateTargetScore(_lastBestTarget);
-        }
-
-        public void PossessedBall(DodgeballAI ai)
-        {
-            IncrementPickupStepCheck();
-            _lastBestTarget = FindBestTarget();
-            SwitchTarget();
-        }
-
-        private void IncrementPickupStepCheck()
-        {
-            _pickupCheckStep = Random.Range(0.2f, 0.4f);
-            _pickupCheckTime = Time.time + _pickupCheckStep;
-        }
-
-        public void UpdateTarget(AIState currentState)
-        {
-            if (currentState == AIState.OutOfPlay) return;
-            var timeSinceLastSwitch = Time.time - _lastTargetChangeTime;
-
-            _targetSwitchProbability = _minSwitchProbability + (_maxSwitchProbability - _minSwitchProbability) *
-                (1 - Mathf.Exp(-_switchProbabilityIncreaseRate * timeSinceLastSwitch));
-
-            if (CurrentTarget == null || !CurrentTarget.activeInHierarchy)
-            {
-                _lastBestTarget = FindBestTarget();
-                CurrentTarget = _lastBestTarget;
-            }
-
-            if (Random.value < _targetSwitchProbability && Time.time >= _lastTargetChangeTime + _minimumSwitchTime)
-            {
-                SwitchTarget();
-                ResetTargetSwitchProbability();
-            }
-
-
-            if (currentState != AIState.Possession &&
-                currentState != AIState.Throw &&
-                currentState != AIState.BackOff)
                 CheckForNearbyDodgeballs();
+            }
+            if (!BallTarget) CurrentTarget = FindBestTarget();
+
+            return 0f;
         }
 
         private void CheckForNearbyDodgeballs()
         {
-            foreach (var ball in _playArea.dodgeBalls)
+            foreach (var ball in _playArea.dodgeBalls.Keys)
             {
-                if (!ball.activeInHierarchy) continue;
-                if (BallProximity(ball, out var distanceToBall)) continue;
-                if (CanNotOverride(distanceToBall)) continue;
+                if (!ball.gameObject.activeInHierarchy) continue;
                 if (!IsInPlayArea(ball.transform.position)) continue;
-                var ballstate = ball.GetComponent<DodgeBall>()._ballState;
+
+                var ballstate = ball._ballState;
                 if (ballstate != BallState.Dead) continue;
-                CurrentTarget = ball;
-                ResetTargetSwitchProbability();
+                CurrentTarget = ball.gameObject;
+                BallTarget = ball;
                 break;
             }
-        }
-
-        private bool CanNotOverride(float distanceToBall)
-        {
-            var overrideProbability = (1 - (distanceToBall / args.dodgeballProximityThreshold)) * _difficultyWeight;
-            return Random.value >= overrideProbability;
-        }
-
-        private bool BallProximity(GameObject ball, out float distanceToBall)
-        {
-            distanceToBall = Vector3.Distance(_ai.transform.position, ball.transform.position);
-            return distanceToBall >= args.dodgeballProximityThreshold &&
-                   IsInPlayArea(ball.transform.position);
         }
 
         public void ResetTargetSwitchProbability()
@@ -185,14 +114,9 @@ namespace Hands.SinglePlayer.EnemyAI
             _lastTargetChangeTime = Time.time;
         }
 
-        public void SwitchTarget()
-        {
-            if (_lastBestTarget == null) return;
-            CurrentTarget = _lastBestTarget;
-        }
-
         private GameObject FindBestTarget()
         {
+            BallTarget = null;
             GameObject bestTarget = null;
             float bestScore = float.MinValue;
 
@@ -208,27 +132,13 @@ namespace Hands.SinglePlayer.EnemyAI
 
                     if (enemyActor != null && !enemyActor.IsOutOfPlay())
                     {
-                        float score = CalculateTargetScore(enemyActor.gameObject);
+                        float score = CalculateTargetScore(enemyActor);
                         if (score > bestScore)
                         {
                             bestScore = score;
                             bestTarget = enemyActor.gameObject;
+                            ActorTarget = enemyActor;
                         }
-                    }
-                }
-            }
-
-            if (_ai.hasBall) return bestTarget;
-            foreach (var ball in _playArea.dodgeBalls)
-            {
-                if (ball.activeInHierarchy && ball.GetComponent<DodgeBall>()._ballState == BallState.Dead &&
-                    IsInPlayArea(ball.transform.position))
-                {
-                    float score = CalculateTargetScore(ball);
-                    if (score > bestScore)
-                    {
-                        bestScore = score;
-                        bestTarget = ball;
                     }
                 }
             }
@@ -236,54 +146,26 @@ namespace Hands.SinglePlayer.EnemyAI
             return bestTarget;
         }
 
-        private float CalculateTargetScore(GameObject target)
+        private float CalculateTargetScore(Actor target)
         {
             var score = 0f;
 
-            if (!target || !target.activeInHierarchy) return -500f;
+            if (!target || !target.gameObject.activeInHierarchy) return -500f;
 
             var maxDistance = 18f;
             var distance = Vector3.Distance(_ai.transform.position, target.transform.position);
             score -= distance / maxDistance;
 
-            var headPos = _ai.transform.position;
-            headPos.y += 1;
-            var direction = target.transform.position - headPos;
+            if (_ai.hasBall) score += GetPriority(PriorityType.PossessedBall);
+            score += GetPriority(PriorityType.Enemy);
 
-            if (Physics.Raycast(headPos, direction, out var hit))
-            {
-                if (hit.collider.gameObject == target) score += GetPriority(PriorityType.LineOfSight);
-                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Ball"))
-                {
-                    var ball = hit.collider.gameObject.GetComponent<DodgeBall>();
-                    if (!_ai.hasBall) score += GetPriority(PriorityType.PossessedBall);
-                    if (_ai.hasBall) score -= GetPriority(PriorityType.PossessedBall);
-                    if (IsInPlayArea(target.transform.position))
-                    {
-                        score += GetPriority(PriorityType.InsidePlayArea);
-                        if (ball._ballState == BallState.Dead)
-                            score += GetPriority(PriorityType.FreeBall);
-                        else if (ball._ballState == BallState.Possessed)
-                            score -= GetPriority(PriorityType.Targeted);
-                        else score -= GetPriority(PriorityType.OutsidePlayArea);
-                    }
-                    else score -= GetPriority(PriorityType.OutsidePlayArea);
-                }
-            }
-
-            if (CurrentTarget != target &&  BallTarget && target.GetComponent<DodgeBall>())
-                score -= GetPriority(PriorityType.Targeted);
-
-            if (target.layer == LayerMask.NameToLayer(_enemyTeam.layerName))
-            {
-                if (_ai.hasBall) score += GetPriority(PriorityType.PossessedBall);
-                score += GetPriority(PriorityType.Enemy);
-                var enemyAi = hit.collider.GetComponent<Actor>();
-                if (enemyAi && enemyAi.hasBall) score += GetPriority(PriorityType.EnemyPossession);
-            }
+            if (target && target.hasBall) score += GetPriority(PriorityType.EnemyPossession);
 
             score += Random.Range(-0.1f, 0.1f);
-            if (CurrentTarget == target) score += GetPriority(PriorityType.Targeted);
+            
+            if (CurrentTarget == target.gameObject)
+                score += GetPriority(PriorityType.Targeted);
+            
             return score;
         }
 
@@ -300,15 +182,8 @@ namespace Hands.SinglePlayer.EnemyAI
             // Calculate the angle to the target
             float angleToTarget = Vector3.Angle(_ai.transform.forward, flatDirection);
 
-            // Determine look weight based on FOV
-            if (angleToTarget > args.fovAngle / 2)
-            {
-                lookWeightTarget = 0.85f; // Lower weight if outside FOV
-            }
-            else
-            {
-                lookWeightTarget = 1f; // Full weight if inside FOV
-            }
+            // Determine look weight based on FOV; Full weight if inside FOV
+            lookWeightTarget = angleToTarget > args.fovAngle / 2 ? 0.4f : 1f; 
 
             // Smoothly interpolate the head look weight
             _headLookWeight = Mathf.Lerp(_headLookWeight, lookWeightTarget, Time.deltaTime * args.headTurnSpeed);

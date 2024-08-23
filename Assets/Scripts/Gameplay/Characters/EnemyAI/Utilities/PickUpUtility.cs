@@ -18,19 +18,17 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public override float Execute(DodgeballAI ai)
         {
-            if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay())
-            {
-                return 0;
-            }
-
-            ballDistance = Vector3.Distance(ai.transform.position, nearestBall.transform.position);
+            if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay()) return -1;
+            
+            ballDistance = Vector3.Distance(ai.transform.position, ai.targetUtility.BallTarget.transform.position);
             if (ballDistance < args.pickupDistanceThreshold)
             {
                 ai.PickUpBall(ai.targetUtility.BallTarget);
+                if (!ai.hasBall) return -1f;
                 return 1f;
             }
 
-            ApproachBallToPickUp(ai.CurrentTarget.GetComponent<DodgeBall>(), ai);
+            ApproachBallToPickUp(ai.targetUtility.BallTarget, ai);
             return CalculatePickUpUtility(ai);
         }
 
@@ -95,38 +93,15 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             args.ik.solvers.rightHand.maintainRotationWeight = Mathf.Lerp(args.maintainRotationWeight, 0, lerpFactor);
         }
 
-
-        private GameObject nearestBall;
         public override float Roll(DodgeballAI ai) => CalculatePickUpUtility(ai);
 
         private float CalculatePickUpUtility(DodgeballAI ai)
         {
-            if (ai.CurrentTarget == null || ai.CurrentTarget.layer != LayerMask.NameToLayer("Ball") ||
-                ai.hasBall || ai.IsOutOfPlay())
-            {
-                return 0;
-            }
-
-            nearestBall = FindNearestBallInPlayArea(ai.playArea, ai, out ballDistance);
-            if (nearestBall == null || !nearestBall.activeInHierarchy)
-            {
-                return 0;
-            }
-
-            var ball = nearestBall.GetComponent<DodgeBall>();
-
-            if (!IsInPlayArea(nearestBall.transform.position))
-            {
-                return 0f;
-            }
+            if (ai.targetUtility.BallTarget == null || ai.hasBall || ai.IsOutOfPlay()) return 0;
+            if (!IsInPlayArea(ai.targetUtility.BallTarget.transform.position)) return 0f;
+            if (ai.targetUtility.BallTarget._ballState != BallState.Dead) return 0f;
 
             float utility = 0;
-            if (ball._ballState != BallState.Dead)
-            {
-                // todo, check trajectory for catch should handle this
-                return 0f;
-            }
-
             utility += 5f;
 
             utility += (1.0f / ballDistance) * ai.distanceWeight;
@@ -142,11 +117,14 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 if (teammateAI == ai) continue;
                 if (teammateAI == null) continue;
 
-                if (teammateAI.CurrentTarget == ai.CurrentTarget &&
-                    Vector3.Distance(teammateAI.transform.position, ai.CurrentTarget.transform.position) <
-                    Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
+                if (teammateAI is DodgeballAI dodgeballAI)
                 {
-                    return true;
+                    if (dodgeballAI.CurrentTarget == ai.CurrentTarget &&
+                        Vector3.Distance(dodgeballAI.transform.position, ai.CurrentTarget.transform.position) <
+                        Vector3.Distance(ai.transform.position, ai.CurrentTarget.transform.position))
+                    {
+                        return true;
+                    }
                 }
             }
 

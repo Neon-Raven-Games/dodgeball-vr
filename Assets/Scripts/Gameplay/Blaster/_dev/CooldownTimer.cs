@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class CooldownTimer : MonoBehaviour
@@ -6,6 +7,8 @@ public class CooldownTimer : MonoBehaviour
     private float cooldownTimer;
 
     private bool _isAvailable;
+    public Action OnCooldownStart;
+    public Action OnCooldownEnd;
     private void Update()
     {
         if (cooldownTimer > 0)
@@ -15,6 +18,7 @@ public class CooldownTimer : MonoBehaviour
         else
         {
             _isAvailable = true;
+            OnCooldownEnd?.Invoke();
         }
     }
     
@@ -32,6 +36,7 @@ public class CooldownTimer : MonoBehaviour
     {
         _isAvailable = false;
         cooldownTimer = cooldownDuration;
+        OnCooldownStart?.Invoke();
     }
 
     public bool IsOnCooldown()
