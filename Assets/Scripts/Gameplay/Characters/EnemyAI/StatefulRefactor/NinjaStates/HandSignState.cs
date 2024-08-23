@@ -77,13 +77,13 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         private void InitializeState()
         {
             Args.collider.enabled = true;
-            Args.ik.solvers.leftHand.target = Args.handSignTarget;
+            AI.ik.solvers.leftHand.target = Args.handSignTarget;
             Args.handAnimator.SetBool(_SSigning, true);
             AssignIKWeight();
         }
 
         private void AssignIKWeight() =>
-            _currentHandLerpWeight = Args.ik.solvers.leftHand.GetIKPositionWeight();
+            _currentHandLerpWeight = AI.ik.solvers.leftHand.GetIKPositionWeight();
 
         #endregion
 
@@ -100,7 +100,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
                     await UniTask.Yield(GetCancellationToken());
                     if (AI.hasBall)
                     {
-                        await UniTask.WaitForSeconds(UnityEngine.Random.Range(1.5f, 10f));
+                        await UniTask.WaitForSeconds(UnityEngine.Random.Range(1.5f, 7f));
                         if (active && AI.hasBall)
                         {
                             if (GetCancellationToken().IsCancellationRequested) return;
@@ -118,7 +118,6 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             }
             catch (ObjectDisposedException)
             {
-                Debug.Log("Cancellation token disposed: HandSignState");
             }
         }
 
@@ -131,26 +130,38 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
                 {
                     var t = Mathf.Clamp01(elapsedTime / duration);
 
-                    Args.ik.solvers.leftHand.SetIKPosition(Args.handSignTarget.position);
-                    Args.ik.solvers.leftHand.SetIKPositionWeight(Mathf.Lerp(fromValue, toValue, t));
-                    Args.ik.solvers.leftHand.SetIKRotation(Args.handSignTarget.rotation);
-                    Args.ik.solvers.leftHand.SetIKRotationWeight(Mathf.Lerp(fromValue, toValue, t));
+                    AI.ik.solvers.leftHand.SetIKPosition(Args.handSignTarget.position);
+                    AI.ik.solvers.leftHand.SetIKPositionWeight(Mathf.Lerp(fromValue, toValue, t));
+                    AI.ik.solvers.leftHand.SetIKRotation(Args.handSignTarget.rotation);
+                    AI.ik.solvers.leftHand.SetIKRotationWeight(Mathf.Lerp(fromValue, toValue, t));
 
                     elapsedTime += Time.deltaTime;
                     await UniTask.Yield();
                 }
 
-                Args.ik.solvers.leftHand.SetIKPositionWeight(toValue);
-                Args.ik.solvers.leftHand.SetIKRotationWeight(toValue);
+                ResetWeights(toValue);
             }
             catch (OperationCanceledException)
             {
-                Debug.Log("LerpToHandSignPositionAndRotation cancelled");
+                ResetIKWeights();
             }
             catch (ObjectDisposedException)
             {
-                // todo we need to make this function handle better
-                Debug.Log("Cancellation token disposed: HandSignState");
+                // we should clean up here, the game is over, and this state is no longer needed.
+                // the catch should be correcting errors, not ignoring them.
+            }
+        }
+
+        private void ResetWeights(float toValue)
+        {
+            if (toValue == 0)
+            {
+                ResetIKWeights();
+            }
+            else
+            {
+                AI.ik.solvers.leftHand.SetIKPositionWeight(toValue);
+                AI.ik.solvers.leftHand.SetIKRotationWeight(toValue);
             }
         }
 

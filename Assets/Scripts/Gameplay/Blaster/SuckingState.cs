@@ -25,6 +25,7 @@ public class SuckingState : BaseHandCanonState
         {
             handCannon.cooldownIndicator.SetActive(false);
         };
+        handCannon.cooldownTimer = _suctionCooldownTimer;
     }
 
     public override void OnTriggerEnter(Collider other)

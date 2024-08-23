@@ -40,7 +40,6 @@ public class BallRespawnManager : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<BallMovement>()) return;
         if (other.gameObject.layer != _ballLayer) return;
         if (forceMode) return;
         if (dodgeballPlayArea.dodgeBalls.Count > dodgeballPlayArea.dodgeballCount)

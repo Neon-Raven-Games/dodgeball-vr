@@ -1,6 +1,8 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 {
@@ -36,25 +38,32 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         
         private async UniTaskVoid RunFakeOutAppearEffect()
         {
-            Args.rightHandIndex.SetBallType(BallType.Dodgeball);
-            var dodgeball = Args.rightHandIndex._currentDodgeball;
+            AI.rightBallIndex.SetBallType(BallType.Dodgeball);
+            var dodgeball = AI.rightBallIndex._currentDodgeball;
             dodgeball.transform.localScale = Vector3.zero;
             var time = 0f;
-
-            while (time < 1 && !GetCancellationToken().IsCancellationRequested)
+            try
             {
-                dodgeball.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, time);
-                time += Time.deltaTime / Args.entryDuration;
-                await UniTask.Yield();
+
+                while (time < 1 && !GetCancellationToken().IsCancellationRequested)
+                {
+                    dodgeball.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, time);
+                    time += Time.deltaTime / Args.entryDuration;
+                    await UniTask.Yield();
+                }
+
+                if (GetCancellationToken().IsCancellationRequested)
+                {
+                    dodgeball.transform.localScale = Vector3.one;
+                    dodgeball.gameObject.SetActive(false);
+                    AI.rightBallIndex._currentDodgeball = null;
+                    ChangeState(NinjaState.Default);
+                    active = false;
+                    return;
+                }
             }
-
-            if (GetCancellationToken().IsCancellationRequested)
+            catch (ObjectDisposedException)
             {
-                dodgeball.transform.localScale = Vector3.one;
-                dodgeball.gameObject.SetActive(false);
-                Args.rightHandIndex._currentDodgeball = null;
-                ChangeState(NinjaState.Default);
-                active = false;
                 return;
             }
             dodgeball.transform.localScale = Vector3.one;

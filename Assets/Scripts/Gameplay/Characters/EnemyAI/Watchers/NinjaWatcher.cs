@@ -11,14 +11,10 @@ namespace Hands.SinglePlayer.EnemyAI.Watchers
         [SerializeField] private float registrationInterval = 0.4f;
         [SerializeField] private ShadowCourt shadowCourt;
         [SerializeField] private DodgeballPlayArea playArea;
+        [SerializeField] float disappearDelaySeconds;
 
         private readonly List<NinjaAgent> _ninjaAgents = new();
-        private readonly List<Vector3> _agentPositions = new();
-
-
-        private int _handSignCount = 0;
-        private bool _smokeBomb = false;
-        private bool _agentsTraveling;
+        private bool _smokeBomb;
 
         private void Start()
         {
@@ -32,7 +28,6 @@ namespace Hands.SinglePlayer.EnemyAI.Watchers
         {
             yield return new WaitForSeconds(smokeBombDuration);
             _smokeBomb = false;
-            _handSignCount = 0;
             foreach (var agent in _ninjaAgents) agent.EndSmokeBomb();
         }
 
@@ -46,10 +41,8 @@ namespace Hands.SinglePlayer.EnemyAI.Watchers
             StartCoroutine(WaitForSmokeScreenEnd());
             var center = PrepareAgentsForSmokeBomb();
             StartCoroutine(RegisterAgentRoutine(center));
-
         }
 
-            [SerializeField] float disappearDelaySeconds;
         private IEnumerator RegisterAgentRoutine(Vector3 center)
         {
             yield return new WaitForSeconds(disappearDelaySeconds);
@@ -58,11 +51,8 @@ namespace Hands.SinglePlayer.EnemyAI.Watchers
                 var direction = center - agent.transform.position;
                 var endPoint = center - direction.normalized * centerOffsetEndPositions;
                 agent.SmokeBomb(endPoint);
-                _agentPositions.Add(endPoint);
                 yield return new WaitForSeconds(registrationInterval);
             }
-
-            _agentsTraveling = true;
         }
 
         private Vector3 PrepareAgentsForSmokeBomb()

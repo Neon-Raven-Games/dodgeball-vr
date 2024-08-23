@@ -59,6 +59,16 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
 
         #region Helpers
 
+        protected void ResetIKWeights()
+        {
+            if (!AI || !AI.ik) return;
+            AI.ik.solvers.lookAt.SetLookAtWeight(0);
+            AI.ik.solvers.rightHand.SetIKPositionWeight(0);
+            AI.ik.solvers.leftHand.SetIKPositionWeight(0);
+            AI.ik.solvers.rightHand.SetIKRotationWeight(0);
+            AI.ik.solvers.leftHand.SetIKRotationWeight(0);
+        }
+
         // ReSharper disable once InconsistentlySynchronizedField
         protected CancellationToken GetCancellationToken() =>
             _cancellationTokenSource.Token;

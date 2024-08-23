@@ -33,7 +33,8 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         public override void ExitState()
         {
             Args.entryEffect.SetActive(false);
-            Args.aiAvatar.SetActive(true);
+            AI.aiAvatar.SetActive(true);
+            ResetIKWeights();
             AI.stayIdle = false;
         }
 
@@ -69,7 +70,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             pos.y = Args.logEffect.transform.position.y;
             Args.logEffect.transform.position = pos;
             Args.logEffect.SetActive(true);
-            Args.aiAvatar.SetActive(false);
+            AI.aiAvatar.SetActive(false);
         }
         
         
@@ -85,10 +86,10 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             {
                 t = Mathf.Clamp01(t + (Time.deltaTime / Args.stepDuration));
 
-                if (t > 0.2f && Args.aiAvatar.activeInHierarchy)
+                if (t > 0.2f && AI.aiAvatar.activeInHierarchy)
                 {
-                    Args.ik.solvers.leftHand.SetIKPositionWeight(0);
-                    Args.ik.solvers.leftHand.SetIKRotationWeight(0);
+                    AI.ik.solvers.leftHand.SetIKPositionWeight(0);
+                    AI.ik.solvers.leftHand.SetIKRotationWeight(0);
                     AI.transform.position = exitPoint;
                 }
                 else
@@ -108,7 +109,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             
             Args.entryEffect.SetActive(true);
             Args.colorLerp.lerpValue = 1;
-            Args.aiAvatar.SetActive(true);
+            AI.aiAvatar.SetActive(true);
             
             exitPoint += Args.stepDirection * (Args.stepDistance / 4);
             exitPoint.y = AI.transform.position.y;

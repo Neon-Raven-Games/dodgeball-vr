@@ -34,7 +34,7 @@ public class LogBuffer : MonoBehaviour
             str += "\n\n";
             str += "Target Utility: " + JsonUtility.ToJson(agent.targetUtility, true);
             str += "\n";
-            str += "Pickup Utility: " + JsonUtility.ToJson(agent._pickUpUtility, true);
+            str += "Pickup Utility: " + JsonUtility.ToJson(agent.pickUpUtility, true);
             str += "\n";
             str += "Right Ball Index: " + JsonUtility.ToJson(agent.rightBallIndex, true);
             str += "\n";

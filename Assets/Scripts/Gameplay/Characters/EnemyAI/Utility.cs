@@ -152,19 +152,14 @@ namespace Hands.SinglePlayer.EnemyAI
         public float rollIntervalMax;
         
         public float entryDuration = 1f;
-        [FormerlySerializedAs("leftHandIndex")] public NetBallPossessionHandler rightHandIndex;
         public float nextRollTime;
     }
     
     [Serializable]
     public class SmokeBombUtilityArgs : UtilityArgs
     {
-        public GameObject aiAvatar;
-        public GameObject trailRenderer;
         public GameObject shadowStepEffect;
-        public float jumpSeconds = 0.8f;
         public float despawnDelay;
-        public float jumpHeight = 5f;
         public ColorLerp colorLerp;
         public float playEffectDelay;
     }
@@ -204,7 +199,6 @@ namespace Hands.SinglePlayer.EnemyAI
     {
         public float pickupDistanceThreshold;
         public float ikDistanceThreshold;
-        public BipedIK ik;
         public float lerpBackSpeed = 3f;
         public float ballPickupHeight = -0.27f;
         public float ballIdleHeight = 0.11f;
@@ -238,8 +232,6 @@ namespace Hands.SinglePlayer.EnemyAI
     [Serializable]
     public class ShadowStepUtilityArgs : UtilityArgs
     {
-        public GameObject aiAvatar;
-        public BipedIK ik;
         public ColorLerp colorLerp;
         
         public float rollChance = 60f;
@@ -253,8 +245,6 @@ namespace Hands.SinglePlayer.EnemyAI
         [Header("Entry Properties")] 
         public GameObject entryEffect;
         public GameObject floorSmoke;
-        [FormerlySerializedAs("entryTimeSeconds")] public float entrySpeed;
-        public int introColorLerpFrame;
         public AnimationClip introAnimationClip;
         public AnimationCurve entryCurve;
         public float introColorLerpValue;
@@ -273,8 +263,6 @@ namespace Hands.SinglePlayer.EnemyAI
     public class SubstitutionUtilityArgs : UtilityArgs
     {
         [Header("Avatar")]
-        public GameObject aiAvatar;
-        public BipedIK ik;
         public Collider collider;
         
         [Header("Exit Effects")]
@@ -303,15 +291,11 @@ namespace Hands.SinglePlayer.EnemyAI
     [Serializable]
     public class NinjaHandSignUtilityArgs : UtilityArgs
     {
-        public float handSignDuration = 2f;
         public float handSignCooldown = 5f;
         public float handSignDebugRoll = 75f;
-        public BipedIK ik;
         public Transform handSignTarget;
         public Animator handAnimator;
         public Collider collider;
-
         public float nextHandSignTime;
-        // todo, randomness, game state/battle phase, player success rate
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 public enum CannonState
 {
@@ -18,9 +19,13 @@ public class HandCannon : MonoBehaviour
     public Transform barrelTransform;
     public GameObject cooldownIndicator;
     public float normalizedCooldownTime;
-    
-    
-    [Header("Shooting Settings")]
+    public Animator animator;
+    public bool trajectoryAssist;
+    [HideInInspector] public CooldownTimer cooldownTimer;
+
+
+    [Header("Shooting Settings")] 
+    public GameObject muzzleFlash;
     public LineRenderer trajectoryLineRenderer;
     public float launchForce = 20f;
     public int trajectoryPoints = 8;
@@ -90,7 +95,10 @@ public class HandCannon : MonoBehaviour
     public void TriggerPerformedAction(InputAction.CallbackContext obj)
     {
         Debug.Log("Trigger performed");
-        _currentState?.FireAction();
+        
+        // blocks trigger actions if not in idle state
+        if (_currentState == _states[CannonState.Idle]) 
+            _currentState?.FireAction();
     }
     
     private void TriggerReleasedAction(InputAction.CallbackContext obj)
@@ -99,22 +107,27 @@ public class HandCannon : MonoBehaviour
         _currentState?.FireReleaseAction();
     }
 
-    private CooldownTimer _cooldownTimer;
-    
+
     private void Update()
     {
-        normalizedCooldownTime = _cooldownTimer.NormalizedProgress();
+        if (cooldownIndicator && cooldownTimer) normalizedCooldownTime = cooldownTimer.NormalizedProgress();
         _currentState?.Update();
     }
     
     private void OnEnable()
     {
-        _cooldownTimer = gameObject.AddComponent<CooldownTimer>();
+        cooldownTimer = gameObject.GetComponent<CooldownTimer>();
         PopulateInput();
         _triggerAction.Enable();
         _gripAction.Enable();
     }
-    
+
+
+    public void Shoot()
+    {
+        ChangeState(CannonState.Shooting);
+    }
+
     private void OnDisable()
     {
         _triggerAction.performed -= TriggerPerformedAction;

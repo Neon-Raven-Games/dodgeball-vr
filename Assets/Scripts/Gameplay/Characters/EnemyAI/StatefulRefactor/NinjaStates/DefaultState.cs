@@ -13,6 +13,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
         public override void EnterState()
         {
+            ResetIKWeights();
         }
 
         public override void ExitState()

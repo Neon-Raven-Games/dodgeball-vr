@@ -1,9 +1,7 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
-using Gameplay.Util;
 using Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState;
 using UnityEngine;
-using Random = System.Random;
 
 namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 {
@@ -11,7 +9,6 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
     {
         private NinjaAgent ninja;
         public override NinjaState State => NinjaState.SmokeBomb;
-        private readonly Vector3[] bezierPoints = new Vector3[4];
         
         public SmokeBombState(DodgeballAI ai, DerivedAIStateController<NinjaState> controller, SmokeBombUtilityArgs args) : base(ai, controller, args)
         {
@@ -55,12 +52,11 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
                 await UniTask.Yield();
             }
             
-            Args.aiAvatar.SetActive(false);
-            AI.transform.position = bezierPoints[2];
-            
+            AI.aiAvatar.SetActive(false);
             Args.shadowStepEffect.SetActive(false);
             Args.colorLerp.lerpValue = 0;
             AI.transform.position = ninja.currentSmokeBombPosition;
+            ResetIKWeights();
         }
 
         public override void ExitState()

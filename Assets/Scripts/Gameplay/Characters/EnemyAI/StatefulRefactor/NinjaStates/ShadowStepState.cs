@@ -38,6 +38,8 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         public override void ExitState()
         {
             AI.stayIdle = false;
+            
+            ResetIKWeights();
             CancelTask();
         }
 
@@ -63,14 +65,14 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         {
             InitializeTeleport();
             _teleportationPathHandler.Teleport(TeleportationType.ShadowStep, Args.stepDirection,
-                () => Args.aiAvatar.SetActive(false), null, null).Forget();
+                () => AI.aiAvatar.SetActive(false), null, null).Forget();
         }
 
         public async UniTaskVoid ShadowStepOutroOverride()
         {
             Args.entryEffect.SetActive(false);
             Args.exitEffect.SetActive(true);
-            Args.aiAvatar.SetActive(true);
+            AI.aiAvatar.SetActive(true);
             Args.floorSmoke.SetActive(false);
 
             AI.animator.Play("SmokeOutro");
@@ -109,8 +111,8 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
         private void OnMovedToOutroPoint()
         {
-            Args.ik.solvers.leftHand.SetIKPositionWeight(0);
-            Args.ik.solvers.leftHand.SetIKRotationWeight(0);
+            AI.ik.solvers.leftHand.SetIKPositionWeight(0);
+            AI.ik.solvers.leftHand.SetIKRotationWeight(0);
 
             if (GetCancellationToken().IsCancellationRequested) return;
             EnterOutro();
@@ -120,7 +122,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         {
             Args.entryEffect.SetActive(false);
             Args.exitEffect.SetActive(true);
-            Args.aiAvatar.SetActive(true);
+            AI.aiAvatar.SetActive(true);
             Args.floorSmoke.SetActive(false);
 
             AI.animator.Play(AIAnimationHelper.SSpecialOneExit);
@@ -135,14 +137,9 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
         private void OnIntroPointReached()
         {
-            Args.ik.solvers.leftHand.SetIKPositionWeight(0);
-            Args.ik.solvers.leftHand.SetIKRotationWeight(0);
-            Args.ik.solvers.rightHand.SetIKPositionWeight(0);
-            Args.ik.solvers.rightHand.SetIKRotationWeight(0);
-            Args.ik.solvers.spine.SetIKPositionWeight(0);
-            Args.ik.solvers.lookAt.SetIKPositionWeight(0);
 
-            Args.aiAvatar.SetActive(false);
+            ResetIKWeights();
+            AI.aiAvatar.SetActive(false);
             if (GetCancellationToken().IsCancellationRequested) return;
             
             AI.SwitchBallSideToLeft();
@@ -168,6 +165,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
             while (curTime < executeDelay - tolerance)
             {
+                AI.targetUtility.Execute(AI);
                 var animState = AI.animator.GetCurrentAnimatorStateInfo(0);
                 var normalizedTime = animState.normalizedTime % 1;
                 curTime = normalizedTime * clip.length;
@@ -230,6 +228,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         private static float FrameToSeconds(int frameNumber, AnimationClip clip) =>
             frameNumber / clip.frameRate;
 
+        // todo, this needs cancellation token flow
         private async UniTaskVoid LerpColors(float fromSeconds, float toSeconds, AnimationClip clip, float fromValue,
             float toValue)
         {
@@ -237,7 +236,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             Args.colorLerp.lerpValue = fromValue;
             await UniTask.Yield();
             var curTime = 0f;
-            while (curTime < fromSeconds && fromSeconds > 0 && Args.aiAvatar.activeInHierarchy)
+            while (curTime < fromSeconds && fromSeconds > 0 && AI.aiAvatar.activeInHierarchy)
             {
                 var animState = AI.animator.GetCurrentAnimatorStateInfo(0);
                 var normalizedTime = animState.normalizedTime % 1;
@@ -251,7 +250,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
             }
 
             var currentTime = 0f;
-            while (Mathf.Abs(currentTime - toSeconds) > tolerance && Args.aiAvatar.activeInHierarchy)
+            while (Mathf.Abs(currentTime - toSeconds) > tolerance && AI.aiAvatar.activeInHierarchy)
             {
                 var animState = AI.animator.GetCurrentAnimatorStateInfo(0);
                 var normalizedTime = animState.normalizedTime % 1;

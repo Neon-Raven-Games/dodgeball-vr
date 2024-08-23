@@ -21,15 +21,13 @@ public abstract class BaseHandCanonState
 
     public virtual void Update()
     {
-        DrawTrajectory();
+        if (handCannon && handCannon.trajectoryAssist)
+            DrawTrajectory();
     }
 
-    public void ChangeState(CannonState state)
-    {
-        handCannon.ChangeState(state);
-    }
-    
-    public virtual void DrawTrajectory()
+    protected void ChangeState(CannonState state) => handCannon.ChangeState(state);
+
+    private void DrawTrajectory()
     {
         Vector3[] points = new Vector3[handCannon.trajectoryPoints];
         Vector3 startPosition = handCannon.barrelTransform.position;

@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
 using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using Multiplayer.SinglePlayer.EnemyAI.Utilities;
@@ -91,7 +89,7 @@ public class NinjaAgent : DodgeballAI
         yield return new WaitForSeconds(Random.Range(1f, 1.7f));
         shadowStepArgs.entryEffect.SetActive(false);
         shadowStepArgs.entryEffect.SetActive(true);
-        shadowStepArgs.aiAvatar.SetActive(true);
+        aiAvatar.SetActive(true);
         var duration = 1.4f;
         var curTime = 0f;
 

@@ -34,7 +34,7 @@ public class LogBufferEditor : Editor
             var aiBase = target.GetComponent<NinjaAgent>();
             if (aiBase != null)
             {
-               aiBase.Logs();
+               // aiBase.Logs();
             }
         }
 
@@ -49,4 +49,15 @@ public class LogBufferEditor : Editor
             }
         }
     }
+    /*
+     logs, state, and call stack for ai
+    public void Logs()
+    {
+        string stateJson = "Call Stack:\n";
+        stateJson += logBuffer.CaptureState(this);
+        string logsJson = logBuffer.ExportLogs();
+        stateJson += "\n\n" + "Logs\n" + logsJson;
+        Debug.Log(stateJson);
+    }
+    */
 }

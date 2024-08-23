@@ -19,11 +19,8 @@ public class DevController : Actor
     private InputAction _lookAction;
     private Vector2 _moveInput;
     private Vector2 _lookInput;
-    [SerializeField] Volume volume;
     [SerializeField] private AudioSource whistleSound;
     [SerializeField] private GameObject outOfBoundsArea;
-
-    public Vector2 GetMoveInput() => _moveInput;
 
     private void Start()
     {
@@ -103,62 +100,25 @@ public class DevController : Actor
                   || rightHandStateController.State == HandState.Grabbing;
 
 
-    private Coroutine vignetteCoroutine;
-    [SerializeField] private float vignetteIntensity = 0.3f;
-    [SerializeField] private float vignetteEntryTime = 0.5f;
-
-    private IEnumerator LerpVignetteIntensity(float startIntensity, float endIntensity)
-    {
-        volume.profile.TryGet<Vignette>(out var vignette);
-        volume.profile.TryGet(out WhiteBalance whiteBalance);
-        if (vignette == null || whiteBalance == null)
-        {
-            Debug.LogError(
-                $"Vignette or WhiteBalance not found in post process volume.\nVignette:{vignette}, WhiteBalance:{whiteBalance}");
-            yield break;
-        }
-
-        var elapsed = 0f;
-        while (elapsed < vignetteEntryTime)
-        {
-            vignette.intensity.value = Mathf.Lerp(endIntensity, startIntensity, elapsed / vignetteEntryTime);
-            elapsed += Time.deltaTime;
-        }
-
-        elapsed = 0f;
-        outOfBoundsEndTime = Time.time + outOfBoundsWaitTime;
-        while (elapsed < 1)
-        {
-            elapsed = 1f - Mathf.Clamp01((outOfBoundsEndTime - Time.time) / outOfBoundsWaitTime);
-            vignette.intensity.value = Mathf.Lerp(startIntensity, endIntensity, elapsed);
-            whiteBalance.temperature.value = Mathf.Lerp(-80, 0, elapsed);
-            yield return null;
-        }
-
-        vignette.intensity.value = 0;
-    }
-
     internal override void SetOutOfPlay(bool value)
     {
         base.SetOutOfPlay(value);
         outOfBoundsArea.SetActive(value);
         if (!value) whistleSound.Play();
-        // leftHandStateController.SetInPlay(!value);
-        // rightHandStateController.SetInPlay(!value);
         
+        // todo, this is not worth the performance hit
         if (!value)
         {
-            speed += 0.5f;
-
-            if (vignetteCoroutine != null) StopCoroutine(vignetteCoroutine);
-            volume.profile.TryGet<Vignette>(out var vignette);
-            vignette.intensity.value = 0f;
+            // speed += 0.5f;
+            // if (vignetteCoroutine != null) StopCoroutine(vignetteCoroutine);
+            // volume.profile.TryGet<Vignette>(out var vignette);
+            // vignette.intensity.value = 0f;
         }
         else
         {
-            speed -= 0.5f;
-            if (vignetteCoroutine != null) StopCoroutine(vignetteCoroutine);
-            vignetteCoroutine = StartCoroutine(LerpVignetteIntensity(vignetteIntensity, 0.2f));
+            // speed -= 0.5f;
+            // if (vignetteCoroutine != null) StopCoroutine(vignetteCoroutine);
+            // vignetteCoroutine = StartCoroutine(LerpVignetteIntensity(vignetteIntensity, 0.2f));
         }
     }
 
