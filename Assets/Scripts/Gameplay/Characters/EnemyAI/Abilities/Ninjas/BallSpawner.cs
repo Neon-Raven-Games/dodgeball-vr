@@ -18,7 +18,7 @@ public class BallSpawner : MonoBehaviour
     [SerializeField] private Vector2 ballLaunchStep;
     private List<BallMovement> balls = new();
 
-    public void Start()
+    public void SpawnBalls()
     {
         for (var i = 0; i < numberOfBalls; i++)
         {
@@ -30,10 +30,6 @@ public class BallSpawner : MonoBehaviour
 
             balls.Add(movement);
         }
-    }
-
-    public void SpawnBalls()
-    {
         LaunchBalls().Forget();
     }
 

@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections;
+using Cysharp.Threading.Tasks;
 
 // Cartoon FX  - (c) 2015, Jean Moreno
 
@@ -7,31 +7,24 @@ using System.Collections;
 // where a system would emit at its original instantiated position before being translated, resulting in particles in-between
 // the two positions.
 // Possibly a threading bug from Unity (as of 3.5.4)
+// Neon Raven made this better, but this is still hacky lmao
 
 public class CFX_ShurikenThreadFix : MonoBehaviour
 {
-	private ParticleSystem[] systems;
+	private ParticleSystem[] _systems;
 	
-	void OnEnable()
+	private async void OnEnable()
 	{
-		systems = GetComponentsInChildren<ParticleSystem>();
+		await UniTask.DelayFrame(1);
+		_systems = GetComponentsInChildren<ParticleSystem>();
 		
-		foreach(ParticleSystem ps in systems)
+		foreach(var ps in _systems)
 		{
 			ps.Stop(true);
 			ps.Clear(true);
 		}
 		
-		StartCoroutine("WaitFrame");
-	}
-	
-	IEnumerator WaitFrame()
-	{
-		yield return null;
-		
-		foreach(ParticleSystem ps in systems)
-		{
-			ps.Play(true);
-		}
+		await UniTask.DelayFrame(1);
+		foreach(var ps in _systems) ps.Play(true);
 	}
 }

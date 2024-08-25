@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI.Abilities;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -18,7 +19,7 @@ public class BallRespawnManager : MonoBehaviour
     private int _currentIndex;
     private bool _teamOneSpawnSide;
 
-    private void Start() => SetPlayBalls();
+    private void Start() => SetPlayBalls().Forget();
 
     public void SetNewNumberBalls(int dodgeballs)
     {
@@ -26,10 +27,13 @@ public class BallRespawnManager : MonoBehaviour
         SetPlayBalls();
     }
     
-    private void SetPlayBalls()
+    private async UniTaskVoid SetPlayBalls()
     {
+        await UniTask.DelayFrame(2);
         for (var i = 0; i < dodgeballPlayArea.dodgeballCount; i++)
         {
+            Debug.Log("Spawning Ball");
+            await UniTask.Yield();
             CreateRandomSpawnPoint();
             var ball = BallPool.SetBall(ballRespawnPoints[_currentIndex].transform.position);
             ball.SetActive(true);

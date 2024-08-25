@@ -11,14 +11,15 @@ public class NinjaAgent : DodgeballAI
     {
         _stateController.CleanUp();
     }
+
     public NinjaState State => _stateController.State;
-    
+
     [SerializeField] private ShadowStepUtilityArgs shadowStepArgs;
     [SerializeField] private SubstitutionUtilityArgs substitutionUtilityArgs;
     [SerializeField] private NinjaHandSignUtilityArgs handSignUtilityArgs;
     [SerializeField] private FakeoutUtilityArgs fakeoutUtilityArgs;
     [SerializeField] private SmokeBombUtilityArgs smokeBombUtilityArgs;
-    
+
     internal Vector3 currentSmokeBombPosition;
     private FakeoutBallUtility _fakeoutBallUtility;
     private SubstitutionUtility _substitutionUtility;
@@ -44,9 +45,9 @@ public class NinjaAgent : DodgeballAI
         _fakeoutBallUtility = new FakeoutBallUtility(fakeoutUtilityArgs, AIState.Special, this);
         _fakeoutBallUtility.Initialize(friendlyTeam.playArea, team);
 
-        _utilityHandler.AddUtility(_substitutionUtility);
-        _utilityHandler.AddUtility(_handSignUtility);
-        _utilityHandler.AddUtility(_fakeoutBallUtility);
+        utilityHandler.AddUtility(_substitutionUtility);
+        utilityHandler.AddUtility(_handSignUtility);
+        utilityHandler.AddUtility(_fakeoutBallUtility);
 
         // todo implement factory helper
         // if we populate a map of the utilities, or have a ninja state on them, we can pass the utilitys in
@@ -72,16 +73,9 @@ public class NinjaAgent : DodgeballAI
             DerivedAIStateFactory.CreateState(this, _stateController, NinjaState.FakeOut, fakeoutUtilityArgs));
         _stateController.Initialize(NinjaState.Default);
         hasSpecials = true;
-        
-        GameManager.onPhaseChange += NinjaPhase;
-        
-    }
 
-    private void NinjaPhase(BattlePhase obj)
-    {
-        if (obj == BattlePhase.LackeyReturn)
-        {
-        }
+        // todo, implement phase manager
+        // GameManager.onPhaseChange += NinjaPhase;
     }
 
     private IEnumerator ReturnFromSmokeBomb()
@@ -95,16 +89,21 @@ public class NinjaAgent : DodgeballAI
 
         var rand = Random.insideUnitCircle * 2;
         var targetPos = new Vector3(transform.position.x + rand.x, transform.position.y, transform.position.z + rand.y);
-        
+
         while (curTime < duration)
         {
             transform.position = Vector3.Lerp(transform.position, targetPos, curTime / duration);
             curTime += Time.deltaTime;
             yield return null;
         }
-        
+
         _stateController.ChangeState(NinjaState.Default);
         if (outOfPlay) SetOutOfPlay(false);
+        lock (this)
+        {
+            stayIdle = false;
+            aiAvatar.SetActive(true);
+        }
     }
 
     internal void SmokeBomb(Vector3 newPos)
@@ -128,7 +127,7 @@ public class NinjaAgent : DodgeballAI
         _gizmo.gizmoText = _stateController.State.ToString();
         if (currentState == AIState.Special)
         {
-            var currentUtil = _utilityHandler.GetCurrentUtility();
+            var currentUtil = utilityHandler.GetCurrentUtility();
             if (currentUtil.State != AIState.Special)
             {
                 Debug.LogError("Out of special utility but current state is special");
@@ -158,6 +157,12 @@ public class NinjaAgent : DodgeballAI
         _stateController.ChangeState(NinjaState.Default);
     }
 
+    protected override void SpawnIn()
+    {
+        var jump = spawnInPos[Random.Range(0, spawnInPos.Count)].GetComponent<NinjaJump>();
+        jump.QueueJump(transform);
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         _stateController.OnTriggerEnter(other);
@@ -171,12 +176,11 @@ public class NinjaAgent : DodgeballAI
         stayIdle = true;
         _stateController.ChangeState(NinjaState.SmokeBomb);
     }
-    
+
 
     public void EndSmokeBomb()
     {
         stayIdle = false;
         StartCoroutine(ReturnFromSmokeBomb());
-        
     }
 }

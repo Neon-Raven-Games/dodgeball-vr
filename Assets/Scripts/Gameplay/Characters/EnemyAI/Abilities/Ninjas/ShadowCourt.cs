@@ -38,7 +38,6 @@ public class ShadowCourt : MonoBehaviour
         GameManager.ChangePhase(BattlePhase.Lackey);
         active = true;
         _instance.smokeEffect.SetActive(true);
-
         _instance.StartSmokeScreen().Forget();
     }
 
@@ -46,7 +45,6 @@ public class ShadowCourt : MonoBehaviour
     {
         smokeEffect.SetActive(false);
         active = false;
-        GameManager.ChangePhase(BattlePhase.LackeyReturn);
         shadowParticleSystem.Stop();
         LerpShadowOut().Forget();
     }

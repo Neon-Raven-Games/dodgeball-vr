@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI.Priority;
 using RootMotion.FinalIK;
@@ -11,19 +10,12 @@ namespace Hands.SinglePlayer.EnemyAI
     [Serializable]
     public class TargetUtilityArgs : UtilityArgs
     {
-        public float minSwitchProbability = 0.1f;
-        public float maxSwitchProbability = 0.9f;
-        public float switchProbabilityIncreaseRate = 0.02f;
-        public float minimumSwitchTime = 5f;
-        public float difficultyWeight = 0.5f;
-        public float dodgeballProximityThreshold = 5f;
         public float headTurnSpeed = 2f;
         public float bodyTurnSpeed = 1f;
         public float fovAngle = 120f;
         public BipedIK ik;
     }
 
-    // Priority types for target utility
     public class TargetUtility : Utility<TargetUtilityArgs>, IUtility
     {
         public GameObject CurrentTarget { get; private set; }
@@ -54,7 +46,19 @@ namespace Hands.SinglePlayer.EnemyAI
         {
             if (!CurrentTarget && !_ai.hasBall) CheckForNearbyDodgeballs();
             if (!CurrentTarget) CurrentTarget = FindBestTarget();
-            if (!CurrentTarget) return -1f;
+            if (!CurrentTarget)
+            {
+                _ai.ik.solvers.lookAt.SetLookAtWeight(0);
+                _ai.ik.solvers.spine.SetIKPositionWeight(0);
+                
+                _ai.ik.solvers.rightHand.SetIKPositionWeight(0);
+                _ai.ik.solvers.rightHand.SetIKRotationWeight(0);
+                
+                _ai.ik.solvers.leftHand.SetIKPositionWeight(0);
+                _ai.ik.solvers.leftHand.SetIKRotationWeight(0);
+                
+                return -1f;
+            }
             LookAtTarget(CurrentTarget.transform.position);
             return 1f;
         }
@@ -98,12 +102,11 @@ namespace Hands.SinglePlayer.EnemyAI
         {
             BallTarget = null;
             GameObject bestTarget = null;
-            float bestScore = float.MinValue;
+            var bestScore = float.MinValue;
 
             foreach (var enemy in _enemyTeam.actors)
             {
                 if (enemy == null || enemy.IsOutOfPlay()) continue;
-
                 var score = CalculateTargetScore(enemy);
 
                 if (score < bestScore) continue;
@@ -168,15 +171,18 @@ namespace Hands.SinglePlayer.EnemyAI
                 ActorTarget.head : CurrentTarget.transform;
             
             args.ik.solvers.lookAt.SetLookAtWeight(_headLookWeight);
+            if (flatDirection == Vector3.zero) return;
             if (_headLookWeight >= 0.7f)
             {
                 var bodyTargetRotation = Quaternion.LookRotation(flatDirection);
+                if (bodyTargetRotation.eulerAngles == Vector3.zero) return;
                 _ai.transform.rotation = Quaternion.Slerp(_ai.transform.rotation, bodyTargetRotation,
                     Time.deltaTime * args.bodyTurnSpeed);
             }
             else
             {
                 var headTargetRotation = Quaternion.LookRotation(flatDirection);
+                if (headTargetRotation.eulerAngles == Vector3.zero) return;
                 _ai.transform.rotation = Quaternion.Slerp(_ai.transform.rotation, headTargetRotation,
                     Time.deltaTime * args.bodyTurnSpeed / 2);
             }

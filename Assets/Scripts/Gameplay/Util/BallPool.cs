@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class BallPool : MonoBehaviour
@@ -17,16 +18,18 @@ public class BallPool : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+        
         _instance = this;
-        Initialize();
+        Initialize().Forget();
     }
-    public static void Initialize()
+    
+    public async static UniTaskVoid Initialize()
     {
-        // _instance._pool.ForEach(Destroy);
-        // _instance._pool.Clear();
+        await UniTask.DelayFrame(2);
         for (var i = 0; i < _instance.poolSize; i++)
         {
-            var ball = Instantiate(_instance.ballPrefab, _instance.transform);
+            await UniTask.Yield();
+            var ball = Instantiate(_instance.ballPrefab, _instance.transform.position, Quaternion.identity, _instance.transform);
             ball.SetActive(false);
             _instance._pool.Add(ball.GetComponent<DodgeBall>());
         }

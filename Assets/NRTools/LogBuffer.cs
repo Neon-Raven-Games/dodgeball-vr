@@ -32,8 +32,8 @@ public class LogBuffer : MonoBehaviour
         if (targetObject is NinjaAgent agent)
         {
             str += "\n\n";
-            str += "Target Utility: " + JsonUtility.ToJson(agent.targetUtility, true);
-            str += "\n";
+            // str += "Target Utility: " + JsonUtility.ToJson(agent.targetUtility, true);
+            // str += "\n";
             str += "Pickup Utility: " + JsonUtility.ToJson(agent.pickUpUtility, true);
             str += "\n";
             str += "Right Ball Index: " + JsonUtility.ToJson(agent.rightBallIndex, true);

@@ -8,35 +8,33 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
     {
         private DodgeballAI AI;
         internal bool pickup;
-        private bool isLerpingBackToIdle;
+        private bool _isLerpingBackToIdle;
+        private float _ballDistance;
 
         public PickUpUtility(PickUpUtilityArgs args, DodgeballAI ai) : base(args, AIState.PickUp)
         {
             AI = ai;
         }
 
-        private float ballDistance;
-
-        public AIState DerivedState { get; }
 
         public override float Execute(DodgeballAI ai)
         {
             pickup = false;
-            if (!ai.CurrentTarget || !ai.targetUtility.BallTarget || ai.hasBall || ai.IsOutOfPlay()) return -1;
-            if (!IsInPlayArea(ai.targetUtility.BallTarget.transform.position)) return -1f;
-            if (ai.targetUtility.BallTarget._ballState != BallState.Dead) return -1f;
+            if (!ai.CurrentTarget || !ai.BallTarget || ai.hasBall || ai.IsOutOfPlay()) return -1;
+            if (!IsInPlayArea(ai.BallTarget.transform.position)) return -1f;
+            if (ai.BallTarget._ballState != BallState.Dead) return -1f;
 
-            ballDistance = Vector3.Distance(ai.transform.position, ai.targetUtility.BallTarget.transform.position);
-            if (ballDistance < args.pickupDistanceThreshold)
+            _ballDistance = Vector3.Distance(ai.transform.position, ai.BallTarget.transform.position);
+            if (_ballDistance < args.pickupDistanceThreshold)
             {
-                ai.PickUpBall(ai.targetUtility.BallTarget);
+                ai.PickUpBall(ai.BallTarget);
                 LerpBackToIdleUpdate().Forget();
                 if (!ai.hasBall) return -1f;
                 return 1f;
             }
 
             pickup = true;
-            ApproachBallToPickUp(ai.targetUtility.BallTarget, ai);
+            ApproachBallToPickUp(ai.BallTarget, ai);
             return CalculatePickUpUtility(ai);
         }
 
@@ -88,7 +86,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private void ApproachBallToPickUp(DodgeBall dodgeBall, DodgeballAI ai)
         {
             if (!pickup) return;
-            var lerpFactor = Mathf.Clamp01((ballDistance / args.ikDistanceThreshold) - 1);
+            var lerpFactor = Mathf.Clamp01((_ballDistance / args.ikDistanceThreshold) - 1);
             var position = ai.transform.position;
 
             position.y = Mathf.Lerp(args.ballPickupHeight, args.ballIdleHeight, lerpFactor);
@@ -106,12 +104,12 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         private float CalculatePickUpUtility(DodgeballAI ai)
         {
-            if (ai.targetUtility.BallTarget == null || ai.hasBall || ai.IsOutOfPlay()) return 0;
-            if (!IsInPlayArea(ai.targetUtility.BallTarget.transform.position)) return 0f;
-            if (ai.targetUtility.BallTarget._ballState != BallState.Dead) return 0f;
+            if (ai.BallTarget == null || ai.hasBall || ai.IsOutOfPlay()) return 0;
+            if (!IsInPlayArea(ai.BallTarget.transform.position)) return 0f;
+            if (ai.BallTarget._ballState != BallState.Dead) return 0f;
 
             var utility = 5f;
-            utility += (1.0f / ballDistance) * args.pickupDistanceThreshold;
+            utility += (1.0f / _ballDistance) * args.pickupDistanceThreshold;
             utility += Random.value * ai.difficultyFactor;
 
             return utility;

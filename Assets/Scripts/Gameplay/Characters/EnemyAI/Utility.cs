@@ -1,8 +1,6 @@
 ﻿using System;
 using Hands.SinglePlayer.EnemyAI.Abilities;
-using RootMotion.FinalIK;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Hands.SinglePlayer.EnemyAI
 {

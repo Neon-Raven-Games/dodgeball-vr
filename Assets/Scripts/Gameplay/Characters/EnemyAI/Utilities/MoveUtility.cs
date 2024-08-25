@@ -66,12 +66,12 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         internal bool PickupMove(DodgeballAI ai)
         {
-            if (!ai.targetUtility.BallTarget || ai.hasBall) return false;
+            if (!ai.BallTarget || ai.hasBall) return false;
             if (ai.hasBall) return false;
-            if (ai.targetUtility.BallTarget.transform.position.y > 1f) return false;
-            if (!IsInPlayArea(ai.targetUtility.BallTarget.transform.position)) return false;
+            if (ai.BallTarget.transform.position.y > 1f) return false;
+            if (!IsInPlayArea(ai.BallTarget.transform.position)) return false;
 
-            MoveTowards(ai, ai.targetUtility.CurrentTarget.transform.position);
+            MoveTowards(ai, ai.CurrentTarget.transform.position);
             if (Time.time < _pickupCheckTime) return true;
  
             _pickupCheckStep = Random.Range(0.5f, 1.5f);
@@ -82,7 +82,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         // if the target is gone or we don't have a ball, return false to switch to idle
         internal bool PossessionMove(DodgeballAI ai)
         {
-            if (!ai.targetUtility.ActorTarget) PickupMove(ai);
+            if (!ai.ActorTarget) PickupMove(ai);
             FlockMove(ai);
 
             if (ai.hasBall) return true;

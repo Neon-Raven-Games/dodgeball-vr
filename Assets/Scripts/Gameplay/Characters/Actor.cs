@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Gameplay.InGameEvents;
 using UnityEngine;
 
 public class Actor : MonoBehaviour
@@ -51,6 +52,7 @@ public class Actor : MonoBehaviour
         {
             friendlyTeam = new ActorTeam
             {
+                // todo this initialized mid way, scene swap doesn't work til after init
                 actors = playArea.team2Actors.ToList(),
                 color = playArea.team2Color,
                 playArea = playArea.team2PlayArea,
@@ -70,12 +72,19 @@ public class Actor : MonoBehaviour
     }
 
     internal bool IsOutOfPlay() => outOfPlay;
-    internal virtual void SetOutOfPlay(bool value) => outOfPlay = value;
+    internal virtual void SetOutOfPlay(bool value)
+    {
+        outOfPlay = value;
+        if (value) PhaseManager.DecreaseTeamLife(team);
+    }
 
     protected void HandleOutOfPlay()
     {
         if (!ValidWaitingArea()) outOfBoundsEndTime = Time.time + outOfBoundsWaitTime;
+        
         if (Time.time >= outOfBoundsEndTime) SetOutOfPlay(false);
+        
+
     }
 
     public bool IsInPlayArea(Vector3 position)

@@ -58,7 +58,7 @@ namespace Cysharp.Threading.Tasks.Editor
     public class UniTaskTrackerTreeView : TreeView
     {
         const string sortedColumnIndexStateKey = "UniTaskTrackerTreeView_sortedColumnIndex";
-
+        public string Path { get; set; }
         public IReadOnlyList<TreeViewItem> CurrentBindingItems;
 
         public UniTaskTrackerTreeView()

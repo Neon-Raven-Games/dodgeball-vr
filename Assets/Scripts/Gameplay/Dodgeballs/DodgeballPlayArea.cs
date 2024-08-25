@@ -23,20 +23,26 @@ public class DodgeballPlayArea : MonoBehaviour
     [SerializeField] public int dodgeballCount = 4;
     
     private static DodgeballPlayArea _instance;
-
+    public SceneActors aiSceneActors;
+    public Actor boss;
     private void Awake()
     {
         if (_instance != null) Destroy(gameObject);
         _instance = this;
+
+        aiSceneActors = new SceneActors();
+        aiSceneActors.lackeys = new List<Actor>(team2Actors);
+        aiSceneActors.boss = boss;
     }
 
     public static void RemoveDodgeball(DodgeBall ball)
     {
-        _instance.dodgeBalls.Remove(ball);
+        if (_instance.dodgeBalls.ContainsKey(ball)) _instance.dodgeBalls.Remove(ball);
     }
 
     public static void AddDodgeBallToGame(DodgeBall ball)
     {
+        if (!_instance) return;
         _instance.dodgeBalls.Add(ball, 0);
     }
 

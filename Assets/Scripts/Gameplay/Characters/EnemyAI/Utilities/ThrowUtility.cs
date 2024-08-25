@@ -18,13 +18,11 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         private float CalculateThrowUtility(DodgeballAI ai)
         {
-            ai.targetUtility.Roll(ai);
             if (!ai.hasBall) return 0;
-
             var utility = ai.ballPossessionTime * args.possessionTimeWeight;
-            if (ai.targetUtility.ActorTarget)
+            if (ai.ActorTarget)
             {
-                var distance = Vector3.Distance(ai.transform.position, ai.targetUtility.ActorTarget.transform.position);
+                var distance = Vector3.Distance(ai.transform.position, ai.ActorTarget.transform.position);
                 utility += (1.0f / distance) * args.maxThrowDistance;
             }
 
@@ -37,11 +35,11 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private bool ShouldThrow(DodgeballAI ai)
         {
             if (!ai.hasBall) return false;
-            if (!ai.targetUtility.CurrentTarget || !ai.targetUtility.ActorTarget) return false;
+            if (!ai.CurrentTarget || !ai.ActorTarget) return false;
 
             var utility = args.possessionTimeWeight * ai.ballPossessionTime;
             var distance = Vector3.Distance(ai.transform.position,
-                ai.targetUtility.ActorTarget.transform.position);
+                ai.ActorTarget.transform.position);
             
             utility += (1.0f / distance) * args.maxThrowDistance;
 
@@ -52,7 +50,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             
             var throwing = utility > 4f;
             var mask = LayerMask.NameToLayer(ai.opposingTeam.layerName);
-            var direction = (ai.targetUtility.ActorTarget.transform.position - ai.transform.position).normalized;
+            var direction = (ai.ActorTarget.transform.position - ai.transform.position).normalized;
 
             if (throwing && Physics.RaycastNonAlloc(ai.transform.position, direction, _hits, distance, mask) > 0)
                 return true;

@@ -15,6 +15,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
 
         void FixedUpdate();
         void CleanUp();
+        void CancelTask();
     }
 
     public abstract class DerivedAIState<TEnum, TArgs> : IDerivedAIState
@@ -111,7 +112,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.BaseState
         /// <summary>
         /// Cancels the current task and creates a new cancellation token source for reuse.
         /// </summary>
-        protected void CancelTask()
+        public void CancelTask()
         {
             if (!active) return;
 
