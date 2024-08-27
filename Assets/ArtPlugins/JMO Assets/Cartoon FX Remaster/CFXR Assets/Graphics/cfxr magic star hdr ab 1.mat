@@ -7,20 +7,20 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: cfxr magic star hdr ab
-  m_Shader: {fileID: -6465566751694194690, guid: 1a29b4d27eb8b04479ef89c00dea533d, type: 3}
+  m_Name: cfxr magic star hdr ab 1
+  m_Shader: {fileID: 10751, guid: 0000000000000000f000000000000000, type: 0}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _
   - _ALPHABLEND_ON
   - _CFXR_DITHERED_SHADOWS_ON
   - _CFXR_HDR_BOOST
-  - _CFXR_SINGLE_CHANNEL
-  - _FADING_ON
-  m_InvalidKeywords:
-  - _
   - _CFXR_OVERLAYBLEND_RGBA
   - _CFXR_OVERLAYTEX_OFF
+  - _CFXR_SINGLE_CHANNEL
+  - _FADING_ON
   m_LightmapFlags: 0
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -52,7 +52,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 081073d8f2209c949819e1e5872845b3, type: 3}
+        m_Texture: {fileID: 2800000, guid: 90588b0b1ff45c54989bfb53d0f609ab, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OverlayTex:
@@ -71,7 +71,7 @@ Material:
     - _CFXR_DITHERED_SHADOWS: 1
     - _CFXR_OVERLAYBLEND: 0
     - _CFXR_OVERLAYTEX: 0
-    - _Cutoff: 0.1
+    - _Cutoff: 0.5
     - _DirLightScreenAtten: 1
     - _DirectLightingRamp: 1
     - _DissolveSmooth: 0.1
