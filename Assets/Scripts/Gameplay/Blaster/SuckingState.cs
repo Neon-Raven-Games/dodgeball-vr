@@ -86,7 +86,7 @@ public class SuckingState : BaseHandCanonState
                         Vector3.one * handCannon.ballEndScale,
                         Time.deltaTime * (handCannon.suctionForce / distanceToBarrel));
 
-                    if (distanceToBarrel < 0.01f)
+                    if (distanceToBarrel < 0.1f)
                     {
                         rb.isKinematic = false;
                         rb.velocity = Vector3.zero;

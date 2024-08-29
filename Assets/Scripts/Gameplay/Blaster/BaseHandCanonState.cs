@@ -25,6 +25,11 @@ public abstract class BaseHandCanonState
             DrawTrajectory();
     }
 
+    public virtual void FixedUpdate()
+    {
+        
+    }
+
     protected void ChangeState(CannonState state) => handCannon.ChangeState(state);
 
     private void DrawTrajectory()

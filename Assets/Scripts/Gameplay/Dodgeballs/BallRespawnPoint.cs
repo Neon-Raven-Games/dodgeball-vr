@@ -24,7 +24,7 @@ public class BallRespawnPoint : MonoBehaviour
     {
         WaitToDespawnBall(ball).Forget();
     }
-    
+
     private async UniTaskVoid WaitToDespawnBall(GameObject ball)
     {
         await UniTask.Delay(TimeSpan.FromSeconds(delayTime));
@@ -36,21 +36,22 @@ public class BallRespawnPoint : MonoBehaviour
     {
         await UniTask.Delay(TimeSpan.FromSeconds(delayTime));
         oldBall.SetActive(false);
-        
+
         particleEffect.gameObject.SetActive(true);
         await UniTask.Delay(TimeSpan.FromSeconds(effectDelay * 2));
 
         var ball = BallPool.SetBall(transform.position);
-        
+
         ball.transform.rotation = quaternion.identity;
         ball.transform.position = transform.position;
         var rb = ball.GetComponent<Rigidbody>();
+        if (!rb.isKinematic) rb.isKinematic = false;
         rb.angularVelocity = Vector3.zero;
         rb.velocity = Vector3.up * spawnInForce;
         ball.SetActive(true);
-        
+
         await UniTask.Delay(TimeSpan.FromSeconds(effectDespawnDelay));
-        
+
         particleEffect.gameObject.SetActive(false);
         _occupuied = false;
     }

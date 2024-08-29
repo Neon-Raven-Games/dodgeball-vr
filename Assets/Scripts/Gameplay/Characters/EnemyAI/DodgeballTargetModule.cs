@@ -72,7 +72,10 @@ namespace Hands.SinglePlayer.EnemyAI
             if (!BallTarget || _ai.hasBall && !ValidActor()) CurrentTarget = FindBestTarget();
             if ((!BallTarget || !BallTarget.gameObject.activeInHierarchy) && (!ActorTarget || !ActorTarget.gameObject.activeInHierarchy)) 
                 CurrentTarget = _ai.opposingTeam.playArea.gameObject;
-
+            
+            if (!CurrentTarget)
+                CurrentTarget = _ai.opposingTeam.playArea.gameObject;
+            
             LookAtTarget(CurrentTarget.transform.position);
         }
 

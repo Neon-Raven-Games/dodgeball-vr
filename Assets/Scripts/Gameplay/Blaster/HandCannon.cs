@@ -36,6 +36,7 @@ public class HandCannon : MonoBehaviour
     private InputAction _gripAction;
     private InputAction _triggerAction;
     public float liveBallRange;
+    public DevController actor;
 
     private void Start()
     {
@@ -106,7 +107,12 @@ public class HandCannon : MonoBehaviour
         // if (cooldownIndicator && cooldownTimer) normalizedCooldownTime = cooldownTimer.NormalizedProgress();
         _currentState?.Update();
     }
-    
+
+    private void FixedUpdate()
+    {
+        _currentState?.FixedUpdate();
+    }
+
     private void OnEnable()
     {
         PopulateInput();
