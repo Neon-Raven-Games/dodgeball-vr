@@ -165,7 +165,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
 
             while (curTime < executeDelay - tolerance)
             {
-                AI.RotateToTargetManually();
+                AI.RotateToTargetManually(AI.CurrentTarget);
                 var animState = AI.animator.GetCurrentAnimatorStateInfo(0);
                 var normalizedTime = animState.normalizedTime % 1;
                 curTime = normalizedTime * clip.length;

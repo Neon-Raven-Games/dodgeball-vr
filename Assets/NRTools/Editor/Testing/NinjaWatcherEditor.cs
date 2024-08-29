@@ -14,7 +14,7 @@ namespace CloudFine.ThrowLab.Testing
             var watcher = (NinjaWatcher) target;
             if (GUILayout.Button("Start Smoke Bomb"))
             {
-                watcher.SmokeBomb();
+                // watcher.SmokeBomb();
             }
         }
     }

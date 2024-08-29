@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
+using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
@@ -11,6 +12,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         }
 
         // does not need to return a value
+        public int State => StateStruct.OutOfPlay;
+
         public override float Execute(DodgeballAI ai)
         {
             HandleOutOfPlayState(ai);

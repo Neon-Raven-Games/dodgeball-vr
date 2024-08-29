@@ -15,6 +15,7 @@ namespace Hands.SinglePlayer.EnemyAI.Priority
     // to populate at runtime for O(1) access
     public enum PriorityType
     {
+        DistanceToEnemy,
         FreeBall,
         PossessedBall,
         Enemy,

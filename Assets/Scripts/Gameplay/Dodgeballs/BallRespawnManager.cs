@@ -32,7 +32,6 @@ public class BallRespawnManager : MonoBehaviour
         await UniTask.DelayFrame(2);
         for (var i = 0; i < dodgeballPlayArea.dodgeballCount; i++)
         {
-            Debug.Log("Spawning Ball");
             await UniTask.Yield();
             CreateRandomSpawnPoint();
             var ball = BallPool.SetBall(ballRespawnPoints[_currentIndex].transform.position);

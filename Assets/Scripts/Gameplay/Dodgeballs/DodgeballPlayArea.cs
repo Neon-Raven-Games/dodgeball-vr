@@ -3,6 +3,7 @@ using UnityEditor;
 #endif
 
 using System.Collections.Generic;
+using Hands.SinglePlayer.EnemyAI.Priority;
 using UnityEngine;
 
 public class DodgeballPlayArea : MonoBehaviour
@@ -11,6 +12,7 @@ public class DodgeballPlayArea : MonoBehaviour
     public Transform team2PlayArea;
     public Transform team1OutOfBounds;
     public Transform team2OutOfBounds;
+    public PriorityData testingData;
 
     public Color team1Color = Color.blue;
     public Color team2Color = Color.red;
@@ -37,6 +39,7 @@ public class DodgeballPlayArea : MonoBehaviour
 
     public static void RemoveDodgeball(DodgeBall ball)
     {
+        if (!ball) return;
         if (_instance.dodgeBalls.ContainsKey(ball)) _instance.dodgeBalls.Remove(ball);
     }
 

@@ -35,13 +35,13 @@ public class ShadowCourt : MonoBehaviour
     public static void SmokeScreen()
     {
         if (active) return;
-        GameManager.ChangePhase(BattlePhase.Lackey);
         active = true;
+        
         _instance.smokeEffect.SetActive(true);
         _instance.StartSmokeScreen().Forget();
     }
 
-    private void EndSmokeScreen()
+    public void EndSmokeScreen()
     {
         smokeEffect.SetActive(false);
         active = false;
@@ -73,6 +73,7 @@ public class ShadowCourt : MonoBehaviour
 
     private async UniTaskVoid StartSmokeScreen()
     {
+        active = true;
         var currentTime = 0f;
         var secondsToSpawnSmoke = GenerateRandomTimes();
         var launchBalls = 0f;
@@ -84,7 +85,7 @@ public class ShadowCourt : MonoBehaviour
         LerpShadow().Forget();
 
         await UniTask.Delay(TimeSpan.FromSeconds(delay));
-        while (currentTime < smokeScreenDuration)
+        while (currentTime < smokeScreenDuration - delay && active)
         {
             await UniTask.Yield();
             currentTime += Time.deltaTime;
@@ -98,7 +99,7 @@ public class ShadowCourt : MonoBehaviour
                     playAreaPos.z + Random.Range(-playArea.localScale.z / 3, playArea.localScale.z / 3));
 
                 ballSpawner.planeTransform.transform.localRotation = Quaternion.Euler(4, Random.Range(80, 95), 3);
-                ballSpawner.SpawnBalls();
+                ballSpawner.LaunchBalls().Forget();
                 ballLaunchTimeStep = Random.Range(1f, 4.5f);
                 launchBalls += ballLaunchTimeStep;
 

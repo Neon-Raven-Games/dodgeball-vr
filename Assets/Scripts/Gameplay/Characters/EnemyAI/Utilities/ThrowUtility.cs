@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
+using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
@@ -8,14 +9,18 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
         }
 
+        public int State => StateStruct.Throw;
+
         public override float Execute(DodgeballAI ai)
         {
             ai.moveUtility.Execute(ai);
             return ShouldThrow(ai) ? 1f : 0f;
         }
 
-        public override float Roll(DodgeballAI ai) => CalculateThrowUtility(ai);
+        public override float Roll(DodgeballAI ai) => ShouldThrow(ai) ? float.MaxValue : 0f;
+            //CalculateThrowUtility(ai);
 
+        // todo, this needs to be fixed
         private float CalculateThrowUtility(DodgeballAI ai)
         {
             if (!ai.hasBall) return 0;
@@ -42,18 +47,15 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
                 ai.ActorTarget.transform.position);
             
             utility += (1.0f / distance) * args.maxThrowDistance;
-
-            // todo, add randomness here
-            // todo priority for line of sight
-            
-            // todo, we have around 0.3ms physics without raycast and 0.6ms with raycast
             
             var throwing = utility > 4f;
             var mask = LayerMask.NameToLayer(ai.opposingTeam.layerName);
             var direction = (ai.ActorTarget.transform.position - ai.transform.position).normalized;
 
             if (throwing && Physics.RaycastNonAlloc(ai.transform.position, direction, _hits, distance, mask) > 0)
-                return true;
+            {
+                if (args.throwProbability.PickValue() > 0) return true;
+            }
 
             return false;
         }

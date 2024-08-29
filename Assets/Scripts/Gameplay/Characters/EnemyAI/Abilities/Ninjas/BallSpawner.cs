@@ -20,10 +20,16 @@ public class BallSpawner : MonoBehaviour
 
     public void SpawnBalls()
     {
+        if (balls.Count > 0)
+        {
+            Debug.LogError("Balls already spawned");
+            return;
+        }
+        Debug.Log("Spawning balls...");
         for (var i = 0; i < numberOfBalls; i++)
         {
             var ball = Instantiate(ballPrefab, Vector3.down, Quaternion.identity);
-            ball.SetActive(false);
+            ball.gameObject.SetActive(false);
             var movement = ball.AddComponent<BallMovement>();
             movement.Initialize(planeTransform, travelTime, centerInfluence, distance);
             ball.GetComponent<Rigidbody>().isKinematic = true;
@@ -33,7 +39,7 @@ public class BallSpawner : MonoBehaviour
         LaunchBalls().Forget();
     }
 
-    private async UniTaskVoid LaunchBalls()
+    internal async UniTaskVoid LaunchBalls()
     {
         for (int i = 0; i < balls.Count; i++)
         {
@@ -48,6 +54,7 @@ public class BallSpawner : MonoBehaviour
             balls[i].StartBallRoutine();
             await UniTask.WaitForSeconds(Random.Range( ballLaunchStep.x, ballLaunchStep.y));
         }
+        balls.Clear();
     }
 
     private void OnDrawGizmos()

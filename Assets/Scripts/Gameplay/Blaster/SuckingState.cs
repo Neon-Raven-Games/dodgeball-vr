@@ -19,11 +19,11 @@ public class SuckingState : BaseHandCanonState
         
         _suctionCooldownTimer.OnCooldownStart += () =>
         {
-            handCannon.cooldownIndicator.SetActive(true);
+            // handCannon.cooldownIndicator.SetActive(true);
         };
         _suctionCooldownTimer.OnCooldownEnd += () =>
         {
-            handCannon.cooldownIndicator.SetActive(false);
+            // handCannon.cooldownIndicator.SetActive(false);
         };
         handCannon.cooldownTimer = _suctionCooldownTimer;
     }

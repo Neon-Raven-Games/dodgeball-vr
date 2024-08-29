@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Cysharp.Threading.Tasks;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
@@ -16,6 +17,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
             AI = ai;
         }
 
+
+        public int State => StateStruct.PickUp;
 
         public override float Execute(DodgeballAI ai)
         {

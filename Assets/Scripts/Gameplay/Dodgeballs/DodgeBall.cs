@@ -9,12 +9,14 @@ public class DodgeBall : MonoBehaviour
     public SkinnedMeshRenderer skinnedMeshRenderer;
     public float transitionTime = 1.0f; // Time in seconds to complete one half of the animation (0 to 100 or 100 to 0)
     public float pauseTime = 0.5f;
-    internal Team _team;
+    internal Team team;
     public BallState _ballState = BallState.Dead;
     protected Rigidbody _rb;
     [SerializeField] private float maxVelocity = 10f; // The velocity at which the volume should be maximum
     [SerializeField] private float minVolume = 0.1f; // Minimum volume
 
+    public BallState BallState => _ballState;
+    public bool DeadBall() => _ballState == BallState.Dead;
     [SerializeField] private float maxVolume = 1f;
 
     private ThrowHandle _throwHandle;
@@ -52,7 +54,7 @@ public class DodgeBall : MonoBehaviour
         ownerActor = actor;
         PlaySound(SoundIndex.Pickup);
         _ballState = BallState.Possessed;
-        _team = actor.team;
+        team = actor.team;
     }
 
     [SerializeField] private GameObject currentParticle;
@@ -94,7 +96,7 @@ public class DodgeBall : MonoBehaviour
         AnimateBlendShape().Forget();
     }
 
-    private void SetDeadBall()
+    internal void SetDeadBall()
     {
         _ballState = BallState.Dead;
     }
@@ -156,19 +158,19 @@ public class DodgeBall : MonoBehaviour
                 return;
             }
             
-            if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
+            if (team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
                 SetDeadBall();
                 HitSquash(collision);
                 param = 3;
             }
-            else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
+            else if (team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
                 SetDeadBall();
                 HitSquash(collision);
                 param = 3;
             }
-            else if (_team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
+            else if (team == Team.TeamTwo && collision.gameObject.layer == LayerMask.NameToLayer("TeamOne"))
             {
                 SetDeadBall();
                 HitSquash(collision);
@@ -177,7 +179,7 @@ public class DodgeBall : MonoBehaviour
                 GameManager.UpdateScore();
                 param = 3;
             }
-            else if (_team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
+            else if (team == Team.TeamOne && collision.gameObject.layer == LayerMask.NameToLayer("TeamTwo"))
             {
                 SetDeadBall();
                 HitSquash(collision);

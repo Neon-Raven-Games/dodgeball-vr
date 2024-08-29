@@ -6,13 +6,13 @@ namespace Hands.SinglePlayer.EnemyAI.Priority
     {
         public void Awake()
         {
-            targetUtility.Initialize();
-            dodgeUtility.Initialize();
-            moveUtility.Initialize();
-            catchUtility.Initialize();
-            pickUpUtility.Initialize();
-            throwUtility.Initialize();
-            outOfBoundsUtility.Initialize();
+            // targetUtility.Initialize();
+            // dodgeUtility.Initialize();
+            // moveUtility.Initialize();
+            // catchUtility.Initialize();
+            // pickUpUtility.Initialize();
+            // throwUtility.Initialize();
+            // outOfBoundsUtility.Initialize();
         }
 
         public PriorityData targetUtility;
@@ -22,6 +22,14 @@ namespace Hands.SinglePlayer.EnemyAI.Priority
         public PriorityData pickUpUtility;
         public PriorityData throwUtility;
         public PriorityData outOfBoundsUtility;
+        
+        public bool targetUtilityFoldout;
+        public bool dodgeUtilityFoldout;
+        public bool moveUtilityFoldout;
+        public bool catchUtilityFoldout;
+        public bool pickUpUtilityFoldout;
+        public bool throwUtilityFoldout;
+        public bool outOfBoundsUtilityFoldout;
         public float maxValue;
         public bool recative;
     }

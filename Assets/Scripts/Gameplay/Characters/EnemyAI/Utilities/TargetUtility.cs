@@ -14,6 +14,7 @@ namespace Hands.SinglePlayer.EnemyAI
         public float bodyTurnSpeed = 1f;
         public float fovAngle = 120f;
         public BipedIK ik;
+        public override int state { get; }
     }
 
     public class TargetUtility : Utility<TargetUtilityArgs>, IUtility
@@ -41,6 +42,8 @@ namespace Hands.SinglePlayer.EnemyAI
             CurrentTarget = _enemyTeam.actors[Random.Range(0, _enemyTeam.actors.Count)].gameObject;
             ActorTarget = CurrentTarget.GetComponent<Actor>();
         }
+
+        public int State { get; }
 
         public override float Execute(DodgeballAI ai)
         {

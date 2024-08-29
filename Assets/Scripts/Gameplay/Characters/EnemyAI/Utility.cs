@@ -1,13 +1,16 @@
 ﻿using System;
 using Hands.SinglePlayer.EnemyAI.Abilities;
+using Hands.SinglePlayer.EnemyAI.Priority;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
+using RNGNeeds;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Hands.SinglePlayer.EnemyAI
 {
     public abstract class Utility<T> where T : UtilityArgs
     {
-        protected internal T args;
-
+        protected T args;
         internal Bounds playAreaBounds;
         private RaycastHit hit;
 
@@ -65,7 +68,7 @@ namespace Hands.SinglePlayer.EnemyAI
                 if (teammate != ai.gameObject)
                 {
                     DodgeballAI teammateAI = teammate.GetComponent<DodgeballAI>();
-                    if (teammateAI != null && teammateAI.currentState == AIState.PickUp &&
+                    if (teammateAI != null && teammateAI.currentState == "PickUp" &&
                         teammateAI.IsTargetingBall(ball))
                     {
                         return true;
@@ -137,8 +140,9 @@ namespace Hands.SinglePlayer.EnemyAI
         }
     }
 
-    public class UtilityArgs
+    public abstract class UtilityArgs
     {
+        public abstract int state { get; }
     }
 
     [Serializable]
@@ -151,6 +155,18 @@ namespace Hands.SinglePlayer.EnemyAI
         
         public float entryDuration = 1f;
         public float nextRollTime;
+        public ProbabilityList<float> probabilityList;
+        public float throwSpeed;
+        public override int state => NinjaStruct.FakeOut;
+    }
+
+    [Serializable]
+    public class NinjaOutOfPlayArgs : UtilityArgs
+    {
+        public override int state => NinjaStruct.OutOfPlay;
+        public float jumpHeight = 18f;
+        public float jumpDuration = 0.4f;
+        public float respawnTime = 1f;
     }
     
     [Serializable]
@@ -160,6 +176,7 @@ namespace Hands.SinglePlayer.EnemyAI
         public float despawnDelay;
         public ColorLerp colorLerp;
         public float playEffectDelay;
+        public override int state => NinjaStruct.SmokeBomb;
     }
     
     [Serializable]
@@ -177,11 +194,13 @@ namespace Hands.SinglePlayer.EnemyAI
         public float blendSpeed = 20;
         public float blendMultiplier = 1;
         public float predictiveStopDistance = 0.3f;
+        public override int state => StateStruct.Move;
     }
 
     [Serializable]
     public class DodgeUtilityArgs : UtilityArgs
     {
+        public override int state { get; }
     }
 
     [Serializable]
@@ -190,6 +209,13 @@ namespace Hands.SinglePlayer.EnemyAI
         public float FOVThreshold = 0.5f;
         public float catchRegisterDistance = 5f;
         public float utilityMultiplier = 0.5f;
+        public override int state { get; }
+    }
+
+    [Serializable]
+    public class PossessionArgs : UtilityArgs
+    {
+        public override int state => StateStruct.Possession;
     }
 
     [Serializable]
@@ -202,11 +228,14 @@ namespace Hands.SinglePlayer.EnemyAI
         public float ballIdleHeight = 0.11f;
         public float spineIKWeight = 0.063f;
         public float maintainRotationWeight = 0.4f;
+        public PriorityData priorityData;
+        public override int state => StateStruct.PickUp;
     }
 
     [Serializable]
     public class ThrowUtilityArgs : UtilityArgs
     {
+        public ProbabilityList<float> throwProbability;
         public float lineOfSightWeight = 1.0f;
         public float possessionTimeWeight = 1.0f;
         public float testingThrowForce;
@@ -217,14 +246,18 @@ namespace Hands.SinglePlayer.EnemyAI
         public float throwForceRandomness;
         public float minThrowForce;
         public float maxThrowForce = 40;
+        public float ballThrowRecovery = 0.5f;
+        public NetBallPossessionHandler leftBallIndex;
+        public NetBallPossessionHandler rightBallIndex;
+        public PriorityData priorityData;
+        public override int state => StateStruct.Throw;
     }
 
     [Serializable]
     public class OutOfPlayUtilityArgs : UtilityArgs
     {
-        // == out of bounds ==
-        // Time to wait when out of bounds
         public float outOfBoundsWaitTime = 3f;
+        public override int state => StateStruct.OutOfPlay;
     }
 
     [Serializable]
@@ -255,6 +288,7 @@ namespace Hands.SinglePlayer.EnemyAI
         public float outroColorLerpValue;
         public int outroColorFrame;
         public int outroThrowFrame;
+        public override int state => NinjaStruct.ShadowStep;
     }
     
     [Serializable] 
@@ -284,16 +318,19 @@ namespace Hands.SinglePlayer.EnemyAI
         [Header("Debug and Runtime")]
         public Vector3 stepDirection = Vector3.forward;
 
+        public override int state => NinjaStruct.Substitution;
     }
 
     [Serializable]
     public class NinjaHandSignUtilityArgs : UtilityArgs
     {
+        public ProbabilityList<float> handSignProbability;
         public float handSignCooldown = 5f;
         public float handSignDebugRoll = 75f;
         public Transform handSignTarget;
         public Animator handAnimator;
         public Collider collider;
         public float nextHandSignTime;
+        public override int state => NinjaStruct.HandSign;
     }
 }

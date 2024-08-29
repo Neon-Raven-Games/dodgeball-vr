@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a174ecebf2a344019582b3ddd7396ab0, type: 3}
+  m_Name: BaseThrow
+  m_EditorClassIdentifier: 
+  utilityType: 1
+  name: BaseThrow
+  priorities:
+  - priority: 0
+    score: 1.2488563
+  - priority: 7
+    score: 2.1637695
+  - priority: 14
+    score: 1.5873742
+  maxValue: 5
+  currentValue: 0
+  recative: 1

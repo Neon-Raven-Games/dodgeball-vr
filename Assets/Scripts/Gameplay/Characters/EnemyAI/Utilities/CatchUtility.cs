@@ -8,6 +8,8 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         {
         }
 
+        public int State { get; }
+
         public override float Execute(DodgeballAI ai)
         {
             return CalculateCatchUtility(ai);

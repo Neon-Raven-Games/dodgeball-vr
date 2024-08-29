@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
+using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.Utilities
 {
@@ -10,6 +11,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private Vector3 noiseOffset;
         private float backoffDuration = .8f;
         private float backoffStartTime;
+        public int State => StateStruct.Move;
 
         public MoveUtility(MoveUtilityArgs args) : base(args, AIState.Move)
         {
@@ -93,9 +95,10 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
         private static readonly int _SXAxis = Animator.StringToHash("xAxis");
         private static readonly int _SYAxis = Animator.StringToHash("yAxis");
 
+
         public override float Execute(DodgeballAI ai)
         {
-            if (ai.currentState == AIState.OutOfPlay) return 0f;
+            if (ai.currentState == AIState.OutOfPlay.ToString()) return 0f;
             FlockMove(ai);
             if (Time.time >= _nextMoveTime) ScheduleNextMove();
             return 1f;
@@ -104,7 +107,7 @@ namespace Hands.SinglePlayer.EnemyAI.Utilities
 
         public override float Roll(DodgeballAI ai)
         {
-            if (ai.currentState == AIState.OutOfPlay) return 0f;
+            if (ai.currentState == AIState.OutOfPlay.ToString()) return 0f;
             if (Time.time >= _nextMoveTime)
             {
                 ScheduleNextMove();

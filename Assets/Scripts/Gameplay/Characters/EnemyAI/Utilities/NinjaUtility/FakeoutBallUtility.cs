@@ -1,4 +1,5 @@
 using Hands.SinglePlayer.EnemyAI;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using UnityEngine;
 
 public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
@@ -13,8 +14,10 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
         _ai = ai;
         _ninja = ai as NinjaAgent;
     }
-    
-    
+
+
+    public int State => NinjaStruct.FakeOut;
+
     public override float Execute(DodgeballAI ai)
     {
         return -1f;
@@ -28,9 +31,9 @@ public class FakeoutBallUtility : Utility<FakeoutUtilityArgs>, IUtility
         }
 
         if (_ai.hasBall ||
-            _ai.currentState == AIState.PickUp ||
-            _ai.currentState == AIState.Throw ||
-            _ai.currentState == AIState.OutOfPlay)
+            _ai.currentState == "PickUp" ||
+            _ai.currentState == "Throw" ||
+            _ai.currentState == "OutOfPlay")
         {
             
             return -1f;

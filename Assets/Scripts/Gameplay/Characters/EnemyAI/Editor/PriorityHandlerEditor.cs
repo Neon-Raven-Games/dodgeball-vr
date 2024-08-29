@@ -5,57 +5,68 @@ using UnityEngine;
 [CustomEditor(typeof(PriorityHandler))]
 public class PriorityHandlerEditor : Editor
 {
-    private bool targetUtilityFoldout = true;
-    private bool dodgeUtilityFoldout = true;
-    private bool moveUtilityFoldout = true;
-    private bool catchUtilityFoldout = true;
-    private bool pickUpUtilityFoldout = true;
-    private bool throwUtilityFoldout = true;
-    private bool outOfBoundsUtilityFoldout = true;
+    private SerializedProperty maxValueProp;
+    private SerializedProperty reactiveProp;
+    private PriorityHandler handler;
+
+    private void OnEnable()
+    {
+        handler = (PriorityHandler)target;
+        maxValueProp = serializedObject.FindProperty("maxValue");
+        reactiveProp = serializedObject.FindProperty("reactive");
+    }
 
     public override void OnInspectorGUI()
     {
-        PriorityHandler handler = (PriorityHandler)target;
+        serializedObject.Update();
 
-        handler.maxValue = EditorGUILayout.FloatField("Max Value", handler.maxValue);
-        handler.recative = EditorGUILayout.Toggle("Reactive", handler.recative);
+        EditorGUILayout.LabelField("AI Priority Settings", EditorStyles.boldLabel);
+
+        EditorGUILayout.PropertyField(maxValueProp, new GUIContent("Max Value"));
+        EditorGUILayout.PropertyField(reactiveProp, new GUIContent("Reactive"));
 
         if (GUILayout.Button("Balance All Priorities"))
         {
-            BalanceAllPriorities(handler);
+            BalanceAllPriorities();
         }
 
-        DrawUtilityPriorities(ref targetUtilityFoldout, handler.targetUtility, "Target Utility",handler);
-        DrawUtilityPriorities(ref dodgeUtilityFoldout, handler.dodgeUtility, "Dodge Utility", handler);
-        DrawUtilityPriorities(ref moveUtilityFoldout, handler.moveUtility, "Move Utility", handler);
-        DrawUtilityPriorities(ref catchUtilityFoldout, handler.catchUtility, "Catch Utility", handler);
-        DrawUtilityPriorities(ref pickUpUtilityFoldout, handler.pickUpUtility, "Pick Up Utility", handler);
-        DrawUtilityPriorities(ref throwUtilityFoldout, handler.throwUtility, "Throw Utility", handler);
-        DrawUtilityPriorities(ref outOfBoundsUtilityFoldout, handler.outOfBoundsUtility, "Out of Bounds Utility", handler);
+        DrawUtilityFoldout("Target Utility", handler.targetUtility, ref handler.targetUtilityFoldout);
+        DrawUtilityFoldout("Dodge Utility", handler.dodgeUtility, ref handler.dodgeUtilityFoldout);
+        DrawUtilityFoldout("Move Utility", handler.moveUtility, ref handler.moveUtilityFoldout);
+        DrawUtilityFoldout("Catch Utility", handler.catchUtility, ref handler.catchUtilityFoldout);
+        DrawUtilityFoldout("Pick Up Utility", handler.pickUpUtility, ref handler.pickUpUtilityFoldout);
+        DrawUtilityFoldout("Throw Utility", handler.throwUtility, ref handler.throwUtilityFoldout);
+        DrawUtilityFoldout("Out of Bounds Utility", handler.outOfBoundsUtility, ref handler.outOfBoundsUtilityFoldout);
 
         serializedObject.ApplyModifiedProperties();
     }
 
-    private void DrawUtilityPriorities(ref bool foldout, PriorityData data, string label, PriorityHandler handler)
+    private void DrawUtilityFoldout(string label, PriorityData data, ref bool foldout)
     {
         foldout = EditorGUILayout.Foldout(foldout, label, true);
         if (foldout)
         {
             EditorGUI.indentLevel++;
 
-            if (GUILayout.Button("Balance Priorities"))
+            if (GUILayout.Button($"Balance {label} Priorities"))
             {
                 data.BalancePriorities();
             }
 
-            data.recative = handler.recative;
-            data.maxValue = handler.maxValue;
-            foreach (var priority in data.priorities)
+            data.recative = EditorGUILayout.Toggle("Reactive", data.recative);
+            data.maxValue = EditorGUILayout.FloatField("Max Value", data.maxValue);
+
+            for (int i = 0; i < data.priorities.Count; i++)
             {
                 EditorGUILayout.BeginHorizontal();
-                priority.priority = (PriorityType)EditorGUILayout.EnumPopup(priority.priority);
-                var score = EditorGUILayout.Slider(priority.score, 0, data.maxValue);
-                data.BalancePrioritiesAround(priority.priority, score);
+                data.priorities[i].priority = (PriorityType)EditorGUILayout.EnumPopup(data.priorities[i].priority);
+                data.priorities[i].score = EditorGUILayout.Slider(data.priorities[i].score, 0, data.maxValue);
+
+                if (GUILayout.Button("-", GUILayout.Width(20)))
+                {
+                    data.priorities.RemoveAt(i);
+                }
+
                 EditorGUILayout.EndHorizontal();
             }
 
@@ -63,11 +74,12 @@ public class PriorityHandlerEditor : Editor
             {
                 AddNewPriority(data);
             }
+
             EditorGUI.indentLevel--;
         }
     }
 
-    private void BalanceAllPriorities(PriorityHandler handler)
+    private void BalanceAllPriorities()
     {
         handler.targetUtility.BalancePriorities();
         handler.dodgeUtility.BalancePriorities();

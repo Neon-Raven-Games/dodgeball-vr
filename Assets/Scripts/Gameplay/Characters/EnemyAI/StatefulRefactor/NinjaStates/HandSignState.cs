@@ -53,7 +53,7 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor.NinjaStates
         }
 
         private bool HitWithBall(Collider collider, DodgeBall db) =>
-            db._ballState == BallState.Live && db._team != AI.team && !AI.IsColliderOwner(collider);
+            db._ballState == BallState.Live && db.team != AI.team && !AI.IsColliderOwner(collider);
 
         public override void OnTriggerExit(Collision col)
         {

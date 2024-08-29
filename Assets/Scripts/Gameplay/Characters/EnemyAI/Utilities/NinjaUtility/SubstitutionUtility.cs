@@ -13,6 +13,8 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
         {
         }
 
+        public int State => NinjaStruct.Substitution;
+
         public override float Execute(DodgeballAI ai)
         {
             return -1f;

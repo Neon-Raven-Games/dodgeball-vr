@@ -7,6 +7,8 @@ public class DodgeUtility : Utility<DodgeUtilityArgs>, IUtility
     {
     }
 
+    public int State { get; }
+
     public override float Execute(DodgeballAI ai)
     {
         return CalculateDodgeUtility(ai);

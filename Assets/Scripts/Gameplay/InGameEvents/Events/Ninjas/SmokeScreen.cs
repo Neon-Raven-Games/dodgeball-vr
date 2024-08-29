@@ -25,6 +25,7 @@ namespace Gameplay.InGameEvents.Ninjas
         private void SmokeScreen()
         {
             if (!PhaseManager.CanSpawnTeam(Team.TeamTwo)) return;
+            _ninjaWatcher.smokeBombDuration = balanceData.EventDuration;
             _ninjaWatcher.SmokeBomb();
             balanceData.UpdateEventCooldownAndDuration(SmokeScreen);
         }

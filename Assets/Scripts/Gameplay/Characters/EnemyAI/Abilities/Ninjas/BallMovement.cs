@@ -18,9 +18,7 @@ namespace Hands.SinglePlayer.EnemyAI.Abilities
             rb = GetComponent<Rigidbody>();
             collider = GetComponent<Collider>();
         }
-        
-        
-        
+    
         public void Initialize(Transform planeTransform, float travelTime, float centerInfluence, float distance)
         {
             this.centerInflucence = centerInfluence;

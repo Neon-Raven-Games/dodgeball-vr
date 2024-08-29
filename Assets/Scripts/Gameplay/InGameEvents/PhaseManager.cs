@@ -13,7 +13,8 @@ namespace Gameplay.InGameEvents
         private BattlePhase _currentPhaseIndex;
         private PhaseEvent _currentPhase;
         private static PhaseManager _instance;
-        
+        public static bool phasing;
+
         private void OnDisable() => TimerManager.ClearTimers();
         
         public bool GameOver() => _currentPhase.GameOver();
@@ -36,6 +37,7 @@ namespace Gameplay.InGameEvents
             
             phases[_currentPhaseIndex].StartPhase();
             _currentPhase = phases[_currentPhaseIndex];
+            phasing = true;
         }
         
         public virtual void Initialize()

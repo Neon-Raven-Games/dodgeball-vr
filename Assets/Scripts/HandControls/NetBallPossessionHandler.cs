@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [Serializable]
@@ -21,7 +22,7 @@ public class NetBallPossessionHandler : MonoBehaviour
     private bool _updatePose;
     private Animator _anim;
     private static readonly int _SGrabbing = Animator.StringToHash("Grabbing");
-    public Vector3 BallPosition => _currentDodgeball.transform.position;
+    public Vector3 BallPosition => dodgeballs.First().dodgeball.transform.position;
 
     public void Start()
     {

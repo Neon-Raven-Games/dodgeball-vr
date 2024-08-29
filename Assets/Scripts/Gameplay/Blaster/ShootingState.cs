@@ -26,7 +26,7 @@ public class ShootingState : BaseHandCanonState
     private void LaunchDodgeball(DodgeBall dodgeball)
     {
         dodgeball.transform.position = handCannon.barrelTransform.position;
-        dodgeball._team = Team.TeamOne;
+        dodgeball.team = Team.TeamOne;
         dodgeball.SetLiveBall();
         Rigidbody rb = dodgeball.GetComponent<Rigidbody>();
         rb.velocity = Vector3.zero;

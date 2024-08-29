@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Hands.SinglePlayer.EnemyAI;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -22,6 +23,8 @@ namespace Multiplayer.SinglePlayer.EnemyAI.Utilities
             ninja = ai as NinjaAgent;
             _cancellationTokenSource = new CancellationTokenSource();
         }
+
+        public int State => NinjaStruct.HandSign;
 
         public override float Execute(DodgeballAI ai)
         {

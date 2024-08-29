@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Gameplay.Characters.EnemyAI.Utilities.UtilityRefactor;
 using Gameplay.InGameEvents;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ public class Actor : MonoBehaviour
 {
     // todo, shown in inspector for debugging
     public bool hasBall;
-    [SerializeField] protected bool outOfPlay;
+    [SerializeField] protected internal bool outOfPlay;
     public Transform head;
     public Team team;
     internal float outOfBoundsEndTime;
@@ -16,9 +17,14 @@ public class Actor : MonoBehaviour
     public DodgeballPlayArea playArea;
     public float outOfBoundsWaitTime = 1f;
     public Dictionary<Collider, bool> colliderMap = new();
+    public StateMatrix stateMatrix;
 
     public bool IsColliderOwner(Collider collider) => colliderMap.ContainsKey(collider);
-    
+
+    protected virtual void PopulateUtilities()
+    {
+        
+    }
     protected void PopulateTeamObjects()
     {
         var colliders = GetComponentsInChildren<Collider>();
@@ -71,11 +77,13 @@ public class Actor : MonoBehaviour
         }
     }
 
+
+    
     internal bool IsOutOfPlay() => outOfPlay;
     internal virtual void SetOutOfPlay(bool value)
     {
         outOfPlay = value;
-        if (value) PhaseManager.DecreaseTeamLife(team);
+        if (value && PhaseManager.phasing) PhaseManager.DecreaseTeamLife(team);
     }
 
     protected void HandleOutOfPlay()
@@ -83,8 +91,6 @@ public class Actor : MonoBehaviour
         if (!ValidWaitingArea()) outOfBoundsEndTime = Time.time + outOfBoundsWaitTime;
         
         if (Time.time >= outOfBoundsEndTime) SetOutOfPlay(false);
-        
-
     }
 
     public bool IsInPlayArea(Vector3 position)

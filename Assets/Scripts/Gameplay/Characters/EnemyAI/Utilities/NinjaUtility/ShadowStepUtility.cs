@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using UnityEngine;
 
 public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
@@ -16,6 +17,8 @@ public class ShadowStepUtility : Utility<ShadowStepUtilityArgs>, IUtility
         _ai = ai;
         _animator = ai.animator;
     }
+
+    public int State => NinjaStruct.ShadowStep;
 
     public override float Execute(DodgeballAI ai)
     {

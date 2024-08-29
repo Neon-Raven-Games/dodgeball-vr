@@ -9,7 +9,6 @@ using TPUModelerEditor;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(TimerManager))]
 public class TimerManagerEditor : EditorWindow
 {
     private Vector2 scrollPosition;

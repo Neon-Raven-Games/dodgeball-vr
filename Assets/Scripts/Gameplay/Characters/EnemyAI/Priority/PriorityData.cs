@@ -1,18 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Gameplay.Characters.EnemyAI.Utilities.UtilityRefactor;
 using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI.Priority
 {
 
     [Serializable] 
-    public class PriorityData
+    public class PriorityData : ScriptableObject
     {
+        public UtilityType utilityType;
         private readonly Dictionary<PriorityType, float> _priorityValues = new();
-        
-        public float GetPriorityValue(PriorityType priorityType) =>
-            _priorityValues[priorityType];
-        
+        public string name;
+        public float GetPriorityValue(PriorityType priorityType)
+        {
+            if (!_priorityValues.ContainsKey(priorityType))
+            {
+                return 1f;
+            }
+            return _priorityValues[priorityType];
+        }
+
         public List<Priority> priorities = new();
         public float maxValue;
         public float currentValue;
@@ -133,5 +142,8 @@ namespace Hands.SinglePlayer.EnemyAI.Priority
                 priority.score *= maxValue;
             }
         }
+
+        public bool ContainsPriority(PriorityType priority) =>
+            _priorityValues.ContainsKey(priority) || priorities.Any(x => x.priority == priority);
     }
 }

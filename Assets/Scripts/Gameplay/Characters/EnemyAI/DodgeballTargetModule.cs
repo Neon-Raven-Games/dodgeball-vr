@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Hands.SinglePlayer.EnemyAI.Priority;
+using Hands.SinglePlayer.EnemyAI.StatefulRefactor;
 using UnityEngine;
 
 namespace Hands.SinglePlayer.EnemyAI
@@ -10,8 +11,7 @@ namespace Hands.SinglePlayer.EnemyAI
 
         // ninja values
         private const float bodyTurnSpeed = 6;
-        private const float fovAngle = 100f;
-
+        private const float fovAngle = 60f;
         // dodgeball ai values
         // public const float bodyTurnSpeed = 5f;
         // public const float fovAngle = 160f;
@@ -33,8 +33,11 @@ namespace Hands.SinglePlayer.EnemyAI
         private bool _lerpingHeadWeight;
         private PriorityData _priorityData;
 
-        private float GetPriority(PriorityType type) =>
-            _priorityData.GetPriorityValue(type);
+        private float GetPriority(PriorityType type)
+        {
+            if (!_priorityData) return 1f;
+            return _priorityData.GetPriorityValue(type);
+        }
 
         internal Bounds playAreaBounds;
 
@@ -46,7 +49,7 @@ namespace Hands.SinglePlayer.EnemyAI
 
         public DodgeballTargetModule(DodgeballAI ai, PriorityData data)
         {
-            _priorityData = data;
+            _priorityData = ai.playArea.testingData;
             _ai = ai;
             _playArea = ai.playArea;
             _enemyTeam = ai.opposingTeam;
@@ -60,6 +63,11 @@ namespace Hands.SinglePlayer.EnemyAI
 
         public void UpdateTarget()
         {
+            if (_ai.state == StateStruct.Throw)
+            {
+                LookAtTarget(CurrentTarget.transform.position);
+                return;
+            }
             if (!_ai.hasBall && !ValidBall()) CheckForNearbyDodgeballs();
             if (!BallTarget || _ai.hasBall && !ValidActor()) CurrentTarget = FindBestTarget();
             if (!CurrentTarget) CurrentTarget = _ai.opposingTeam.playArea.gameObject;
@@ -98,7 +106,6 @@ namespace Hands.SinglePlayer.EnemyAI
             GameObject bestTarget = null;
             var bestScore = float.MinValue;
             
-            Debug.Log("roll target");
             foreach (var enemy in _enemyTeam.actors)
             {
                 if (enemy == null || enemy.IsOutOfPlay() || !enemy.gameObject.activeInHierarchy) continue;
@@ -164,7 +171,7 @@ namespace Hands.SinglePlayer.EnemyAI
             StopLook().Forget();
         }
 
-        private void LookAtTarget(Vector3 targetPosition)
+        public void LookAtTarget(Vector3 targetPosition)
         {
             var direction = targetPosition - _ai.transform.position;
             if (direction.magnitude < 0.1f) return;

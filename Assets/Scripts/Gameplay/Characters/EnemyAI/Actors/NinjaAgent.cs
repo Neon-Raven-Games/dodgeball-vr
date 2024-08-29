@@ -7,19 +7,12 @@ using Random = UnityEngine.Random;
 
 public class NinjaAgent : DodgeballAI
 {
-    private void OnDisable()
-    {
-        _stateController.CleanUp();
-    }
-
-    public NinjaState State => _stateController.State;
-
     [SerializeField] private ShadowStepUtilityArgs shadowStepArgs;
     [SerializeField] private SubstitutionUtilityArgs substitutionUtilityArgs;
     [SerializeField] private NinjaHandSignUtilityArgs handSignUtilityArgs;
     [SerializeField] private FakeoutUtilityArgs fakeoutUtilityArgs;
     [SerializeField] private SmokeBombUtilityArgs smokeBombUtilityArgs;
-
+    [SerializeField] private NinjaOutOfPlayArgs ninjaOutOfPlayUtilityArgs;
     internal Vector3 currentSmokeBombPosition;
     private FakeoutBallUtility _fakeoutBallUtility;
     private SubstitutionUtility _substitutionUtility;
@@ -29,51 +22,42 @@ public class NinjaAgent : DodgeballAI
     private DerivedAIStateController<NinjaState> _stateController;
     private CharacterGizmo _gizmo;
 
-    protected override void PopulateUtilities()
+    internal override void TriggerRespawn()
+    {
+        gameObject.SetActive(false);
+        transform.position = spawnInPos[Random.Range(0, spawnInPos.Count)].position;
+        gameObject.SetActive(true);
+        SetOutOfPlay(false);
+        animator.Rebind();
+        stateController.Rebind();
+        stateController.SubscribeRolling();
+    }
+
+    protected override void CreateStateController()
     {
         _gizmo = GetComponent<CharacterGizmo>();
-        base.PopulateUtilities();
-        _substitutionUtility = new SubstitutionUtility(substitutionUtilityArgs, AIState.Special, this);
-        _substitutionUtility.Initialize(friendlyTeam.playArea, team);
+        stateController = AIStateMachineFactory.CreateStateMachine(this,
+            moveUtilityArgs, pickUpUtilityArgs, throwUtilityArgs,
+            substitutionUtilityArgs, shadowStepArgs, fakeoutUtilityArgs, ninjaOutOfPlayUtilityArgs);
+        _ninjaStateController = stateController as NinjaStateController;
+        _ninjaStateController.SetNinja(handSignUtilityArgs, fakeoutUtilityArgs, smokeBombUtilityArgs);
+    }
 
+    protected void Nothing()
+    {
+        return;
+        // utilityHandler = UtilityHandler.Create(this, moveUtilityArgs, 
+        //     pickUpUtilityArgs, throwUtilityArgs, outOfPlayUtilityArgs,
+        //     substitutionUtilityArgs, handSignUtilityArgs, shadowStepArgs);
+
+        // we will move this logic to the controller.
+        // the controller will override states if handsign active
         _handSignUtility = new NinjaHandSignUtility(handSignUtilityArgs, this);
         _handSignUtility.Initialize(friendlyTeam.playArea, team);
 
-        _shadowStepUtility = new ShadowStepUtility(shadowStepArgs, AIState.Special, this);
-        _shadowStepUtility.Initialize(friendlyTeam.playArea, team);
-
+        // this will be a utility
         _fakeoutBallUtility = new FakeoutBallUtility(fakeoutUtilityArgs, AIState.Special, this);
         _fakeoutBallUtility.Initialize(friendlyTeam.playArea, team);
-
-        utilityHandler.AddUtility(_substitutionUtility);
-        utilityHandler.AddUtility(_handSignUtility);
-        utilityHandler.AddUtility(_fakeoutBallUtility);
-
-        // todo implement factory helper
-        // if we populate a map of the utilities, or have a ninja state on them, we can pass the utilitys in
-        // _stateController = DerivedAIStateFactory.CreateNinja(OnDefaultRestored, _shadowStepUtility, _substitutionUtility, _fakeoutBallUtility,
-        //     _handSignUtility);
-
-        _stateController = new DerivedAIStateController<NinjaState>();
-
-        _stateController.onDefaultRestored += OnDefaultRestored;
-
-        _stateController.AddState(NinjaState.SmokeBomb,
-            DerivedAIStateFactory.CreateState(this, _stateController, NinjaState.SmokeBomb, smokeBombUtilityArgs));
-        _stateController.AddState(NinjaState.Default,
-            DerivedAIStateFactory.CreateState(this, _stateController, NinjaState.Default, default));
-        _stateController.AddState(NinjaState.Substitution,
-            DerivedAIStateFactory.CreateState(this, _stateController, NinjaState.Substitution,
-                substitutionUtilityArgs));
-        _stateController.AddState(NinjaState.ShadowStep,
-            DerivedAIStateFactory.CreateState(this, _stateController, NinjaState.ShadowStep, shadowStepArgs));
-        _stateController.AddState(NinjaState.HandSign,
-            DerivedAIStateFactory.CreateState(this, _stateController, NinjaState.HandSign, handSignUtilityArgs));
-        _stateController.AddState(NinjaState.FakeOut,
-            DerivedAIStateFactory.CreateState(this, _stateController, NinjaState.FakeOut, fakeoutUtilityArgs));
-        _stateController.Initialize(NinjaState.Default);
-        hasSpecials = true;
-
         // todo, implement phase manager
         // GameManager.onPhaseChange += NinjaPhase;
     }
@@ -117,56 +101,57 @@ public class NinjaAgent : DodgeballAI
         if (obj != NinjaState.Default)
             Debug.LogError("Default state was not initialized properly.");
 
-        currentState = AIState.Move;
+        // _stateController.ChangeState(StateStruct.Move);
     }
 
 
-    protected override void Update()
-    {
-        if (_stateController.State == NinjaState.SmokeBomb) return;
-        _gizmo.gizmoText = _stateController.State.ToString();
-        if (currentState == AIState.Special)
-        {
-            var currentUtil = utilityHandler.GetCurrentUtility();
-            if (currentUtil.State != AIState.Special)
-            {
-                Debug.LogError("Out of special utility but current state is special");
-                return;
-            }
+    // protected override void Update()
+    // {
+    //     if (stayIdle) return;
+    //     if (_stateController.State == NinjaState.SmokeBomb) return;
+    //     _gizmo.gizmoText = _stateController.State.ToString();
+    //     if (currentState == "Special")
+    //     {
+    //         var currentUtil = utilityHandler.GetCurrentUtility();
+    //         // if (currentUtil.State != AIState.Special)
+    //         // {
+    //             // Debug.LogError("Out of special utility but current state is special");
+    //             // return;
+    //         // }
+    //
+    //         if (_stateController.State == NinjaState.Default)
+    //         {
+    //             if (currentUtil == _handSignUtility) _stateController.ChangeState(NinjaState.HandSign);
+    //             else if (currentUtil == _fakeoutBallUtility) _stateController.ChangeState(NinjaState.FakeOut);
+    //         }
+    //     }
+    //
+    //     _stateController.UpdateState();
+    //     base.Update();
+    // }
 
-            if (_stateController.State == NinjaState.Default)
-            {
-                if (currentUtil == _handSignUtility) _stateController.ChangeState(NinjaState.HandSign);
-                else if (currentUtil == _fakeoutBallUtility) _stateController.ChangeState(NinjaState.FakeOut);
-            }
-        }
-
-        _stateController.UpdateState();
-        base.Update();
-    }
+    private NinjaStateController _ninjaStateController;
 
     internal override void SetOutOfPlay(bool value)
     {
-        if (stayIdle || _stateController.State == NinjaState.Substitution ||
-            _stateController.State == NinjaState.HandSign ||
-            _stateController.State == NinjaState.ShadowStep)
+        if (value && _ninjaStateController.IsHandSigning()) return;
+        if (_ninjaStateController.State == NinjaStruct.Substitution ||
+            _ninjaStateController.State == NinjaStruct.ShadowStep)
             return;
-
         base.SetOutOfPlay(value);
-        currentState = AIState.OutOfPlay;
-        _stateController.ChangeState(NinjaState.Default);
     }
 
-    protected override void SpawnIn()
+    protected void SpawnIn()
     {
+        // todo, out of play for ninja
         var jump = spawnInPos[Random.Range(0, spawnInPos.Count)].GetComponent<NinjaJump>();
         jump.QueueJump(transform);
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        _stateController.OnTriggerEnter(other);
-    }
+    // private void OnTriggerEnter(Collider other)
+    // {
+    //     _stateController.OnTriggerEnter(other);
+    // }
 
 
     private bool entryFinished = false;

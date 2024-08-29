@@ -17,7 +17,6 @@ public class HandCannon : MonoBehaviour
     internal List<DodgeBall> dodgeBallAmmo = new();
     [SerializeField] private InputActionAsset actionAsset;
     public Transform barrelTransform;
-    public GameObject cooldownIndicator;
     public float normalizedCooldownTime;
     public Animator animator;
     public bool trajectoryAssist;
@@ -110,7 +109,7 @@ public class HandCannon : MonoBehaviour
 
     private void Update()
     {
-        if (cooldownIndicator && cooldownTimer) normalizedCooldownTime = cooldownTimer.NormalizedProgress();
+        // if (cooldownIndicator && cooldownTimer) normalizedCooldownTime = cooldownTimer.NormalizedProgress();
         _currentState?.Update();
     }
     
