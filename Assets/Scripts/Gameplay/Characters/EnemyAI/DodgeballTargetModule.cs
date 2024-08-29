@@ -70,7 +70,8 @@ namespace Hands.SinglePlayer.EnemyAI
             }
             if (!_ai.hasBall && !ValidBall()) CheckForNearbyDodgeballs();
             if (!BallTarget || _ai.hasBall && !ValidActor()) CurrentTarget = FindBestTarget();
-            if (!CurrentTarget) CurrentTarget = _ai.opposingTeam.playArea.gameObject;
+            if ((!BallTarget || !BallTarget.gameObject.activeInHierarchy) && (!ActorTarget || !ActorTarget.gameObject.activeInHierarchy)) 
+                CurrentTarget = _ai.opposingTeam.playArea.gameObject;
 
             LookAtTarget(CurrentTarget.transform.position);
         }
@@ -138,8 +139,8 @@ namespace Hands.SinglePlayer.EnemyAI
 
             score += Random.Range(-0.1f, 0.1f);
 
-            if (CurrentTarget == target.gameObject) score += GetPriority(PriorityType.Targeted);
-            if (target is DevController) score += 5f;
+            if (CurrentTarget == target.gameObject) score += GetPriority(PriorityType.Targeted) * 2;
+            if (target.GetComponent<DevController>()) score += 5f;
             return score;
         }
 

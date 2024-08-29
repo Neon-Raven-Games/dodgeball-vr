@@ -4,12 +4,6 @@ public class IdleState : BaseHandCanonState
     {
     }
 
-    public override void EnterState()
-    {
-        base.EnterState();
-        handCannon.trajectoryLineRenderer.enabled = handCannon.trajectoryAssist;
-    }
-
     public override void GripAction()
     {
         base.GripAction();

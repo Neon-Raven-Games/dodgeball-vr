@@ -17,15 +17,11 @@ public class HandCannon : MonoBehaviour
     internal List<DodgeBall> dodgeBallAmmo = new();
     [SerializeField] private InputActionAsset actionAsset;
     public Transform barrelTransform;
-    public float normalizedCooldownTime;
     public Animator animator;
     public bool trajectoryAssist;
-    [HideInInspector] public CooldownTimer cooldownTimer;
-
 
     [Header("Shooting Settings")] 
     public GameObject muzzleFlash;
-    public LineRenderer trajectoryLineRenderer;
     public float launchForce = 20f;
     public int trajectoryPoints = 8;
     
@@ -33,8 +29,6 @@ public class HandCannon : MonoBehaviour
     public float suctionForce = 10f;
     public float swirlRadius = 1f;
     public float swirlSpeed = 2f;
-    public float suctionCooldown = 1f;
-    public float suctionDuration = 2f; // Added suction duration
     public float ballEndScale = 0.4f;
 
     private Dictionary<CannonState, BaseHandCanonState> _states;
@@ -115,7 +109,6 @@ public class HandCannon : MonoBehaviour
     
     private void OnEnable()
     {
-        cooldownTimer = gameObject.GetComponent<CooldownTimer>();
         PopulateInput();
         _triggerAction.Enable();
         _gripAction.Enable();

@@ -72,6 +72,8 @@ namespace Hands.SinglePlayer.EnemyAI.StatefulRefactor
                 ResetWeights();
                 newState = NinjaStruct.OutOfPlay;
             }
+
+            if (State == NinjaStruct.OutOfPlay) return;
             base.ChangeState(newState);
         }
 

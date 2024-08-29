@@ -12,7 +12,6 @@ public class ShootingState : BaseHandCanonState
         handCannon.muzzleFlash.SetActive(false);
         base.EnterState();
         
-        handCannon.trajectoryLineRenderer.enabled = handCannon.trajectoryAssist;
         if (handCannon.dodgeBallAmmo.Count > 0)
         {
             LaunchDodgeball(handCannon.dodgeBallAmmo.FirstOrDefault());

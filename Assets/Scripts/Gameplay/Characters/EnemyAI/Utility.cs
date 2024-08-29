@@ -166,6 +166,7 @@ namespace Hands.SinglePlayer.EnemyAI
         public override int state => NinjaStruct.OutOfPlay;
         public float jumpHeight = 18f;
         public float jumpDuration = 0.4f;
+        public GameObject trailRenderer;
         public float respawnTime = 1f;
     }
     

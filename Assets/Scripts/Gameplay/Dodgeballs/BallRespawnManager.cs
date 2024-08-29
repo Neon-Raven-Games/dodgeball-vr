@@ -19,7 +19,11 @@ public class BallRespawnManager : MonoBehaviour
     private int _currentIndex;
     private bool _teamOneSpawnSide;
 
-    private void Start() => SetPlayBalls().Forget();
+    private void Start()
+    {
+        _ballLayer = LayerMask.NameToLayer("Ball");
+        SetPlayBalls().Forget();
+    }
 
     public void SetNewNumberBalls(int dodgeballs)
     {
@@ -38,7 +42,6 @@ public class BallRespawnManager : MonoBehaviour
             ball.SetActive(true);
             _currentIndex = (_currentIndex + 1) % ballRespawnPoints.Count;
         }
-        _ballLayer = LayerMask.NameToLayer("Ball");
     }
 
     private void OnTriggerEnter(Collider other)

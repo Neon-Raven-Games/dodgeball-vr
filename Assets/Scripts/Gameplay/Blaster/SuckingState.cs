@@ -6,7 +6,6 @@ public class SuckingState : BaseHandCanonState
 {
     private readonly List<Collider> _ballsToRemove = new();
     private readonly List<Collider> _ballsInRange = new();
-    private readonly CooldownTimer _suctionCooldownTimer;
 
     private float _nextSuctionTime;
     private float _lastSuctionTime;
@@ -14,18 +13,6 @@ public class SuckingState : BaseHandCanonState
 
     public SuckingState(HandCannon handCannon) : base(handCannon)
     {
-        _suctionCooldownTimer = handCannon.AddComponent<CooldownTimer>();
-        _suctionCooldownTimer.SetCooldownTime(handCannon.suctionCooldown);
-        
-        _suctionCooldownTimer.OnCooldownStart += () =>
-        {
-            // handCannon.cooldownIndicator.SetActive(true);
-        };
-        _suctionCooldownTimer.OnCooldownEnd += () =>
-        {
-            // handCannon.cooldownIndicator.SetActive(false);
-        };
-        handCannon.cooldownTimer = _suctionCooldownTimer;
     }
 
     public override void OnTriggerEnter(Collider other)
@@ -52,60 +39,9 @@ public class SuckingState : BaseHandCanonState
         }
     }
 
-#if UNITY_EDITOR
-    public override void OnDrawGizmos()
-    {
-        if (handCannon.barrelTransform && _suctionCooldownTimer)
-        {
-            if (_suctionCooldownTimer.IsAvailable() && !_suctionCooldownTimer.IsOnCooldown())
-                Gizmos.color = Color.green;
-            else
-                Gizmos.color = Color.red;
-        
-            Gizmos.DrawWireSphere(handCannon.barrelTransform.position, .2f);
-        }
-    }
-#endif
-
-    public override void EnterState()
-    {
-        base.EnterState();
-        if (_suctionCooldownTimer.IsOnCooldown() || !_suctionCooldownTimer.IsAvailable())
-        {
-            ChangeState(CannonState.Idle);
-            return;
-        }
-
-        handCannon.trajectoryLineRenderer.enabled = false;
-
-        if (_suctionCooldownTimer.IsAvailable() && _suctionEndTime == 0)
-            _suctionEndTime = Time.time + handCannon.suctionDuration;
-    }
-
-
     public override void Update()
-    {
-        if (Time.time >= _suctionEndTime && _suctionEndTime != 0)
-        {
-            _suctionEndTime = 0;
-
-            _suctionCooldownTimer.StartCooldown();
-            
-            _ballsInRange.ForEach(x =>
-            {
-                x.transform.localScale = Vector3.one;
-                x.GetComponent<Rigidbody>().isKinematic = false;
-            });
-            
-            _ballsInRange.Clear();
-            _ballsToRemove.Clear();
-
-            ChangeState(CannonState.Idle);
-        }
-        else
-        {
-            ApplySuction();
-        }
+    { 
+        ApplySuction();
     }
 
     private void ApplySuction()
@@ -178,8 +114,11 @@ public class SuckingState : BaseHandCanonState
     {
         base.GripReleaseAction();
 
+        // todo, update visuals to suck all the way up
         _ballsInRange.ForEach(x =>
         {
+            if (x.gameObject.activeInHierarchy)
+                handCannon.AddDodgeBall(x.gameObject.GetComponent<DodgeBall>());
             x.transform.localScale = Vector3.one;
             x.GetComponent<Rigidbody>().isKinematic = false;
         });

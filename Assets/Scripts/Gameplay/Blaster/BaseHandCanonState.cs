@@ -29,6 +29,7 @@ public abstract class BaseHandCanonState
 
     private void DrawTrajectory()
     {
+        return;
         Vector3[] points = new Vector3[handCannon.trajectoryPoints];
         Vector3 startPosition = handCannon.barrelTransform.position;
         Vector3 velocity = handCannon.barrelTransform.forward * handCannon.launchForce;
@@ -39,8 +40,8 @@ public abstract class BaseHandCanonState
             points[i] = startPosition + velocity * time + Physics.gravity * time * time / 2f;
         }
 
-        handCannon.trajectoryLineRenderer.positionCount = handCannon.trajectoryPoints;
-        handCannon.trajectoryLineRenderer.SetPositions(points);
+        // handCannon.trajectoryLineRenderer.positionCount = handCannon.trajectoryPoints;
+        // handCannon.trajectoryLineRenderer.SetPositions(points);
     }
 
     public virtual void GripAction()

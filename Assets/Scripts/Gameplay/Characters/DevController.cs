@@ -102,6 +102,7 @@ public class DevController : Actor
 
     internal override void SetOutOfPlay(bool value)
     {
+        return;
         base.SetOutOfPlay(value);
         outOfBoundsArea.SetActive(value);
         if (!value) whistleSound.Play();

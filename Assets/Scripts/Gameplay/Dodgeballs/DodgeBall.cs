@@ -31,12 +31,16 @@ public class DodgeBall : MonoBehaviour
         if (hitParticle) hitParticle.transform.SetParent(null);
     }
 
+    private bool _initialized;
+
     private void OnEnable()
     {
         _rb = GetComponent<Rigidbody>();
         var blendShapeIndex = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex("blendShape1.DodgeBall_Base1");
         skinnedMeshRenderer.SetBlendShapeWeight(blendShapeIndex, 0);
-        DodgeballPlayArea.AddDodgeBallToGame(this);
+        
+        if (!_initialized) _initialized = true;
+        else DodgeballPlayArea.AddDodgeBallToGame(this);
     }
 
     private void OnDisable()

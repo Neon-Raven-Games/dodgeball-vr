@@ -20,11 +20,11 @@ public class PlayerMenuController : MonoBehaviour
 
     private void ShowMenu()
     {
-        Vector3 cameraPosition = Camera.main.transform.position;
-        Vector3 cameraForward = Camera.main.transform.forward;
+        var cameraPosition = Camera.main.transform.position;
+        var cameraForward = Camera.main.transform.forward;
         
-        Quaternion rotationOffset = Quaternion.Euler(0, menuYRotationOffset, 0);
-        Vector3 rotatedForward = rotationOffset * cameraForward;
+        var rotationOffset = Quaternion.Euler(0, menuYRotationOffset, 0);
+        var rotatedForward = rotationOffset * cameraForward;
 
         // can we raycast the ground layer, and offset the target by it's height, snapping it to the floor??
         Vector3 targetPosition = cameraPosition + new Vector3(rotatedForward.x, 0, rotatedForward.z).normalized * hologramDistance;
